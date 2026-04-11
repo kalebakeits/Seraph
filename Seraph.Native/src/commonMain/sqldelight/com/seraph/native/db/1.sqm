@@ -1,0 +1,118 @@
+CREATE TABLE r24 (
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	sequence INTEGER NOT NULL,
+	timestamp INTEGER NOT NULL,
+	subseconds INTEGER NOT NULL,
+	heart_rate INTEGER NOT NULL,
+	rr_intervals TEXT,
+	skin_temp REAL NOT NULL,
+	step_count INTEGER NOT NULL,
+	b2 INTEGER NOT NULL,
+	b80 INTEGER DEFAULT 0 NOT NULL,
+	device_id TEXT NOT NULL,
+	created_at INTEGER NOT NULL
+);
+
+CREATE UNIQUE INDEX r24_device_seq_idx ON r24 (device_id, sequence);
+CREATE INDEX r24_device_ts_idx ON r24 (device_id, timestamp);
+
+CREATE TABLE app_parameters (
+	key TEXT PRIMARY KEY NOT NULL,
+	value TEXT NOT NULL,
+	updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE daily_aggregations (
+	date TEXT PRIMARY KEY NOT NULL,
+	steps INTEGER,
+	avg_hr REAL,
+	rhr REAL,
+	max_hr REAL,
+	max_hr_validated INTEGER,
+	hrv_rmssd REAL,
+	strain REAL,
+	active_minutes INTEGER,
+	recovery REAL,
+	skin_temp REAL,
+	sleep_need REAL,
+	sleep_debt_adj REAL,
+	sleep_strain_adj REAL,
+	hr_sample_count INTEGER NOT NULL DEFAULT 0,
+	trimp REAL,
+	ctl REAL,
+	atl REAL,
+	hrv_windows TEXT,
+	daily_stress INTEGER,
+	baseline_waking_hrv REAL,
+	finalized INTEGER DEFAULT 0 NOT NULL,
+	last_agg_ts INTEGER,
+	updated_at INTEGER NOT NULL,
+	baseline_hrv REAL,
+	baseline_rhr REAL
+);
+
+CREATE TABLE sleep_events (
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	date TEXT NOT NULL,
+	start_ts INTEGER NOT NULL,
+	end_ts INTEGER NOT NULL,
+	duration_minutes INTEGER NOT NULL,
+	awake_minutes INTEGER NOT NULL DEFAULT 0,
+	pending_awake_ms INTEGER NOT NULL DEFAULT 0,
+	avg_hr REAL,
+	hrv_rmssd REAL,
+	hr_samples TEXT,
+	stage_samples TEXT,
+	hr_sum REAL NOT NULL DEFAULT 0.0,
+	hr_count INTEGER NOT NULL DEFAULT 0,
+	hrv_sq_sum REAL NOT NULL DEFAULT 0.0,
+	hrv_count INTEGER NOT NULL DEFAULT 0,
+	rhr_min INTEGER,
+	skin_temp_sum REAL NOT NULL DEFAULT 0.0,
+	skin_temp_count INTEGER NOT NULL DEFAULT 0,
+	finalized INTEGER DEFAULT 0 NOT NULL,
+	sleep_edited INTEGER DEFAULT 0 NOT NULL,
+	is_manual INTEGER DEFAULT 0 NOT NULL,
+	sleep_score INTEGER,
+	timezone TEXT,
+	created_at INTEGER NOT NULL
+);
+
+CREATE INDEX sleep_events_date_idx ON sleep_events (date);
+
+CREATE TABLE activity_events (
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	date TEXT NOT NULL,
+	start_ts INTEGER NOT NULL,
+	end_ts INTEGER NOT NULL,
+	duration_minutes INTEGER NOT NULL,
+	avg_hr REAL,
+	max_hr REAL,
+	steps INTEGER,
+	type TEXT DEFAULT 'unknown' NOT NULL,
+	hr_samples TEXT,
+	zone_seconds TEXT,
+	threshold_hr REAL,
+	trimp REAL,
+	hr_sum REAL NOT NULL DEFAULT 0.0,
+	hr_count INTEGER NOT NULL DEFAULT 0,
+	finalized INTEGER DEFAULT 0 NOT NULL,
+	is_manual INTEGER DEFAULT 0 NOT NULL,
+	timezone TEXT,
+	created_at INTEGER NOT NULL
+);
+
+CREATE INDEX activity_events_date_idx ON activity_events (date);
+
+CREATE TABLE notifications (
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	type TEXT NOT NULL,
+	payload TEXT,
+	read INTEGER NOT NULL DEFAULT 0,
+	entity_type TEXT,
+	entity_id INTEGER,
+	created_at INTEGER NOT NULL
+);
+
+CREATE INDEX notifications_created_idx ON notifications (created_at DESC);
+CREATE UNIQUE INDEX notifications_entity_idx ON notifications (entity_type, entity_id) WHERE entity_type IS NOT NULL AND entity_id IS NOT NULL;

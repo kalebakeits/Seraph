@@ -1,0 +1,406 @@
+-- ─── r24 ─────────────────────────────────────────────────────────────────────
+
+insertR24:
+INSERT OR REPLACE INTO r24(sequence, timestamp, subseconds, heart_rate, rr_intervals, skin_temp, step_count, b2, b80, device_id, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+queryR24ByDateRange:
+SELECT * FROM r24 WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC;
+
+-- HR chart samples: avg HR per bucket, capped at :maxPoints buckets by picking every Nth.
+-- Caller sets bucketMs = (end - start) / maxPoints so the GROUP BY naturally returns ~maxPoints rows.
+sampleHrBuckets:
+SELECT
+    (timestamp / :bucketMs) * :bucketMs AS bucket_start,
+    CAST(AVG(heart_rate) AS INTEGER) AS avg_hr
+FROM r24
+WHERE timestamp >= :startMs AND timestamp <= :endMs
+  AND heart_rate BETWEEN 30 AND 220
+GROUP BY bucket_start
+ORDER BY bucket_start ASC;
+
+-- Minimal projection for RMSSD bucketing in Kotlin — avoids loading full R24 objects.
+rrIntervalsInRange:
+SELECT timestamp, rr_intervals FROM r24
+WHERE timestamp >= ? AND timestamp <= ?
+  AND rr_intervals IS NOT NULL
+ORDER BY timestamp ASC;
+
+-- RHR: lowest 60s-bucket average HR across the session window.
+calcRhrForWindow:
+SELECT CAST(AVG(heart_rate) AS INTEGER) AS rhr
+FROM r24
+WHERE timestamp >= ? AND timestamp <= ?
+GROUP BY (timestamp / 60000)
+ORDER BY AVG(heart_rate) ASC
+LIMIT 1;
+
+queryR24ByDate:
+SELECT * FROM r24 WHERE date(timestamp / 1000, 'unixepoch') = ? ORDER BY timestamp ASC;
+
+deleteR24OlderThan:
+DELETE FROM r24 WHERE timestamp < ?;
+
+deleteR24InRange:
+DELETE FROM r24 WHERE timestamp >= ? AND timestamp <= ?;
+
+getDistinctR24Months:
+SELECT DISTINCT strftime('%Y-%m', timestamp / 1000, 'unixepoch') AS month FROM r24 ORDER BY month ASC;
+
+getR24SeqRangeForMonth:
+SELECT MIN(sequence) AS MIN, MAX(sequence) AS MAX FROM r24 WHERE timestamp >= ? AND timestamp <= ?;
+
+queryR24FromTs:
+SELECT * FROM r24 WHERE date(timestamp / 1000, 'unixepoch') = ? AND timestamp > ? ORDER BY timestamp ASC;
+
+-- ─── daily_aggregations ───────────────────────────────────────────────────────
+
+-- Incremental fields — updated every sync (steps, strain, active time, avg HR, max HR)
+-- INSERT OR IGNORE creates the row; UPDATE then overwrites incremental columns only,
+-- leaving rhr/hrv_rmssd/recovery/skin_temp/finalized untouched.
+insertIncrementalAggregationIfMissing:
+INSERT OR IGNORE INTO daily_aggregations(date, steps, avg_hr, max_hr, max_hr_validated, strain, active_minutes, hr_sample_count, finalized, last_agg_ts, updated_at)
+VALUES (:date, 0, 0.0, 0.0, 0, 0.0, 0, 0, 0, :last_agg_ts, :updated_at);
+
+updateIncrementalAggregation:
+UPDATE daily_aggregations
+SET steps = steps + :steps,
+    avg_hr = CASE WHEN hr_sample_count = 0 THEN :avg_hr ELSE (avg_hr * hr_sample_count + CAST(:avg_hr AS REAL) * :hr_sample_count) / (hr_sample_count + :hr_sample_count) END,
+    hr_sample_count = hr_sample_count + :hr_sample_count,
+    max_hr = MAX(COALESCE(max_hr, 0.0), CAST(:max_hr AS REAL)),
+    max_hr_validated = CASE WHEN :max_hr_validated = 1 THEN 1 ELSE max_hr_validated END,
+    strain = :strain,
+    active_minutes = active_minutes + :active_minutes,
+    sleep_need = :sleep_need,
+    sleep_debt_adj = :sleep_debt_adj,
+    sleep_strain_adj = :sleep_strain_adj,
+    last_agg_ts = :last_agg_ts,
+    updated_at = :updated_at
+WHERE date = :date;
+
+
+-- Finalization fields — written once when primary sleep closes (RHR/HRV from sleep window)
+finalizeDailyAggregation:
+UPDATE daily_aggregations
+SET rhr = ?, hrv_rmssd = ?, recovery = ?, skin_temp = ?, sleep_need = ?, finalized = 1, updated_at = ?
+WHERE date = ?;
+
+markAggregationFinalized:
+UPDATE daily_aggregations SET finalized = 1 WHERE date = ?;
+
+updateHrvWindows:
+UPDATE daily_aggregations
+SET hrv_windows = :hrv_windows,
+    daily_stress = :daily_stress,
+    baseline_waking_hrv = :baseline_waking_hrv,
+    updated_at = :updated_at
+WHERE date = :date;
+
+queryAggregationRange:
+SELECT * FROM daily_aggregations WHERE date >= ? AND date <= ? ORDER BY date ASC;
+
+queryHrvWindowsRange:
+SELECT date, hrv_windows FROM daily_aggregations
+WHERE date >= ? AND date <= ? AND hrv_windows IS NOT NULL ORDER BY date ASC;
+
+updateDailyBaselines:
+UPDATE daily_aggregations SET baseline_hrv = :baseline_hrv, baseline_rhr = :baseline_rhr WHERE date = :date;
+
+getLastAggTs:
+SELECT last_agg_ts FROM daily_aggregations WHERE date = ?;
+
+getStrainForDate:
+SELECT strain FROM daily_aggregations WHERE date = ?;
+
+-- Force re-aggregation: zero/null all derived fields for a single date.
+-- Baselines (baseline_hrv, baseline_rhr, baseline_waking_hrv) are preserved — they are
+-- computed from history and will be recalculated by BaselineCalculator after the run.
+resetDailyAggregationForDate:
+UPDATE daily_aggregations
+SET steps = 0,
+    avg_hr = 0.0,
+    hr_sample_count = 0,
+    max_hr = 0.0,
+    max_hr_validated = 0,
+    strain = 0.0,
+    active_minutes = 0,
+    trimp = NULL,
+    ctl = NULL,
+    atl = NULL,
+    hrv_windows = NULL,
+    daily_stress = NULL,
+    rhr = NULL,
+    hrv_rmssd = NULL,
+    recovery = NULL,
+    skin_temp = NULL,
+    sleep_need = NULL,
+    sleep_debt_adj = NULL,
+    sleep_strain_adj = NULL,
+    finalized = 0,
+    last_agg_ts = NULL,
+    updated_at = :updated_at
+WHERE date = :date;
+
+clearLastAggTsRange:
+UPDATE daily_aggregations SET last_agg_ts = NULL WHERE date >= ? AND date <= ?;
+
+-- ─── sleep_events ─────────────────────────────────────────────────────────────
+
+insertSleepEvent:
+INSERT INTO sleep_events(date, start_ts, end_ts, duration_minutes, awake_minutes, avg_hr, hrv_rmssd, hr_samples, stage_samples, finalized, sleep_edited, is_manual, sleep_score, hr_sum, hr_count, hrv_sq_sum, hrv_count, rhr_min, skin_temp_sum, skin_temp_count, created_at)
+VALUES (:date, :start_ts, :end_ts, :duration_minutes, :awake_minutes, :avg_hr, :hrv_rmssd, :hr_samples, :stage_samples, 0, 0, :is_manual, :sleep_score, :hr_sum, :hr_count, :hrv_sq_sum, :hrv_count, :rhr_min, :skin_temp_sum, :skin_temp_count, :created_at);
+
+-- Sleep byte arrived: extend end_ts, commit pending awake, accumulate HR/HRV
+extendSleep:
+UPDATE sleep_events
+SET end_ts = :end_ts,
+    awake_minutes = awake_minutes + (pending_awake_ms / 60000),
+    pending_awake_ms = 0,
+    duration_minutes = (:end_ts - start_ts) / 60000 - awake_minutes - (pending_awake_ms / 60000),
+    hr_sum = hr_sum + :hr_sum,
+    hr_count = hr_count + :hr_count,
+    avg_hr = CASE WHEN hr_count + :hr_count > 0 THEN (hr_sum + :hr_sum) / (hr_count + :hr_count) ELSE NULL END,
+    hrv_sq_sum = hrv_sq_sum + :hrv_sq_sum,
+    hrv_count = hrv_count + :hrv_count,
+    skin_temp_sum = skin_temp_sum + :skin_temp_sum,
+    skin_temp_count = skin_temp_count + :skin_temp_count
+WHERE id = :id AND sleep_edited = 0 AND finalized = 0;
+
+-- Sleep byte within a fixed (edited/manual) window: accumulate HR/HRV but do NOT move end_ts
+accumulateEditedSleep:
+UPDATE sleep_events
+SET awake_minutes = awake_minutes + (pending_awake_ms / 60000),
+    pending_awake_ms = 0,
+    hr_sum = hr_sum + :hr_sum,
+    hr_count = hr_count + :hr_count,
+    avg_hr = CASE WHEN hr_count + :hr_count > 0 THEN (hr_sum + :hr_sum) / (hr_count + :hr_count) ELSE NULL END,
+    hrv_sq_sum = hrv_sq_sum + :hrv_sq_sum,
+    hrv_count = hrv_count + :hrv_count,
+    skin_temp_sum = skin_temp_sum + :skin_temp_sum,
+    skin_temp_count = skin_temp_count + :skin_temp_count
+WHERE id = :id AND finalized = 0;
+
+-- Non-sleep byte inside merge gap: set pending awake to gap since last sleep byte
+setPendingAwake:
+UPDATE sleep_events
+SET pending_awake_ms = :awake_ms
+WHERE id = :id AND sleep_edited = 0 AND finalized = 0;
+
+-- Non-sleep byte within a fixed (edited/manual) window: track awake gap without moving timestamps
+setPendingAwakeEdited:
+UPDATE sleep_events
+SET pending_awake_ms = :awake_ms
+WHERE id = :id AND finalized = 0;
+
+-- Finalization: write final samples, score, awake_minutes, duration
+finalizeSleepValues:
+UPDATE sleep_events
+SET hr_samples = :hr_samples,
+    stage_samples = :stage_samples,
+    sleep_score = :sleep_score,
+    awake_minutes = :awake_minutes,
+    duration_minutes = :duration_minutes,
+    pending_awake_ms = 0
+WHERE id = :id AND finalized = 0;
+
+markSleepFinalized:
+UPDATE sleep_events SET finalized = 1, hrv_rmssd = :hrv_rmssd, avg_hr = hr_sum / hr_count WHERE id = :id;
+
+-- Prepares a sleep row for a recalc pass: unfinalize and zero all accumulators
+-- so HR/HRV are not double-counted. Native owns this reset entirely.
+resetSleepForRecalc:
+UPDATE sleep_events
+SET finalized = 0,
+    hr_sum = 0, hr_count = 0, hrv_sq_sum = 0, hrv_count = 0,
+    awake_minutes = 0, pending_awake_ms = 0,
+    skin_temp_sum = 0, skin_temp_count = 0
+WHERE id = :id;
+
+deleteSleepById:
+DELETE FROM sleep_events WHERE id = :id;
+
+-- Returns the finalized sleep with the earliest end_ts for the date (primary sleep)
+getEarliestFinalizedSleep:
+SELECT end_ts FROM sleep_events WHERE date = :date AND finalized = 1 ORDER BY end_ts ASC LIMIT 1;
+
+getOpenSleep:
+SELECT * FROM sleep_events WHERE date = :date AND finalized = 0 AND sleep_edited = 0 AND is_manual = 0 ORDER BY id DESC LIMIT 1;
+
+getOpenEditedSleep:
+SELECT * FROM sleep_events WHERE date = :date AND finalized = 0 AND (sleep_edited = 1 OR is_manual = 1) ORDER BY id ASC;
+
+getAllOpenSleeps:
+SELECT * FROM sleep_events WHERE finalized = 0 AND sleep_edited = 0 AND is_manual = 0 ORDER BY start_ts ASC;
+
+querySleepByDate:
+SELECT * FROM sleep_events WHERE date = ? ORDER BY id ASC;
+
+querySleepRange:
+SELECT * FROM sleep_events WHERE date >= ? ORDER BY date ASC;
+
+getSleepById:
+SELECT * FROM sleep_events WHERE id = :id LIMIT 1;
+
+-- Returns count > 0 if any sleep row (excluding :excludeId) overlaps [start_ts, end_ts).
+-- Manual/edited sessions are ground truth even if unfinalized (e.g. during force re-agg).
+hasSleepOverlapRange:
+SELECT COUNT(*) FROM sleep_events
+WHERE id != :excludeId
+  AND start_ts < :end_ts AND end_ts > :start_ts
+  AND (finalized = 1 OR sleep_edited = 1 OR is_manual = 1);
+
+-- Prepares all manual/edited sleep sessions for a date for a force re-agg pass:
+-- unfinalizes and zeros all accumulators so HR/HRV are not double-counted.
+resetManualSleepForDate:
+UPDATE sleep_events
+SET finalized = 0,
+    hr_sum = 0, hr_count = 0, hrv_sq_sum = 0, hrv_count = 0,
+    awake_minutes = 0, pending_awake_ms = 0,
+    skin_temp_sum = 0, skin_temp_count = 0
+WHERE date = :date AND (sleep_edited = 1 OR is_manual = 1);
+
+-- Returns count > 0 if any user-edited or manual sleep overlaps the given timestamp
+hasSleepEditedOverlap:
+SELECT COUNT(*) FROM sleep_events
+WHERE (sleep_edited = 1 OR is_manual = 1)
+  AND start_ts <= :ts AND end_ts >= :ts;
+
+-- ─── activity_events ──────────────────────────────────────────────────────────
+
+insertActivityEvent:
+INSERT INTO activity_events(date, start_ts, end_ts, duration_minutes, avg_hr, max_hr, steps, type, hr_samples, zone_seconds, threshold_hr, trimp, is_manual, hr_sum, hr_count, created_at)
+VALUES (:date, :start_ts, :end_ts, :duration_minutes, :avg_hr, :max_hr, :steps, :type, :hr_samples, :zone_seconds, :threshold_hr, :trimp, :is_manual, :hr_sum, :hr_count, :created_at);
+
+deleteAutoActivitiesForDate:
+DELETE FROM activity_events WHERE date = ? AND is_manual = 0;
+
+-- Prepares all manual/recorded activity sessions for a date for a force re-agg pass:
+-- unfinalizes and zeros accumulators so HR/trimp are not double-counted.
+resetManualActivitiesForDate:
+UPDATE activity_events
+SET finalized = 0,
+    hr_sum = 0, hr_count = 0,
+    avg_hr = 0.0, max_hr = 0.0,
+    trimp = 0.0,
+    hr_samples = '[]', zone_seconds = '[]'
+WHERE date = :date AND is_manual IN (1, 2);
+
+deleteActivityById:
+DELETE FROM activity_events WHERE id = ?;
+
+getAutoActivitiesForDate:
+SELECT * FROM activity_events WHERE date = ? AND is_manual = 0 ORDER BY start_ts ASC;
+
+getOpenAutoActivities:
+SELECT * FROM activity_events WHERE date = :date AND is_manual = 0 AND finalized = 0 ORDER BY start_ts ASC;
+
+getOpenManualActivities:
+SELECT * FROM activity_events WHERE date = :date AND is_manual = 1 AND finalized = 0 ORDER BY start_ts ASC;
+
+updateActivityAccumulators:
+UPDATE activity_events
+SET end_ts = MAX(end_ts, :end_ts),
+    duration_minutes = (MAX(end_ts, :end_ts) - start_ts) / 60000,
+    hr_sum = hr_sum + :hr_sum,
+    hr_count = hr_count + :hr_count,
+    avg_hr = (hr_sum + :hr_sum) / (hr_count + :hr_count),
+    max_hr = MAX(COALESCE(max_hr, 0.0), CAST(:max_hr AS REAL)),
+    hr_samples = :hr_samples,
+    zone_seconds = :zone_seconds,
+    trimp = COALESCE(trimp, 0.0) + :trimp
+WHERE id = :id;
+
+markActivityFinalized:
+UPDATE activity_events SET finalized = 1 WHERE id = :id;
+
+
+updateActivityMaxHr:
+UPDATE activity_events SET max_hr = :max_hr WHERE id = :id AND is_manual = 0;
+
+
+queryActivitiesByDate:
+SELECT * FROM activity_events WHERE date = ? ORDER BY start_ts ASC;
+
+sumTrimpForDate:
+SELECT COALESCE(SUM(trimp), 0.0) FROM activity_events WHERE date = ? AND finalized = 1;
+
+-- Returns count > 0 if any logged/recorded activity overlaps the given timestamp
+hasManualOverlap:
+SELECT COUNT(*) FROM activity_events
+WHERE date = :date AND is_manual IN (1, 2)
+  AND start_ts <= :ts AND end_ts >= :ts;
+
+-- Returns count > 0 if any logged/recorded activity range overlaps [start_ts, end_ts)
+hasManualOverlapRange:
+SELECT COUNT(*) FROM activity_events
+WHERE date = :date AND is_manual IN (1, 2)
+  AND start_ts < :end_ts AND end_ts > :start_ts;
+
+-- Returns count > 0 if any activity (excluding :excludeId) overlaps [start_ts, end_ts)
+hasActivityOverlapRange:
+SELECT COUNT(*) FROM activity_events
+WHERE id != :excludeId
+  AND start_ts < :end_ts AND end_ts > :start_ts
+  AND finalized = 1;
+
+getActivityById:
+SELECT * FROM activity_events WHERE id = :id LIMIT 1;
+
+-- ─── notifications ────────────────────────────────────────────────────────────
+
+insertNotification:
+INSERT INTO notifications(type, payload, read, entity_type, entity_id, created_at)
+VALUES (:type, :payload, 0, :entity_type, :entity_id, :created_at);
+
+deleteNotificationForEntity:
+DELETE FROM notifications WHERE entity_type = :entity_type AND entity_id = :entity_id;
+
+deleteActivityNotificationsForDate:
+DELETE FROM notifications WHERE entity_type = 'activity' AND entity_id IN (SELECT id FROM activity_events WHERE date = :date);
+
+deleteSleepNotificationsForDate:
+DELETE FROM notifications WHERE entity_type = 'sleep' AND entity_id IN (SELECT id FROM sleep_events WHERE date = :date);
+
+getRecentNotifications:
+SELECT * FROM notifications ORDER BY created_at DESC LIMIT :limit;
+
+getUnreadNotificationCount:
+SELECT COUNT(*) FROM notifications WHERE read = 0;
+
+markNotificationRead:
+UPDATE notifications SET read = 1 WHERE id = :id;
+
+markAllNotificationsRead:
+UPDATE notifications SET read = 1 WHERE read = 0;
+
+updateDailyTrimp:
+UPDATE daily_aggregations SET trimp = :trimp WHERE date = :date;
+
+updateDailyTrainingLoad:
+UPDATE daily_aggregations SET ctl = :ctl, atl = :atl WHERE date = :date;
+
+clearDailyTrainingLoad:
+UPDATE daily_aggregations SET ctl = NULL, atl = NULL WHERE date = :date;
+
+getLastDailyWithLoad:
+SELECT date, ctl, atl FROM daily_aggregations
+WHERE date < :before AND ctl IS NOT NULL AND atl IS NOT NULL
+ORDER BY date DESC
+LIMIT 1;
+
+-- ─── app_parameters ───────────────────────────────────────────────────────────
+
+getAppParameter:
+SELECT value FROM app_parameters WHERE key = ?;
+
+setAppParameter:
+INSERT OR REPLACE INTO app_parameters(key, value, updated_at) VALUES (?, ?, ?);
+
+getAppParameterRow:
+SELECT key, value AS paramValue, updated_at FROM app_parameters WHERE key = ?;
+
+queryR24BySequence:
+SELECT timestamp FROM r24 WHERE sequence = (? % 256) ORDER BY timestamp DESC LIMIT 1;
+
+lastInsertRowId:
+SELECT last_insert_rowid();

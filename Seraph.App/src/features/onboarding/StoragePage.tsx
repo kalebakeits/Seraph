@@ -1,0 +1,27 @@
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { SafeText } from '../../components/common/SafeText';
+import { PageContainer } from './PageContainer';
+import { styles } from './OnboardingStyles';
+import { GranularityPicker } from '../profile/components/GranularityPicker';
+import { StorageEstimateCard } from '../profile/components/StorageEstimateCard';
+import type { GranularitySeconds } from '../profile/utils/storageUtils';
+
+interface Props {
+  width: number;
+  granularity: GranularitySeconds;
+  setGranularity: (v: GranularitySeconds) => void;
+}
+
+export const StoragePage: React.FC<Props> = ({ width, granularity, setGranularity }) => {
+  const { t } = useTranslation();
+
+  return (
+    <PageContainer width={width}>
+      <SafeText style={styles.pageTitle}>{t('onboarding.storage.title')}</SafeText>
+      <SafeText style={styles.pageSubtitle}>{t('onboarding.storage.subtitle')}</SafeText>
+      <GranularityPicker value={granularity} onChange={setGranularity} />
+      <StorageEstimateCard granularity={granularity} />
+    </PageContainer>
+  );
+};
