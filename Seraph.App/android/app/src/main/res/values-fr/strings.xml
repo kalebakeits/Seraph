@@ -1,0 +1,66 @@
+<resources>
+  <!-- Notification titles -->
+  <string name="notif_sleep_recorded">Sommeil enregistré</string>
+  <string name="notif_sleep_updated">Sommeil mis à jour</string>
+  <string name="notif_activity_detected">Activité détectée</string>
+  <string name="notif_workout_updated">Séance mise à jour</string>
+  <string name="notif_workout_saved">Séance sauvegardée</string>
+  <string name="notif_workout_logged">Séance enregistrée</string>
+
+  <!-- Notification body fragments -->
+  <string name="notif_score">Note %d</string>
+  <string name="notif_avg_hr">moy %d bpm</string>
+  <string name="notif_duration_h_m">%dh %dmin</string>
+  <string name="notif_duration_m">%dmin</string>
+
+  <!-- Sport labels -->
+  <string name="sport_crossfit">CrossFit</string>
+  <string name="sport_cycling">Cyclisme</string>
+  <string name="sport_functional_fitness">Fitness fonctionnel</string>
+  <string name="sport_hiit">HIIT</string>
+  <string name="sport_running">Course à pied</string>
+  <string name="sport_swimming">Natation</string>
+  <string name="sport_walking">Marche</string>
+  <string name="sport_weightlifting">Musculation</string>
+  <string name="sport_yoga">Yoga</string>
+  <string name="sport_baseball">Baseball</string>
+  <string name="sport_basketball">Basketball</string>
+  <string name="sport_boxing">Boxe</string>
+  <string name="sport_calisthenics">Callisthénie</string>
+  <string name="sport_climbing">Escalade</string>
+  <string name="sport_cricket">Cricket</string>
+  <string name="sport_dance">Danse</string>
+  <string name="sport_elliptical">Elliptique</string>
+  <string name="sport_football">Football américain</string>
+  <string name="sport_golf">Golf</string>
+  <string name="sport_gymnastics">Gymnastique</string>
+  <string name="sport_handball">Handball</string>
+  <string name="sport_hiking">Randonnée</string>
+  <string name="sport_hockey">Hockey</string>
+  <string name="sport_ice_skating">Patinage sur glace</string>
+  <string name="sport_jiu_jitsu">Jiu-Jitsu</string>
+  <string name="sport_kayaking">Kayak</string>
+  <string name="sport_kickboxing">Kickboxing</string>
+  <string name="sport_lacrosse">Lacrosse</string>
+  <string name="sport_martial_arts">Arts martiaux</string>
+  <string name="sport_padel">Padel</string>
+  <string name="sport_paddleboarding">Paddle</string>
+  <string name="sport_pickleball">Pickleball</string>
+  <string name="sport_pilates">Pilates</string>
+  <string name="sport_racquetball">Racquetball</string>
+  <string name="sport_rowing">Aviron</string>
+  <string name="sport_rugby">Rugby</string>
+  <string name="sport_skiing">Ski</string>
+  <string name="sport_snowboarding">Snowboard</string>
+  <string name="sport_soccer">Football</string>
+  <string name="sport_squash">Squash</string>
+  <string name="sport_stretching">Étirements</string>
+  <string name="sport_surfing">Surf</string>
+  <string name="sport_tennis">Tennis</string>
+  <string name="sport_trail_running">Trail</string>
+  <string name="sport_triathlon">Triathlon</string>
+  <string name="sport_volleyball">Volleyball</string>
+  <string name="sport_water_polo">Water-polo</string>
+  <string name="sport_workout">Entraînement</string>
+  <string name="sport_wrestling">Lutte</string>
+</resources>
