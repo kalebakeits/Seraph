@@ -967,7 +967,8 @@ class SeraphModule(
             val clazz = Class.forName("com.seraph.native.blob.BlobUploader")
             val method = clazz.getMethod("getConfig", android.content.Context::class.java)
 
-            @Suppress("UNCHECKED_CAST") val pair = method.invoke(clazz.kotlin.objectInstance, reactApplicationContext) as Pair<String, String>
+            @Suppress("UNCHECKED_CAST")
+            val pair = method.invoke(clazz.kotlin.objectInstance, reactApplicationContext) as Pair<String, String>
             val (url, token) = pair
             val map =
                 Arguments.createMap().apply {

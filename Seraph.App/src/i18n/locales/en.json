@@ -545,7 +545,12 @@
       "workout_edited": "Workout updated",
       "workout_recorded": "Workout saved",
       "workout_logged": "Workout logged",
-      "remote_message": "Message"
-    }
+      "remote_message": "Message",
+      "update_available": "Update available",
+      "announcement": "Announcement"
+    },
+    "updateBody": "Version {{version}} is ready to install.",
+    "contentUnavailable": "Content not available yet.",
+    "contentUnavailableHint": "Check back later for the full details."
   }
 }

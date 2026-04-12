@@ -13,6 +13,7 @@ import {
   formatNotificationTitle,
   formatNotificationDetail,
   iconForNotification,
+  isSystemNotification,
 } from './notificationUtils';
 
 function relativeTime(
@@ -92,16 +93,30 @@ export function NotificationCenterScreen() {
     });
   }, [queryClient]);
 
-  const handlePress = useCallback((item: Notification) => {
-    if (!item.payload) return;
-    const nav = parsePayload(item.payload);
-    if (!nav.screen || !navigationRef.isReady()) return;
-    if (nav.screen === 'WorkoutDetail' && nav.activityId != null) {
-      navigationRef.navigate('WorkoutDetail', { activityId: nav.activityId });
-    } else if (nav.screen === 'SleepSessionDetail' && nav.sleepId != null) {
-      navigationRef.navigate('SleepSessionDetail', { sleepId: nav.sleepId });
-    }
-  }, []);
+  const handlePress = useCallback(
+    (item: Notification) => {
+      if (!navigationRef.isReady()) return;
+      if (isSystemNotification(item.type)) {
+        const payload = parsePayload(item.payload ?? null);
+        const typeLabel = t(`notifications.types.${item.type}`, { defaultValue: item.type });
+        navigationRef.navigate('SystemNotificationDetail', {
+          contentId: payload.content_id,
+          title: typeLabel,
+          type: item.type,
+        });
+        return;
+      }
+      if (!item.payload) return;
+      const nav = parsePayload(item.payload);
+      if (!nav.screen) return;
+      if (nav.screen === 'WorkoutDetail' && nav.activityId != null) {
+        navigationRef.navigate('WorkoutDetail', { activityId: nav.activityId });
+      } else if (nav.screen === 'SleepSessionDetail' && nav.sleepId != null) {
+        navigationRef.navigate('SleepSessionDetail', { sleepId: nav.sleepId });
+      }
+    },
+    [t],
+  );
 
   return (
     <View style={styles.container}>
@@ -111,12 +126,23 @@ export function NotificationCenterScreen() {
         renderItem={({ item }) => {
           const payload = parsePayload(item.payload);
           const typeLabel = t(`notifications.types.${item.type}`, { defaultValue: item.type });
-          const scoreLabel =
-            payload.score != null ? t('notifications.score', { value: payload.score }) : '';
-          const avgHrLabel =
-            payload.avg_hr != null ? t('notifications.avgHr', { value: payload.avg_hr }) : '';
-          const heroTitle = formatNotificationTitle(typeLabel);
-          const detail = formatNotificationDetail(payload, i18n.language, scoreLabel, avgHrLabel);
+          const isSystem = isSystemNotification(item.type);
+          let heroTitle: string;
+          let detail: string;
+          if (isSystem) {
+            heroTitle = typeLabel;
+            detail =
+              item.type === 'update_available' && payload.version
+                ? t('notifications.updateBody', { version: payload.version })
+                : (payload.message ?? '');
+          } else {
+            const scoreLabel =
+              payload.score != null ? t('notifications.score', { value: payload.score }) : '';
+            const avgHrLabel =
+              payload.avg_hr != null ? t('notifications.avgHr', { value: payload.avg_hr }) : '';
+            heroTitle = formatNotificationTitle(typeLabel);
+            detail = formatNotificationDetail(payload, i18n.language, scoreLabel, avgHrLabel);
+          }
           return (
             <NotificationRow
               item={item}
@@ -126,7 +152,7 @@ export function NotificationCenterScreen() {
                 item.created_at,
                 t as (key: string, opts?: Record<string, unknown>) => string,
               )}
-              eventLabel={typeLabel}
+              eventLabel={isSystem ? '' : typeLabel}
               onPress={handlePress}
             />
           );

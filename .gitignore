@@ -26,6 +26,7 @@
 
 # Claude
 CLAUDE.md
+.claude/
 
 # React Native
 **/.expo/
@@ -35,6 +36,7 @@ CLAUDE.md
 **/sentry.properties
 **/debug.keystore
 **/release.keystore
+**/google-services.json
 *.jks
 *.p12
 .env*

@@ -24,45 +24,54 @@ object NotificationResources {
                 val body = listOfNotNull(
                     dateStr,
                     durationStr,
-                    score?.let { lctx.getString(R.string.notif_score, it) },
+                    score?.let { lctx.getString(R.string.notifications_score, it) },
                 ).joinToString(" · ").ifBlank { null }
-                lctx.getString(R.string.notif_sleep_recorded) to body
+                lctx.getString(R.string.notifications_types_sleep_detected) to body
             }
             "sleep_edited" -> {
                 val score = p?.optInt("score", -1)?.takeIf { it >= 0 }
                 val body = listOfNotNull(
                     dateStr,
                     durationStr,
-                    score?.let { lctx.getString(R.string.notif_score, it) },
+                    score?.let { lctx.getString(R.string.notifications_score, it) },
                 ).joinToString(" · ").ifBlank { null }
-                lctx.getString(R.string.notif_sleep_updated) to body
+                lctx.getString(R.string.notifications_types_sleep_edited) to body
             }
             "workout_detected" -> {
                 val avgHr = p?.optInt("avg_hr", -1)?.takeIf { it > 0 }
                 val body = listOfNotNull(
                     dateStr,
                     durationStr,
-                    avgHr?.let { lctx.getString(R.string.notif_avg_hr, it) },
+                    avgHr?.let { lctx.getString(R.string.notifications_avg_hr, it) },
                 ).joinToString(" · ").ifBlank { null }
-                lctx.getString(R.string.notif_activity_detected) to body
+                lctx.getString(R.string.notifications_types_workout_detected) to body
             }
             "workout_edited" -> {
                 val avgHr = p?.optInt("avg_hr", -1)?.takeIf { it > 0 }
                 val body = listOfNotNull(
                     dateStr,
                     durationStr,
-                    avgHr?.let { lctx.getString(R.string.notif_avg_hr, it) },
+                    avgHr?.let { lctx.getString(R.string.notifications_avg_hr, it) },
                 ).joinToString(" · ").ifBlank { null }
-                lctx.getString(R.string.notif_workout_updated) to body
+                lctx.getString(R.string.notifications_types_workout_edited) to body
             }
             "workout_recorded" -> {
                 val avgHr = p?.optInt("avg_hr", -1)?.takeIf { it > 0 }
                 val body = listOfNotNull(
                     dateStr,
                     durationStr,
-                    avgHr?.let { lctx.getString(R.string.notif_avg_hr, it) },
+                    avgHr?.let { lctx.getString(R.string.notifications_avg_hr, it) },
                 ).joinToString(" · ").ifBlank { null }
-                lctx.getString(R.string.notif_workout_logged) to body
+                lctx.getString(R.string.notifications_types_workout_recorded) to body
+            }
+            "update_available" -> {
+                val version = p?.optString("version", null)
+                val body = version?.let { lctx.getString(R.string.notifications_update_body, it) }
+                lctx.getString(R.string.notifications_types_update_available) to body
+            }
+            "announcement" -> {
+                val message = p?.optString("message", null)
+                lctx.getString(R.string.notifications_types_announcement) to message
             }
             else -> type to null
         }
@@ -76,8 +85,8 @@ object NotificationResources {
     private fun formatDuration(ctx: Context, minutes: Int): String {
         val h = minutes / 60
         val m = minutes % 60
-        return if (h > 0) ctx.getString(R.string.notif_duration_h_m, h, m)
-        else ctx.getString(R.string.notif_duration_m, m)
+        return if (h > 0) ctx.getString(R.string.notifications_duration_h_m, h, m)
+        else ctx.getString(R.string.notifications_duration_m, m)
     }
 
     private fun localizedCtx(ctx: Context, lang: String): Context {

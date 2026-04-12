@@ -1,4 +1,4 @@
-import './src/i18n';
+import i18n from './src/i18n';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -69,11 +69,15 @@ export default Sentry.wrap(function App() {
   useEffect(() => {
     initDb()
       .then(async () => {
+        const savedLang = await appParametersRepository.get('language');
+        if (!savedLang) {
+          await appParametersRepository.set('language', i18n.language.slice(0, 2));
+        }
         const onboarded = await appParametersRepository.get('onboarding_complete');
         setAppState(onboarded === '1' ? 'ready' : 'onboarding');
       })
       .catch(() => {
-        setAppState('ready');
+        setAppState('onboarding');
       })
       .finally(() => {
         SplashScreen.setOptions({ fade: true, duration: 500 });
@@ -92,7 +96,7 @@ export default Sentry.wrap(function App() {
           {appState === 'onboarding' ? (
             <OnboardingScreen
               onComplete={() => {
-                setAppState('ready');
+                void initDb().finally(() => setAppState('ready'));
               }}
             />
           ) : (

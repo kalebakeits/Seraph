@@ -545,7 +545,12 @@
       "workout_edited": "Séance mise à jour",
       "workout_recorded": "Séance sauvegardée",
       "workout_logged": "Séance enregistrée",
-      "remote_message": "Message"
-    }
+      "remote_message": "Message",
+      "update_available": "Mise à jour disponible",
+      "announcement": "Annonce"
+    },
+    "updateBody": "La version {{version}} est prête à installer.",
+    "contentUnavailable": "Contenu non disponible.",
+    "contentUnavailableHint": "Revenez plus tard pour les détails complets."
   }
 }
