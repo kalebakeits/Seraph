@@ -2,6 +2,12 @@
 .DS_Store
 **/.DS_Store
 
+# Service account keys and local scripts
+*.json.key
+*-firebase-adminsdk-*.json
+seraph-fitness-*.json
+send_fcm.py
+
 # Android build
 *.apk
 *.aab
