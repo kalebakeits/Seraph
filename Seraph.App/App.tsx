@@ -96,7 +96,11 @@ export default Sentry.wrap(function App() {
           {appState === 'onboarding' ? (
             <OnboardingScreen
               onComplete={() => {
-                void initDb().finally(() => setAppState('ready'));
+                initDb()
+                  .finally(() => {
+                    setAppState('ready');
+                  })
+                  .catch(console.error);
               }}
             />
           ) : (

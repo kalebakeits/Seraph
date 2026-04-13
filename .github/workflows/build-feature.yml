@@ -2,11 +2,6 @@ name: Feature Build
 
 on:
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to build (e.g. feat/notifications)'
-        required: true
-        default: ''
 
 jobs:
   build:
@@ -20,7 +15,6 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.branch }}
           fetch-depth: 0
 
       - name: Set up JDK 17
@@ -67,7 +61,7 @@ jobs:
         id: version
         run: |
           BASE=$(grep versionName Seraph.App/android/app/build.gradle | grep -oP '"\K[^"]+')
-          BRANCH="${{ github.event.inputs.branch }}"
+          BRANCH="${{ github.ref_name }}"
           SLUG=$(echo "$BRANCH" | sed 's|.*/||' | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
           SHA=$(git rev-parse --short HEAD)
           echo "version=${BASE}-dev-${SLUG}+${SHA}" >> $GITHUB_OUTPUT

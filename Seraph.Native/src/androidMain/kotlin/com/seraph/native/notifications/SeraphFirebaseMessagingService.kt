@@ -1,6 +1,7 @@
 package com.seraph.native.notifications
 
 import co.touchlab.kermit.Logger
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.seraph.native.db.DbHolder
@@ -20,13 +21,13 @@ private val log = Logger.withTag("SeraphFCM")
  */
 @OptIn(ExperimentalTime::class)
 class SeraphFirebaseMessagingService : FirebaseMessagingService() {
-
     override fun onMessageReceived(message: RemoteMessage) {
         val data = message.data
-        val type = data["type"] ?: run {
-            log.w { "FCM message missing 'type' — ignoring" }
-            return
-        }
+        val type =
+            data["type"] ?: run {
+                log.w { "FCM message missing 'type' — ignoring" }
+                return
+            }
         log.i { "FCM received: type=$type" }
 
         val db = DbHolder.db
@@ -47,14 +48,15 @@ class SeraphFirebaseMessagingService : FirebaseMessagingService() {
         val nm = ServiceNotificationManager(this)
         nm.createChannels()
         val lang = db.seraphDbQueries.getAppParameter("language").executeAsOneOrNull() ?: "en"
-        val (title, body) = com.seraph.native.service.ForegroundService
-            .systemNotificationFormatter(lang, type, payload)
+        val (title, body) =
+            com.seraph.native.service.ForegroundService
+                .systemNotificationFormatter(lang, type, payload)
         nm.sendEventAlert(title, body, deepLink = null)
     }
 
     override fun onNewToken(token: String) {
         log.i { "FCM token refreshed" }
-        // Token stored for future server-side targeting if needed
+        FirebaseMessaging.getInstance().subscribeToTopic("all")
         try {
             val db = DbHolder.db
             db.seraphDbQueries.setAppParameter(
@@ -67,7 +69,10 @@ class SeraphFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun buildPayload(type: String, data: Map<String, String>): String? {
+    private fun buildPayload(
+        type: String,
+        data: Map<String, String>,
+    ): String? {
         val parts = mutableListOf<String>()
         data["version"]?.let { parts.add(""""version":"$it"""") }
         data["message"]?.let { parts.add(""""message":"$it"""") }
