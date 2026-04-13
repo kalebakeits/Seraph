@@ -5,6 +5,7 @@ export interface NapState {
   targetMs: number | null;
   hardCutoffSec: number | null;
   mode: 'manual' | 'auto' | null;
+  sleepStartTs: number | null; // ms; 0 = onset not yet detected
 }
 
 interface SeraphModuleInterface extends NativeModule {

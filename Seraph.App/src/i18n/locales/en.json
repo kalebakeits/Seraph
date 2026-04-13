@@ -294,7 +294,15 @@
     "cancelMessage": "This will stop the nap and restore your regular alarm.",
     "cancelConfirm": "Cancel nap",
     "errorTitle": "Could not start nap",
-    "errorMessage": "Something went wrong. Make sure your strap is connected and try again."
+    "errorMessage": "Something went wrong. Make sure your strap is connected and try again.",
+    "activeTitle": "Nap",
+    "progressLabel": "Nap progress",
+    "alarmLabel": "Until alarm",
+    "endNap": "End Nap",
+    "endTitle": "End nap?",
+    "endMessage": "Save to keep your sleep data, or discard to delete this session.",
+    "endSave": "Save nap",
+    "endDiscard": "Discard"
   },
   "workout": {
     "title": "Workout",

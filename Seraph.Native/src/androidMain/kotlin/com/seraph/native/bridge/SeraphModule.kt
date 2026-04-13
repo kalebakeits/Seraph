@@ -21,7 +21,6 @@ import com.facebook.react.bridge.ReadableMap
 import com.seraph.native.aggregation.OverlapException
 import com.seraph.native.db.DbHolder
 import com.seraph.native.db.DbKeyExport
-import com.seraph.native.recording.RecordingManager
 import com.seraph.native.recording.RecordingState
 import com.seraph.native.service.AlarmReceiver
 import com.seraph.native.service.ForegroundService
@@ -98,8 +97,8 @@ class SeraphModule(
                         }
                         if (event == Lifecycle.Event.ON_START) {
                             service?.uiOpen = true
-                            service?.orchestrator?.let {
-                                it.startSyncLoop()
+                            service?.syncLoopRunner?.let {
+                                it.start()
                                 it.triggerImmediately()
                             }
                             val svc = service
@@ -146,59 +145,45 @@ class SeraphModule(
         flowJobs.add(cm.connectionState.onEach { emitters.emitConnectionState(it) }.launchIn(scope))
 
         // Helper to subscribe to orchestrator flows
-        fun subscribeToOrchestrator(orc: com.seraph.native.sync.WorkOrchestrator) {
-            // Emit current orchestrator state immediately
-            emitters.emitSyncState(orc.state.value)
-
+        fun subscribeToRunners() {
+            val svc = service ?: return
+            emitters.emitSyncState(svc.syncRunner.state.value)
             orchestratorJobs.add(
-                orc.state
+                svc.syncRunner.state
                     .onEach { emitters.emitSyncState(it) }
                     .launchIn(scope),
             )
             orchestratorJobs.add(
-                orc.deviceEvents
+                svc.syncRunner.deviceEvents
                     .onEach { emitters.emitDeviceEvent(it) }
                     .launchIn(scope),
             )
             orchestratorJobs.add(
-                orc.trimAcked
+                svc.syncRunner.trimAcked
                     .onEach { trim ->
-                        emitters.emit(
-                            "onTrimUpdated",
-                            Arguments.createMap().apply {
-                                putInt("trimValue", trim)
-                            },
-                        )
+                        emitters.emit("onTrimUpdated", Arguments.createMap().apply { putInt("trimValue", trim) })
                     }.launchIn(scope),
             )
             orchestratorJobs.add(
-                orc.realtimeHR
+                svc.syncRunner.realtimeHR
                     .onEach { hr ->
-                        emitters.emit(
-                            "onRealtimeHR",
-                            Arguments.createMap().apply {
-                                putInt("hr", hr)
-                            },
-                        )
+                        emitters.emit("onRealtimeHR", Arguments.createMap().apply { putInt("hr", hr) })
                     }.launchIn(scope),
             )
-            orc.startSyncLoop()
-            orc.triggerImmediately()
+            svc.napRunner.onSleepOnset = { startTs -> emitters.emitNapSleepOnset(startTs) }
+            svc.syncLoopRunner.start()
+            svc.syncLoopRunner.triggerImmediately()
         }
 
-        // Subscribe to orchestrator if already connected
         if (cm.connectionState.value is ConnectionState.Connected) {
-            service?.orchestrator?.let { subscribeToOrchestrator(it) }
+            subscribeToRunners()
         }
 
         flowJobs.add(
             cm.connectionState
                 .onEach { state ->
                     when (state) {
-                        is ConnectionState.Connected ->
-                            service?.orchestrator?.let { subscribeToOrchestrator(it) }
-                        is ConnectionState.Disconnected, is ConnectionState.Error -> {}
-
+                        is ConnectionState.Connected -> subscribeToRunners()
                         else -> {}
                     }
                 }.launchIn(scope),
@@ -300,8 +285,8 @@ class SeraphModule(
     ) {
         scope.launch {
             try {
-                val orc =
-                    service?.orchestrator
+                val runner =
+                    service?.syncRunner
                         ?: run {
                             promise.reject("SERVICE_NOT_READY", "Service not started")
                             return@launch
@@ -312,7 +297,7 @@ class SeraphModule(
                     } else {
                         null
                     }
-                orc.requestSync(trim)
+                runner.requestSync(trim)
                 promise.resolve(null)
             } catch (e: Exception) {
                 promise.reject("SYNC_ERROR", e.message, e)
@@ -324,7 +309,7 @@ class SeraphModule(
     fun abortSync(promise: Promise) {
         scope.launch {
             try {
-                service?.orchestrator?.abortSync()
+                service?.syncRunner?.abortSync()
                 promise.resolve(null)
             } catch (e: Exception) {
                 promise.reject("ABORT_ERROR", e.message, e)
@@ -339,13 +324,13 @@ class SeraphModule(
     ) {
         scope.launch {
             try {
-                val orc =
-                    service?.orchestrator
+                val runner =
+                    service?.syncRunner
                         ?: run {
                             promise.reject("SERVICE_NOT_READY", "Service not started")
                             return@launch
                         }
-                orc.forceTrim(trimValue)
+                runner.forceTrim(trimValue)
                 promise.resolve(null)
             } catch (e: Exception) {
                 promise.reject("FORCE_TRIM_ERROR", e.message, e)
@@ -357,13 +342,13 @@ class SeraphModule(
     fun getLastTrim(promise: Promise) {
         scope.launch {
             try {
-                val orc =
-                    service?.orchestrator
+                val runner =
+                    service?.syncRunner
                         ?: run {
                             promise.resolve(null)
                             return@launch
                         }
-                val (trimVal, savedAt, r24Ts) = orc.getLastTrim()
+                val (trimVal, savedAt, r24Ts) = runner.getLastTrim()
                 if (trimVal == null) {
                     promise.resolve(null)
                 } else {
@@ -388,14 +373,14 @@ class SeraphModule(
     ) {
         scope.launch {
             try {
-                val orc =
-                    service?.orchestrator
+                val coordinator =
+                    service?.aggregationCoordinator
                         ?: run {
                             promise.reject("SERVICE_NOT_READY", "Service not started")
                             return@launch
                         }
                 val dates = (0 until datesArray.size()).mapNotNull { datesArray.getString(it) }
-                orc.reaggregate(dates)
+                coordinator.reaggregate(dates)
                 promise.resolve(null)
             } catch (e: Exception) {
                 promise.reject("REAGGREGATE_ERROR", e.message, e)
@@ -410,13 +395,13 @@ class SeraphModule(
     ) {
         scope.launch(Dispatchers.IO) {
             try {
-                val orc =
-                    awaitService()?.orchestrator
+                val coordinator =
+                    awaitService()?.aggregationCoordinator
                         ?: run {
                             promise.reject("SERVICE_NOT_READY", "Service not started")
                             return@launch
                         }
-                orc.recalcActivity(activityId.toLong())
+                coordinator.recalcActivity(activityId.toLong())
                 promise.resolve(null)
             } catch (e: OverlapException) {
                 promise.reject("OVERLAP_ACTIVITY", e.message, e)
@@ -433,13 +418,13 @@ class SeraphModule(
     ) {
         scope.launch(Dispatchers.IO) {
             try {
-                val orc =
-                    awaitService()?.orchestrator
+                val coordinator =
+                    awaitService()?.aggregationCoordinator
                         ?: run {
                             promise.reject("SERVICE_NOT_READY", "Service not started")
                             return@launch
                         }
-                orc.refreshDailyLoad(date)
+                coordinator.refreshDailyLoad(date)
                 promise.resolve(null)
             } catch (e: Exception) {
                 promise.reject("REFRESH_LOAD_ERROR", e.message, e)
@@ -454,13 +439,13 @@ class SeraphModule(
     ) {
         scope.launch(Dispatchers.IO) {
             try {
-                val orc =
-                    awaitService()?.orchestrator
+                val coordinator =
+                    awaitService()?.aggregationCoordinator
                         ?: run {
                             promise.reject("SERVICE_NOT_READY", "Service not started")
                             return@launch
                         }
-                orc.recalcSleep(sleepId.toLong())
+                coordinator.recalcSleep(sleepId.toLong())
                 promise.resolve(null)
             } catch (e: OverlapException) {
                 promise.reject("OVERLAP_SLEEP", e.message, e)
@@ -497,14 +482,14 @@ class SeraphModule(
             promise,
             fetch = { dev ->
                 val info = dev.getBattery() ?: return@cachedDeviceCall null
-                service?.orchestrator?.cachedBattery = info.level.toDouble()
+                service?.syncRunner?.cachedBattery = info.level.toDouble()
                 Arguments.createMap().apply {
                     putDouble("level", info.level.toDouble())
                     putInt("rawValue", info.rawValue)
                 }
             },
             fallback = {
-                val cached = service?.orchestrator?.cachedBattery ?: return@cachedDeviceCall null
+                val cached = service?.syncRunner?.cachedBattery ?: return@cachedDeviceCall null
                 Arguments.createMap().apply {
                     putDouble("level", cached)
                     putInt("rawValue", 0)
@@ -518,16 +503,16 @@ class SeraphModule(
             promise,
             fetch = { dev ->
                 val info = dev.getHello() ?: return@cachedDeviceCall null
-                service?.orchestrator?.cachedOnWrist = info.onWrist
-                service?.orchestrator?.cachedCharging = info.charging
+                service?.syncRunner?.cachedOnWrist = info.onWrist
+                service?.syncRunner?.cachedCharging = info.charging
                 Arguments.createMap().apply {
                     putBoolean("onWrist", info.onWrist)
                     putBoolean("charging", info.charging)
                 }
             },
             fallback = {
-                val onWrist = service?.orchestrator?.cachedOnWrist ?: return@cachedDeviceCall null
-                val charging = service?.orchestrator?.cachedCharging ?: return@cachedDeviceCall null
+                val onWrist = service?.syncRunner?.cachedOnWrist ?: return@cachedDeviceCall null
+                val charging = service?.syncRunner?.cachedCharging ?: return@cachedDeviceCall null
                 Arguments.createMap().apply {
                     putBoolean("onWrist", onWrist)
                     putBoolean("charging", charging)
@@ -563,19 +548,19 @@ class SeraphModule(
     @ReactMethod
     fun getAlarm(promise: Promise) {
         scope.launch {
-            val orc = service?.orchestrator
+            val runner = service?.syncRunner
             try {
                 val dev = service?.connectionManager?.device
                 if (dev != null) {
                     val sec = dev.getAlarm()
-                    orc?.cachedAlarm = sec
+                    runner?.cachedAlarm = sec
                     promise.resolve(if (sec == null || sec == 0) null else sec.toDouble())
                     return@launch
                 }
-                val cached = orc?.cachedAlarm
+                val cached = runner?.cachedAlarm
                 promise.resolve(if (cached == null || cached == 0) null else cached.toDouble())
             } catch (e: Exception) {
-                val cached = orc?.cachedAlarm
+                val cached = runner?.cachedAlarm
                 if (cached != null) {
                     promise.resolve(if (cached == 0) null else cached.toDouble())
                 } else {
@@ -687,10 +672,10 @@ class SeraphModule(
 
     // ── Workout Recording ─────────────────────────────────────────────────────
 
-    private fun recordingManager(promise: Promise): RecordingManager? {
-        val rm = service?.recordingManager
-        if (rm == null) promise.reject("SERVICE_NOT_READY", "Service not started")
-        return rm
+    private fun recordingRunner(promise: Promise): com.seraph.native.recording.RecordingRunner? {
+        val rr = service?.recordingRunner
+        if (rr == null) promise.reject("SERVICE_NOT_READY", "Service not started")
+        return rr
     }
 
     @ReactMethod
@@ -700,13 +685,8 @@ class SeraphModule(
     ) {
         scope.launch {
             try {
-                val rm = recordingManager(promise) ?: return@launch
-                val orc =
-                    service?.orchestrator ?: run {
-                        promise.reject("SERVICE_NOT_READY", "Orchestrator not ready")
-                        return@launch
-                    }
-                orc.startRecording(rm, sportLabel)
+                val rr = recordingRunner(promise) ?: return@launch
+                rr.start(sportLabel)
                 promise.resolve(null)
             } catch (e: Exception) {
                 promise.reject("RECORDING_ERROR", e.message, e)
@@ -718,7 +698,11 @@ class SeraphModule(
     fun pauseWorkoutRecording(promise: Promise) {
         scope.launch {
             try {
-                val rm = recordingManager(promise) ?: return@launch
+                val rm =
+                    service?.recordingManager ?: run {
+                        promise.reject("SERVICE_NOT_READY", "Service not started")
+                        return@launch
+                    }
                 rm.pause()
                 promise.resolve(null)
             } catch (e: Exception) {
@@ -731,7 +715,11 @@ class SeraphModule(
     fun resumeWorkoutRecording(promise: Promise) {
         scope.launch {
             try {
-                val rm = recordingManager(promise) ?: return@launch
+                val rm =
+                    service?.recordingManager ?: run {
+                        promise.reject("SERVICE_NOT_READY", "Service not started")
+                        return@launch
+                    }
                 rm.resume()
                 promise.resolve(null)
             } catch (e: Exception) {
@@ -744,13 +732,8 @@ class SeraphModule(
     fun stopWorkoutRecording(promise: Promise) {
         scope.launch {
             try {
-                val rm = recordingManager(promise) ?: return@launch
-                val orc =
-                    service?.orchestrator ?: run {
-                        promise.reject("SERVICE_NOT_READY", "Orchestrator not ready")
-                        return@launch
-                    }
-                val result = orc.stopRecording(rm)
+                val rr = recordingRunner(promise) ?: return@launch
+                val result = rr.stop()
                 if (result == null) {
                     promise.reject("NO_DATA", "No HR data captured")
                     return@launch
@@ -779,14 +762,8 @@ class SeraphModule(
     fun discardWorkoutRecording(promise: Promise) {
         scope.launch {
             try {
-                val rm = recordingManager(promise) ?: return@launch
-                val orc =
-                    service?.orchestrator ?: run {
-                        rm.discard()
-                        promise.resolve(null)
-                        return@launch
-                    }
-                orc.discardRecording(rm)
+                val rr = recordingRunner(promise) ?: return@launch
+                rr.discard()
                 promise.resolve(null)
             } catch (e: Exception) {
                 promise.reject("RECORDING_ERROR", e.message, e)
@@ -892,7 +869,7 @@ class SeraphModule(
     ) {
         scope.launch(Dispatchers.IO) {
             try {
-                service?.orchestrator?.abortSync()
+                service?.syncRunner?.abortSync()
                 val src = java.io.File(srcPath)
                 if (!src.exists()) {
                     promise.reject("IMPORT_ERROR", "File not found: $srcPath")
@@ -1032,13 +1009,13 @@ class SeraphModule(
     fun startNap(promise: Promise) {
         scope.launch {
             try {
-                val orc =
-                    awaitService()?.orchestrator
+                val svc =
+                    awaitService()
                         ?: run {
                             promise.reject("SERVICE_NOT_READY", "Service not started")
                             return@launch
                         }
-                orc.startNapMode()
+                svc.napRunner.start(svc.syncRunner.device)
                 promise.resolve(null)
             } catch (e: Exception) {
                 promise.reject("NAP_ERROR", e.message, e)
@@ -1054,13 +1031,12 @@ class SeraphModule(
     fun cancelNap(promise: Promise) {
         scope.launch {
             try {
-                val orc =
-                    awaitService()?.orchestrator
-                        ?: run {
-                            promise.reject("SERVICE_NOT_READY", "Service not started")
-                            return@launch
-                        }
-                orc.cancelNapMode()
+                awaitService()
+                    ?: run {
+                        promise.reject("SERVICE_NOT_READY", "Service not started")
+                        return@launch
+                    }
+                service?.napRunner?.cancel()
                 promise.resolve(null)
             } catch (e: Exception) {
                 promise.reject("NAP_ERROR", e.message, e)
@@ -1089,12 +1065,23 @@ class SeraphModule(
                         .getAppParameter("nap_hard_cutoff_sec")
                         .executeAsOneOrNull()
                         ?.toLongOrNull()
+                val today =
+                    java.time.LocalDate
+                        .now()
+                        .toString()
+                val napStartTs =
+                    db.seraphDbQueries
+                        .getOpenNapSleep(today)
+                        .executeAsList()
+                        .firstOrNull()
+                        ?.start_ts
                 promise.resolve(
                     Arguments.createMap().apply {
                         putBoolean("active", active)
                         if (targetMs != null) putDouble("targetMs", targetMs.toDouble()) else putNull("targetMs")
                         if (cutoffSec != null) putDouble("hardCutoffSec", cutoffSec.toDouble()) else putNull("hardCutoffSec")
                         if (mode != null && mode.isNotEmpty()) putString("mode", mode) else putNull("mode")
+                        if (napStartTs != null) putDouble("sleepStartTs", napStartTs.toDouble()) else putNull("sleepStartTs")
                     },
                 )
             } catch (e: Exception) {

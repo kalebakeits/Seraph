@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { OverviewTab } from './overview/OverviewTab';
 import { HomeHeader } from './components/HomeHeader';
@@ -12,6 +12,7 @@ import { useLastSynced } from '../../hooks/useLastSynced';
 import { useUnreadCount } from '../../hooks/useUnreadCount';
 import { todayISO, addDaysISO } from '../../utils/dateUtils';
 import { ActivityType } from '../../types/ActivityType';
+import { useNapState } from '../nap/hooks/useNapState';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>;
 
@@ -20,6 +21,15 @@ export const HomeScreen: React.FC = () => {
   const { isConnected, isConnecting, isSyncing, isAggregating, battery } = useDeviceStore();
   const lastSynced = useLastSynced();
   const unreadCount = useUnreadCount();
+  const { napState } = useNapState();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (napState.active) {
+        navigation.navigate('NapActive');
+      }
+    }, [napState.active, navigation]),
+  );
 
   let deviceState: DeviceState;
   if (isSyncing) {

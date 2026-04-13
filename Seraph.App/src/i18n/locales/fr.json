@@ -294,7 +294,15 @@
     "cancelMessage": "Cela arrêtera la sieste et restaurera votre alarme habituelle.",
     "cancelConfirm": "Annuler la sieste",
     "errorTitle": "Impossible de démarrer la sieste",
-    "errorMessage": "Une erreur s'est produite. Vérifiez que votre bracelet est connecté et réessayez."
+    "errorMessage": "Une erreur s'est produite. Vérifiez que votre bracelet est connecté et réessayez.",
+    "activeTitle": "Sieste",
+    "progressLabel": "Progression de la sieste",
+    "alarmLabel": "Avant le réveil",
+    "endNap": "Terminer la sieste",
+    "endTitle": "Terminer la sieste ?",
+    "endMessage": "Enregistrez pour conserver vos données de sommeil, ou supprimez cette session.",
+    "endSave": "Enregistrer",
+    "endDiscard": "Supprimer"
   },
   "workout": {
     "title": "Entraînement",

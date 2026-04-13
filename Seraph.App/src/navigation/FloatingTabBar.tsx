@@ -8,7 +8,12 @@ import { theme } from '../theme';
 import { SafeText } from '../components/common/SafeText';
 
 /** Screens where the floating tab bar should be hidden. */
-const HIDE_ON_SCREENS = new Set(['WorkoutDetail', 'RecordWorkout', 'SleepSessionDetail']);
+const HIDE_ON_SCREENS = new Set([
+  'WorkoutDetail',
+  'RecordWorkout',
+  'SleepSessionDetail',
+  'NapActive',
+]);
 
 function getFocusedLeafRoute(state: NavigationState): string | undefined {
   const route = state.routes[state.index];

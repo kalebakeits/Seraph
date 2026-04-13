@@ -1,7 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { nativeGetNapState, type NapState } from '../../../services/ble/nativeModule';
 
-const INACTIVE: NapState = { active: false, targetMs: null, hardCutoffSec: null, mode: null };
+const INACTIVE: NapState = {
+  active: false,
+  targetMs: null,
+  hardCutoffSec: null,
+  mode: null,
+  sleepStartTs: null,
+};
 
 export function useNapState() {
   const { data, refetch } = useQuery<NapState>({
@@ -13,7 +19,6 @@ export function useNapState() {
         return INACTIVE;
       }
     },
-    refetchInterval: 5000,
     initialData: INACTIVE,
   });
 

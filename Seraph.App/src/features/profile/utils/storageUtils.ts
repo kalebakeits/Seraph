@@ -1,5 +1,5 @@
 export const GRANULARITY_OPTIONS = [1, 2, 5, 10] as const;
-export type GranularitySeconds = typeof GRANULARITY_OPTIONS[number];
+export type GranularitySeconds = (typeof GRANULARITY_OPTIONS)[number];
 
 export const ROWS_PER_DAY: Record<GranularitySeconds, number> = {
   1: 86_400,
