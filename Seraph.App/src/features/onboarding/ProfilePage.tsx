@@ -42,7 +42,10 @@ export const ProfilePage: React.FC<Props> = ({ width, draft, setDraft }) => {
         timeZone: 'UTC',
       })
     : '';
-  const sleepDisplay = `${String(Math.floor(draft.sleep_goal_minutes / 60)).padStart(2, '0')}:${String(draft.sleep_goal_minutes % 60).padStart(2, '0')}`;
+  const sleepDisplay = `${String(Math.floor(draft.sleep_goal_minutes / 60)).padStart(
+    2,
+    '0',
+  )}:${String(draft.sleep_goal_minutes % 60).padStart(2, '0')}`;
 
   return (
     <PageContainer width={width} scrollable>

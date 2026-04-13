@@ -12,6 +12,7 @@
   <string name="notifications_types_workout_logged">Workout logged</string>
   <string name="notifications_types_update_available">Update available</string>
   <string name="notifications_types_announcement">Announcement</string>
+  <string name="notifications_announcement_body">Tap to view.</string>
 
   <!-- Notification body fragments (mirrors notifications.* in i18n) -->
   <string name="notifications_update_body">Version %s is ready to install.</string>

@@ -130,7 +130,18 @@ class ForegroundService : Service() {
             field = value
             notifications.onUiForeground(value)
             if (::notificationChannel.isInitialized) notificationChannel.isForegrounded = value
-            if (value) cancelPendingShutdown()
+            if (value) {
+                // UI came to foreground — drop the service notification, app is visible
+                cancelPendingShutdown()
+                stopForeground(STOP_FOREGROUND_REMOVE)
+            } else {
+                // UI went to background — if work is in progress, re-promote to foreground
+                // so Android doesn't kill us mid-sync
+                val orc = orchestrator
+                if (orc != null && orc.busy.value) {
+                    startForeground(NOTIFICATION_ID, notifications.buildInitialNotification())
+                }
+            }
         }
 
     private var idleShutdownJob: Job? = null
@@ -244,11 +255,16 @@ class ForegroundService : Service() {
     fun shutdownWhenIdle() {
         if (uiOpen) return
         val orc = orchestrator
+        if (orc?.napModeActive == true) {
+            log.i { "Nap active — deferring shutdown" }
+            return
+        }
         if (orc == null || !orc.busy.value) {
             log.i { "No work in progress — stopping service" }
             shutdown()
         } else {
-            log.i { "Work in progress — will stop when idle" }
+            log.i { "Work in progress — promoting to foreground and waiting for idle" }
+            startForeground(NOTIFICATION_ID, notifications.buildInitialNotification())
             idleShutdownJob?.cancel()
             idleShutdownJob =
                 scope.launch {
@@ -290,10 +306,10 @@ class ForegroundService : Service() {
             }.launchIn(scope)
 
         scope.launch {
-            orchestrator.fetchDeviceState()
-            val device = connectionManager.device
-            if (device != null) checkAlarm(device)
-            orchestrator.requestSync()
+            orchestrator.onConnectReady {
+                val device = connectionManager.device
+                if (device != null) checkAlarm(device)
+            }
         }
     }
 
@@ -321,10 +337,11 @@ class ForegroundService : Service() {
         cancelPendingShutdown()
         scope.launch {
             orchestrator?.stopSyncLoop()
-            connectionManager.disconnect()
+            // Drop the foreground notification — BLE stays connected, service stays alive
+            // as a bound service. Android will kill it under memory pressure if needed.
+            // WorkManager re-promotes via startForegroundService() on the next scheduled sync.
             stopForeground(STOP_FOREGROUND_REMOVE)
             notifications.cancelAll()
-            stopSelf()
         }
     }
 

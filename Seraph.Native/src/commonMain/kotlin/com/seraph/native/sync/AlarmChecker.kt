@@ -55,6 +55,9 @@ class AlarmChecker(
         deviceAlarmSec: Int?,
         isConnected: Boolean,
     ): AlarmAction {
+        // A nap has taken ownership of the device alarm — do not overwrite it.
+        if (!getPref("nap_mode").isNullOrEmpty()) return AlarmAction.None
+
         val nextAlarm = getNextAlarmSeconds() ?: return AlarmAction.None
 
         // Device already has the correct alarm set (within 60s tolerance for clock drift)

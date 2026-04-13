@@ -1015,6 +1015,94 @@ class SeraphModule(
         }
     }
 
+    // ── Nap ───────────────────────────────────────────────────────────────────
+
+    /**
+     * Begins a nap recording session.
+     *
+     * The app has already:
+     *   1. Inserted the sleep_events row (is_manual = 2) with start_ts and hard-cutoff end_ts.
+     *   2. Written nap_active_duration_ms, nap_hard_cutoff_sec, nap_mode to app_parameters.
+     *   3. Set the device alarm to the hard cutoff via setAlarm().
+     *
+     * This call switches the sync loop to fast cadence so the orchestrator can detect
+     * sleep onset and fire a haptic once the target sleep duration is accumulated.
+     */
+    @ReactMethod
+    fun startNap(promise: Promise) {
+        scope.launch {
+            try {
+                val orc =
+                    awaitService()?.orchestrator
+                        ?: run {
+                            promise.reject("SERVICE_NOT_READY", "Service not started")
+                            return@launch
+                        }
+                orc.startNapMode()
+                promise.resolve(null)
+            } catch (e: Exception) {
+                promise.reject("NAP_ERROR", e.message, e)
+            }
+        }
+    }
+
+    /**
+     * Cancels an active nap, clears nap state from app_parameters, and restores normal sync cadence.
+     * The regular device alarm will be re-synced on the next connect cycle by AlarmChecker.
+     */
+    @ReactMethod
+    fun cancelNap(promise: Promise) {
+        scope.launch {
+            try {
+                val orc =
+                    awaitService()?.orchestrator
+                        ?: run {
+                            promise.reject("SERVICE_NOT_READY", "Service not started")
+                            return@launch
+                        }
+                orc.cancelNapMode()
+                promise.resolve(null)
+            } catch (e: Exception) {
+                promise.reject("NAP_ERROR", e.message, e)
+            }
+        }
+    }
+
+    /**
+     * Returns the current nap state from app_parameters.
+     * Active fields are null when no nap is running.
+     */
+    @ReactMethod
+    fun getNapState(promise: Promise) {
+        scope.launch {
+            try {
+                val db = DbHolder.db
+                val mode = db.seraphDbQueries.getAppParameter("nap_mode").executeAsOneOrNull()
+                val active = !mode.isNullOrEmpty()
+                val targetMs =
+                    db.seraphDbQueries
+                        .getAppParameter("nap_active_duration_ms")
+                        .executeAsOneOrNull()
+                        ?.toLongOrNull()
+                val cutoffSec =
+                    db.seraphDbQueries
+                        .getAppParameter("nap_hard_cutoff_sec")
+                        .executeAsOneOrNull()
+                        ?.toLongOrNull()
+                promise.resolve(
+                    Arguments.createMap().apply {
+                        putBoolean("active", active)
+                        if (targetMs != null) putDouble("targetMs", targetMs.toDouble()) else putNull("targetMs")
+                        if (cutoffSec != null) putDouble("hardCutoffSec", cutoffSec.toDouble()) else putNull("hardCutoffSec")
+                        if (mode != null && mode.isNotEmpty()) putString("mode", mode) else putNull("mode")
+                    },
+                )
+            } catch (e: Exception) {
+                promise.reject("NAP_ERROR", e.message, e)
+            }
+        }
+    }
+
     // ── RN boilerplate ────────────────────────────────────────────────────────
 
     @ReactMethod fun addListener(eventName: String) {}

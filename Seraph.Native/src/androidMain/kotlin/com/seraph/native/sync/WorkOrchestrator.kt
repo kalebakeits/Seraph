@@ -21,25 +21,18 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Clock
 
 private val log = Logger.withTag("WorkOrchestrator")
-
-private const val SYNC_INTERVAL_MS = 15L * 60 * 1000
-
-private const val SYNC_TICK_MS = 5_000L
-private const val SYNC_RETRY_BACKOFF_MS = 30_000L
 
 /**
  * Owns all native work: BLE sync and re-aggregation.
@@ -84,6 +77,48 @@ class WorkOrchestrator(
         this.packetRouter = router
         this.onRawHistoricalPacket = onRawPacket
         this.onRealtimeHR = onRealtimeHR
+
+        // Resume or clear nap mode based on persisted DB state.
+        // The orchestrator self-configures on reconnect — ForegroundService stays unaware.
+        val napMode = db.seraphDbQueries.getAppParameter("nap_mode").executeAsOneOrNull()
+        val cutoffSec =
+            db.seraphDbQueries
+                .getAppParameter("nap_hard_cutoff_sec")
+                .executeAsOneOrNull()
+                ?.toLongOrNull()
+        val nowSec = Clock.System.now().toEpochMilliseconds() / 1000
+        when {
+            napMode.isNullOrEmpty() -> { /* no nap was active */ }
+            cutoffSec != null && cutoffSec > nowSec -> {
+                log.i { "Resuming nap mode on reconnect (cutoff in ${cutoffSec - nowSec}s)" }
+                syncLoopWorker.setStrategy(NapSyncStrategy(db, device))
+            }
+            else -> {
+                log.i { "Stale nap state on reconnect — clearing" }
+                db.seraphDbQueries.deleteAppParameter("nap_active_duration_ms")
+                db.seraphDbQueries.deleteAppParameter("nap_hard_cutoff_sec")
+                db.seraphDbQueries.deleteAppParameter("nap_mode")
+            }
+        }
+    }
+
+    /**
+     * Runs the full connect-time sequence — device state fetch, alarm check, and initial sync —
+     * under a single [busy] = true window so [shutdownWhenIdle] cannot fire mid-sequence.
+     *
+     * [checkAlarm] is supplied by [ForegroundService] because it needs access to the connected
+     * [Device] reference which the orchestrator already holds after [attachBle].
+     */
+    suspend fun onConnectReady(checkAlarm: suspend () -> Unit) {
+        workCount.incrementAndGet()
+        _busy.value = true
+        try {
+            fetchDeviceState()
+            checkAlarm()
+            requestSync()
+        } finally {
+            if (workCount.decrementAndGet() == 0) _busy.value = false
+        }
     }
 
     suspend fun fetchDeviceState() {
@@ -360,45 +395,55 @@ class WorkOrchestrator(
 
     // ── Sync loop ─────────────────────────────────────────────────────────────
 
-    private var syncLoopJob: Job? = null
+    // ── Sync loop ─────────────────────────────────────────────────────────────
 
-    @Volatile private var immediate = false
+    private val syncLoopWorker =
+        SyncLoopWorker(
+            scope = scope,
+            isBusy = { _state.value.let { it is SyncState.Syncing || it is SyncState.Aggregating } },
+            sync = { requestSync() },
+        )
 
-    fun startSyncLoop() {
-        if (syncLoopJob?.isActive == true) return
-        log.i { "SyncLoop started" }
-        syncLoopJob =
-            scope.launch {
-                var nextSync = System.currentTimeMillis() + SYNC_INTERVAL_MS
-                while (isActive) {
-                    delay(SYNC_TICK_MS)
-                    val state = _state.value
-                    if (state is SyncState.Syncing || state is SyncState.Aggregating) continue
-                    val due = System.currentTimeMillis() >= nextSync || immediate
-                    if (!due) continue
-                    immediate = false
-                    try {
-                        log.i { "Auto-sync triggering" }
-                        _busy.value = true
-                        requestSync()
-                        nextSync = System.currentTimeMillis() + SYNC_INTERVAL_MS
-                    } catch (e: Exception) {
-                        log.e(e) { "Auto-sync failed — backing off" }
-                        nextSync = System.currentTimeMillis() + SYNC_RETRY_BACKOFF_MS
-                    }
-                }
-            }
+    fun startSyncLoop() = syncLoopWorker.start()
+
+    fun stopSyncLoop() = syncLoopWorker.stop()
+
+    fun triggerImmediately() = syncLoopWorker.triggerImmediately()
+
+    // ── Nap mode ──────────────────────────────────────────────────────────────
+
+    /**
+     * Switches to [NapSyncStrategy], which syncs every 60 seconds and fires a haptic
+     * on the device once the nap sleep target (stored in app_parameters) is reached.
+     *
+     * Called after the app has already written the nap parameters to DB and set the
+     * hard-cutoff device alarm.
+     */
+    fun startNapMode() {
+        log.i { "Nap mode: starting" }
+        syncLoopWorker.setStrategy(NapSyncStrategy(db, device))
     }
 
-    fun stopSyncLoop() {
-        syncLoopJob?.cancel()
-        syncLoopJob = null
-        log.i { "SyncLoop stopped" }
+    /**
+     * Cancels an active nap by switching back to [NormalSyncStrategy].
+     * Clears nap state from app_parameters and restores the regular alarm.
+     * The [NapSyncStrategy] also calls this on itself when the goal is met.
+     */
+    fun cancelNapMode() {
+        log.i { "Nap mode: cancelling" }
+        syncLoopWorker.setStrategy(NormalSyncStrategy)
+        db.seraphDbQueries.deleteAppParameter("nap_active_duration_ms")
+        db.seraphDbQueries.deleteAppParameter("nap_hard_cutoff_sec")
+        db.seraphDbQueries.deleteAppParameter("nap_mode")
     }
 
-    fun triggerImmediately() {
-        immediate = true
-    }
+    /** True while [NapSyncStrategy] is active. Used by ForegroundService to defer idle shutdown. */
+    val napModeActive: Boolean
+        get() =
+            db.seraphDbQueries
+                .getAppParameter("nap_mode")
+                .executeAsOneOrNull()
+                ?.isNotEmpty() == true
 
     // ── Recording ─────────────────────────────────────────────────────────────
 

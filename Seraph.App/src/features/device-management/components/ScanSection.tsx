@@ -55,9 +55,9 @@ export const ScanSection: React.FC<ScanSectionProps> = ({
 
       {scannedDevices.length > 0 && (
         <View style={styles.devicesContainer}>
-          <Text
-            style={styles.devicesTitle}
-          >{`Found ${String(scannedDevices.length)} device(s) `}</Text>
+          <Text style={styles.devicesTitle}>{`Found ${String(
+            scannedDevices.length,
+          )} device(s) `}</Text>
           <DeviceList devices={scannedDevices} onSelectDevice={onSelectDevice} />
         </View>
       )}

@@ -16,7 +16,7 @@ export function useSleepHrTrend(anchorDate?: string) {
     queryFn: async (): Promise<DualAxisPoint[]> => {
       const sleeps = await sleepEventsRepository.getRange(from);
       // Primary sleep per date = lowest end_ts (first to end)
-      const byDate = new Map<string, (typeof sleeps)[0]>();
+      const byDate = new Map<string, typeof sleeps[0]>();
       for (const s of sleeps) {
         const existing = byDate.get(s.date);
         if (!existing || s.end_ts < existing.end_ts) byDate.set(s.date, s);

@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Modal, View, TouchableOpacity, Pressable, StyleSheet, Animated } from 'react-native';
+import React, { useState } from 'react';
+import { Modal, View, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeText } from '../../../../components/common/SafeText';
 import { LogActivitySheet } from './LogActivitySheet';
+import { NapSetupSheet } from '../../../nap/NapSetupSheet';
 import { theme } from '../../../../theme';
 import { ActivityType } from '../../../../types/ActivityType';
 import type { HomeStackParamList } from '../../../../navigation/HomeStackNavigator';
@@ -19,7 +20,7 @@ interface ActivityActionSheetProps {
   onClose: () => void;
 }
 
-type SubSheet = 'sleep' | 'workout' | null;
+type SubSheet = 'sleep' | 'workout' | 'nap' | null;
 
 export const ActivityActionSheet: React.FC<ActivityActionSheetProps> = ({
   selectedDate,
@@ -29,22 +30,6 @@ export const ActivityActionSheet: React.FC<ActivityActionSheetProps> = ({
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
   const [subSheet, setSubSheet] = useState<SubSheet>(null);
-
-  // Pulse animation for the Record button
-  const pulse = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    if (!isToday) return;
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1.06, duration: 800, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 1, duration: 800, useNativeDriver: true }),
-      ]),
-    );
-    anim.start();
-    return () => {
-      anim.stop();
-    };
-  }, [isToday, pulse]);
 
   if (subSheet === 'sleep') {
     return (
@@ -64,6 +49,10 @@ export const ActivityActionSheet: React.FC<ActivityActionSheetProps> = ({
         onClose={onClose}
       />
     );
+  }
+
+  if (subSheet === 'nap') {
+    return <NapSetupSheet onClose={onClose} />;
   }
 
   return (
@@ -92,6 +81,25 @@ export const ActivityActionSheet: React.FC<ActivityActionSheetProps> = ({
               <Ionicons name="chevron-forward" size={16} color={theme.colors.text.muted} />
             </TouchableOpacity>
 
+            {isToday && (
+              <>
+                <View style={styles.divider} />
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  activeOpacity={0.75}
+                  onPress={() => {
+                    setSubSheet('nap');
+                  }}
+                >
+                  <View style={[styles.iconCircle, { backgroundColor: 'rgba(81,181,239,0.12)' }]}>
+                    <Ionicons name="bed-outline" size={20} color={theme.colors.sleep} />
+                  </View>
+                  <SafeText style={styles.actionLabel}>{t('nap.startNap')}</SafeText>
+                  <Ionicons name="chevron-forward" size={16} color={theme.colors.text.muted} />
+                </TouchableOpacity>
+              </>
+            )}
+
             <View style={styles.divider} />
 
             <TouchableOpacity
@@ -111,24 +119,22 @@ export const ActivityActionSheet: React.FC<ActivityActionSheetProps> = ({
             {isToday && (
               <>
                 <View style={styles.divider} />
-                <Animated.View style={{ transform: [{ scale: pulse }] }}>
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.recordBtn]}
-                    activeOpacity={0.75}
-                    onPress={() => {
-                      onClose();
-                      navigation.navigate('RecordWorkout');
-                    }}
-                  >
-                    <View style={[styles.iconCircle, { backgroundColor: 'rgba(245,87,108,0.22)' }]}>
-                      <Ionicons name="radio-button-on" size={20} color={theme.colors.strain} />
-                    </View>
-                    <SafeText style={[styles.actionLabel, { color: theme.colors.strain }]}>
-                      {t('activities.recordWorkout')}
-                    </SafeText>
-                    <Ionicons name="chevron-forward" size={16} color={theme.colors.strain} />
-                  </TouchableOpacity>
-                </Animated.View>
+                <TouchableOpacity
+                  style={[styles.actionBtn, styles.recordBtn]}
+                  activeOpacity={0.75}
+                  onPress={() => {
+                    onClose();
+                    navigation.navigate('RecordWorkout');
+                  }}
+                >
+                  <View style={[styles.iconCircle, { backgroundColor: 'rgba(245,87,108,0.22)' }]}>
+                    <Ionicons name="radio-button-on" size={20} color={theme.colors.strain} />
+                  </View>
+                  <SafeText style={[styles.actionLabel, { color: theme.colors.strain }]}>
+                    {t('activities.recordWorkout')}
+                  </SafeText>
+                  <Ionicons name="chevron-forward" size={16} color={theme.colors.strain} />
+                </TouchableOpacity>
               </>
             )}
 

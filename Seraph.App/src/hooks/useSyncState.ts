@@ -35,7 +35,7 @@ export function useSyncState(): SyncState {
       setState({
         status: event.status,
         packetsReceived: event.status === 'syncing' ? event.packetsReceived : 0,
-        latestDate: event.status === 'syncing' ? (event.latestDate ?? null) : null,
+        latestDate: event.status === 'syncing' ? event.latestDate ?? null : null,
         affectedDates: event.status === 'complete' ? event.affectedDates : [],
         error: event.status === 'error' ? event.message : null,
         isSyncing,

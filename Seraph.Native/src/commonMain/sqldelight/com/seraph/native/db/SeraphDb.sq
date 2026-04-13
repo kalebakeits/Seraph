@@ -226,8 +226,40 @@ SELECT end_ts FROM sleep_events WHERE date = :date AND finalized = 1 ORDER BY en
 getOpenSleep:
 SELECT * FROM sleep_events WHERE date = :date AND finalized = 0 AND sleep_edited = 0 AND is_manual = 0 ORDER BY id DESC LIMIT 1;
 
+-- is_manual = 1: user-edited sleep
 getOpenEditedSleep:
 SELECT * FROM sleep_events WHERE date = :date AND finalized = 0 AND (sleep_edited = 1 OR is_manual = 1) ORDER BY id ASC;
+
+-- Nap sessions: is_manual = 2 (simple) and is_manual = 3 (smart). Both use NapSessionStrategy —
+-- onset-detected start_ts, end_ts advances with sleep bytes, never self-closes on a fixed boundary.
+getOpenNapSleep:
+SELECT * FROM sleep_events WHERE date = :date AND finalized = 0 AND (is_manual = 2 OR is_manual = 3) ORDER BY id ASC;
+
+-- Smart nap: set start_ts on first sleep byte (onset detection), accumulate HR/HRV
+setNapOnset:
+UPDATE sleep_events
+SET start_ts = :start_ts,
+    end_ts = :end_ts,
+    hr_sum = hr_sum + :hr_sum,
+    hr_count = hr_count + :hr_count,
+    avg_hr = CASE WHEN hr_count + :hr_count > 0 THEN (hr_sum + :hr_sum) / (hr_count + :hr_count) ELSE NULL END,
+    hrv_sq_sum = hrv_sq_sum + :hrv_sq_sum,
+    hrv_count = hrv_count + :hrv_count,
+    pending_awake_ms = 0
+WHERE id = :id AND finalized = 0;
+
+-- Smart nap: extend end_ts on each sleep byte (including past hard cutoff if user ignores alarm)
+extendNapSleep:
+UPDATE sleep_events
+SET end_ts = :end_ts,
+    awake_minutes = awake_minutes + (pending_awake_ms / 60000),
+    pending_awake_ms = 0,
+    hr_sum = hr_sum + :hr_sum,
+    hr_count = hr_count + :hr_count,
+    avg_hr = CASE WHEN hr_count + :hr_count > 0 THEN (hr_sum + :hr_sum) / (hr_count + :hr_count) ELSE NULL END,
+    hrv_sq_sum = hrv_sq_sum + :hrv_sq_sum,
+    hrv_count = hrv_count + :hrv_count
+WHERE id = :id AND finalized = 0;
 
 getAllOpenSleeps:
 SELECT * FROM sleep_events WHERE finalized = 0 AND sleep_edited = 0 AND is_manual = 0 ORDER BY start_ts ASC;
@@ -247,7 +279,7 @@ hasSleepOverlapRange:
 SELECT COUNT(*) FROM sleep_events
 WHERE id != :excludeId
   AND start_ts < :end_ts AND end_ts > :start_ts
-  AND (finalized = 1 OR sleep_edited = 1 OR is_manual = 1);
+  AND (finalized = 1 OR sleep_edited = 1 OR is_manual >= 1);
 
 -- Prepares all manual/edited sleep sessions for a date for a force re-agg pass:
 -- unfinalizes and zeros all accumulators so HR/HRV are not double-counted.
@@ -257,12 +289,12 @@ SET finalized = 0,
     hr_sum = 0, hr_count = 0, hrv_sq_sum = 0, hrv_count = 0,
     awake_minutes = 0, pending_awake_ms = 0,
     skin_temp_sum = 0, skin_temp_count = 0
-WHERE date = :date AND (sleep_edited = 1 OR is_manual = 1);
+WHERE date = :date AND (sleep_edited = 1 OR is_manual >= 1);
 
 -- Returns count > 0 if any user-edited or manual sleep overlaps the given timestamp
 hasSleepEditedOverlap:
 SELECT COUNT(*) FROM sleep_events
-WHERE (sleep_edited = 1 OR is_manual = 1)
+WHERE (sleep_edited = 1 OR is_manual >= 1)
   AND start_ts <= :ts AND end_ts >= :ts;
 
 -- ─── activity_events ──────────────────────────────────────────────────────────
@@ -398,6 +430,9 @@ INSERT OR REPLACE INTO app_parameters(key, value, updated_at) VALUES (?, ?, ?);
 
 getAppParameterRow:
 SELECT key, value AS paramValue, updated_at FROM app_parameters WHERE key = ?;
+
+deleteAppParameter:
+DELETE FROM app_parameters WHERE key = ?;
 
 queryR24BySequence:
 SELECT timestamp FROM r24 WHERE sequence = (? % 256) ORDER BY timestamp DESC LIMIT 1;

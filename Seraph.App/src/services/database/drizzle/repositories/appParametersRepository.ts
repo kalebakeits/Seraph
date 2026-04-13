@@ -28,7 +28,12 @@ export type AppParameter =
   // Computed baselines (written by Native)
   | 'baseline_max_hr'
   | 'onboarding_complete'
-  | 'language';
+  | 'language'
+  // Nap recording state (written by app, read by NapSyncStrategy)
+  | 'nap_active_duration_ms'   // target sleep duration in ms; presence = nap active
+  | 'nap_hard_cutoff_sec'      // unix seconds — device alarm / hard deadline
+  | 'nap_mode'                 // "manual" | "auto" — active nap session state
+  | 'nap_default_mode';        // "simple" | "smart" — remembered UI preference
 
 class AppParametersRepository {
   async get(key: AppParameter): Promise<string | null> {

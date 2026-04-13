@@ -134,7 +134,7 @@ export function NotificationCenterScreen() {
             detail =
               item.type === 'update_available' && payload.version
                 ? t('notifications.updateBody', { version: payload.version })
-                : (payload.message ?? '');
+                : payload.message ?? '';
           } else {
             const scoreLabel =
               payload.score != null ? t('notifications.score', { value: payload.score }) : '';
