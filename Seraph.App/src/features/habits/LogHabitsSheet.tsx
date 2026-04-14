@@ -10,6 +10,7 @@ import { HabitRow } from './components/HabitRow';
 import { useActiveHabits } from './hooks/useActiveHabits';
 import { useHabitLogs } from './hooks/useHabitLogs';
 import { habitLogsRepository } from '../../services/database/drizzle';
+import { navigationRef } from '../../navigation/navigationRef';
 import { theme } from '../../theme';
 
 interface LogHabitsSheetProps {
@@ -108,6 +109,19 @@ export const LogHabitsSheet: React.FC<LogHabitsSheetProps> = ({ selectedDate, on
                 <SafeText style={styles.dateValue}>{dateLabel}</SafeText>
                 <Ionicons name="chevron-down" size={14} color={theme.colors.text.muted} />
               </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.chooseBtn}
+              onPress={() => {
+                if (navigationRef.isReady()) {
+                  navigationRef.navigate('ChooseHabits' as never);
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="options-outline" size={16} color={theme.colors.recovery} />
+              <SafeText style={styles.chooseBtnText}>{t('habits.chooseHabits')}</SafeText>
             </TouchableOpacity>
 
             {habits.length === 0 ? (
@@ -215,6 +229,19 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.sizes.md,
     fontWeight: theme.typography.weights.semibold,
     color: theme.colors.text.primary,
+  },
+  chooseBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    alignSelf: 'flex-end',
+    paddingVertical: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
+  },
+  chooseBtnText: {
+    fontSize: theme.typography.sizes.sm,
+    color: theme.colors.recovery,
+    fontWeight: theme.typography.weights.semibold,
   },
   list: {
     marginBottom: theme.spacing.md,

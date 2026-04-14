@@ -189,7 +189,8 @@
     "trendSleepAwake": "Time Awake Trends",
     "trendRecovery": "Recovery Trends",
     "trendStrain": "Strain Trends",
-    "notificationCenter": "Notifications"
+    "notificationCenter": "Notifications",
+    "chooseHabits": "Choose Habits"
   },
   "strain": {
     "pageHelper": "The cardiovascular load you've put on your body today. Builds up with any activity that raises your heart rate above rest.",
@@ -572,6 +573,14 @@
     "noActiveHabits": "No habits selected.",
     "noActiveHabitsHint": "Tap Choose Habits to pick what you want to track.",
     "save": "Save",
+    "chooseHint": "{{count}} selected. Pick the habits you want to log each day.",
+    "tooManyTitle": "That's a lot",
+    "tooManyMessage": "Try to keep it under 15. Fewer habits means cleaner data.",
+    "type": {
+      "boolean": "Yes / No",
+      "count": "Count",
+      "duration": "Duration"
+    },
     "unit": {
       "cups": "cups",
       "cans": "cans",

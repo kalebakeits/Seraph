@@ -189,7 +189,8 @@
     "trendSleepAwake": "Tendances d'éveil nocturne",
     "trendRecovery": "Tendances de récupération",
     "trendStrain": "Tendances d'effort",
-    "notificationCenter": "Notifications"
+    "notificationCenter": "Notifications",
+    "chooseHabits": "Choisir des habitudes"
   },
   "strain": {
     "pageHelper": "La charge cardiovasculaire accumulée aujourd'hui. Augmente avec toute activité qui élève votre fréquence cardiaque au-dessus du repos.",
@@ -572,6 +573,14 @@
     "noActiveHabits": "Aucune habitude sélectionnée.",
     "noActiveHabitsHint": "Appuyez sur Choisir des habitudes pour commencer.",
     "save": "Enregistrer",
+    "chooseHint": "{{count}} sélectionnées. Choisissez les habitudes à noter chaque jour.",
+    "tooManyTitle": "C'est beaucoup",
+    "tooManyMessage": "Essayez de rester sous 15. Moins d'habitudes, meilleures sont les données.",
+    "type": {
+      "boolean": "Oui / Non",
+      "count": "Quantité",
+      "duration": "Durée"
+    },
     "unit": {
       "cups": "tasses",
       "cans": "canettes",

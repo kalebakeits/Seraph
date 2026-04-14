@@ -28,6 +28,7 @@ import { RecordWorkoutScreen } from '../features/record-workout/RecordWorkoutScr
 import { NotificationCenterScreen } from '../features/notifications/NotificationCenterScreen';
 import { SystemNotificationDetailScreen } from '../features/notifications/SystemNotificationDetailScreen';
 import { NapActiveScreen } from '../features/nap/NapActiveScreen';
+import { ChooseHabitsScreen } from '../features/habits/ChooseHabitsScreen';
 
 export interface HomeStackParamList {
   [key: string]: object | undefined;
@@ -58,6 +59,7 @@ export interface HomeStackParamList {
   NotificationCenter: undefined;
   SystemNotificationDetail: { contentId: string | undefined; title: string; type: string };
   NapActive: undefined;
+  ChooseHabits: undefined;
 }
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -235,6 +237,15 @@ export const HomeStackNavigator: React.FC = () => {
         options={{
           headerShown: false,
           presentation: 'fullScreenModal',
+        }}
+      />
+      <Stack.Screen
+        name="ChooseHabits"
+        component={ChooseHabitsScreen}
+        options={{
+          presentation: 'modal',
+          headerTitle: t('nav.chooseHabits'),
+          headerBackTitle: '',
         }}
       />
     </Stack.Navigator>
