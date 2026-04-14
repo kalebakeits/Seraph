@@ -10,7 +10,7 @@ interface TimePickerProps {
 }
 
 /**
- * Wrapper around react-native-date-picker for time selection
+ * Wrapper around react-native-date-picker for date-time selection
  * Makes it easy to swap out the underlying picker library
  */
 export const TimePicker: React.FC<TimePickerProps> = ({
@@ -23,7 +23,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   return (
     <DatePicker
       modal
-      mode="time"
+      mode="datetime"
       date={time}
       open={open}
       onConfirm={date => {
