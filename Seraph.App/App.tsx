@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { useAutoConnect } from './src/hooks/useAutoConnect';
 import { initDb, appParametersRepository } from './src/services/database/drizzle';
+import { seedHabitsIfNeeded } from './src/features/habits/utils/seedHabits';
 import { useDeviceInit } from './src/hooks/useDeviceInit';
 import { useSyncState } from './src/hooks/useSyncState';
 import { useNotificationPermission } from './src/hooks/useNotificationPermission';
@@ -73,6 +74,7 @@ export default Sentry.wrap(function App() {
         if (!savedLang) {
           await appParametersRepository.set('language', i18n.language.slice(0, 2));
         }
+        await seedHabitsIfNeeded();
         const onboarded = await appParametersRepository.get('onboarding_complete');
         setAppState(onboarded === '1' ? 'ready' : 'onboarding');
       })

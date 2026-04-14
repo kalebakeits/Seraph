@@ -5,16 +5,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeText } from '../../components/common/SafeText';
 import { theme } from '../../theme';
 
-export const CoachScreen: React.FC = () => {
+export const InsightsScreen: React.FC = () => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 16 }]}>
-      <SafeText style={styles.screenTitle}>{t('nav.coach')}</SafeText>
+      <SafeText style={styles.screenTitle}>{t('nav.insights')}</SafeText>
       <View style={styles.comingSoon}>
         <SafeText style={styles.comingSoonText}>{t('comingSoon.title')}</SafeText>
-        <SafeText style={styles.comingSoonSub}>{t('comingSoon.coach')}</SafeText>
+        <SafeText style={styles.comingSoonSub}>{t('comingSoon.insights')}</SafeText>
       </View>
     </View>
   );

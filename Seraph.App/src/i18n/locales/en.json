@@ -12,7 +12,10 @@
     "low": "Low",
     "strainTrends": "Strain Trends",
     "sevenDayStrain": "7-Day Strain",
-    "tap": "Tap to change"
+    "tap": "Tap to change",
+    "yes": "Yes",
+    "no": "No",
+    "save": "Save"
   },
   "sleep": {
     "pageHelper": "How you slept, night by night. Time asleep and how consistently you go to bed and wake up.",
@@ -162,11 +165,11 @@
   "comingSoon": {
     "title": "Coming Soon",
     "recovery": "Recovery details are on the way.",
-    "coach": "Personalized insights are on the way."
+    "insights": "Personalized insights are on the way."
   },
   "nav": {
     "home": "Home",
-    "coach": "Coach",
+    "insights": "Insights",
     "sleep": "Sleep",
     "recovery": "Recovery",
     "strain": "Strain",
@@ -560,6 +563,44 @@
     "syncedToDevice": "On device",
     "notSyncedToDevice": "Not synced",
     "basedOnSleepNeed": "Based on {{duration}} sleep need"
+  },
+  "habits": {
+    "logHabits": "Log Habits",
+    "chooseHabits": "Choose Habits",
+    "addCustom": "Add Custom",
+    "date": "Date",
+    "noActiveHabits": "No habits selected.",
+    "noActiveHabitsHint": "Tap Choose Habits to pick what you want to track.",
+    "save": "Save",
+    "unit": {
+      "cups": "cups",
+      "cans": "cans",
+      "servings": "servings",
+      "minutes": "min",
+      "drinks": "drinks"
+    },
+    "catalog": {
+      "noScreensBeforeBed": "No screens before bed",
+      "heavyMealBeforeBed": "Heavy meal before bed",
+      "caffeine": "Caffeine",
+      "preworkout": "Pre-workout",
+      "energyDrink": "Energy drink",
+      "alcohol": "Alcohol",
+      "strengthTraining": "Strength training",
+      "cardio": "Cardio",
+      "fastedTraining": "Fasted training",
+      "restDay": "Rest day",
+      "stretching": "Stretching",
+      "coldPlunge": "Cold plunge",
+      "sauna": "Sauna",
+      "massage": "Massage",
+      "meditation": "Meditation",
+      "journaling": "Journaling",
+      "highStress": "High stress day",
+      "creatine": "Creatine",
+      "cannabis": "Cannabis",
+      "nicotine": "Nicotine"
+    }
   },
   "notifications": {
     "title": "Notifications",

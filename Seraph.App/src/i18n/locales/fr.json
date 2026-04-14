@@ -12,7 +12,10 @@
     "low": "Faible",
     "strainTrends": "Tendances d'effort",
     "sevenDayStrain": "Effort 7 jours",
-    "tap": "Appuyer pour modifier"
+    "tap": "Appuyer pour modifier",
+    "yes": "Oui",
+    "no": "Non",
+    "save": "Enregistrer"
   },
   "sleep": {
     "pageHelper": "Comment vous avez dormi, nuit après nuit. Temps de sommeil et régularité de vos horaires.",
@@ -162,11 +165,11 @@
   "comingSoon": {
     "title": "Bientôt disponible",
     "recovery": "Les détails de récupération arrivent bientôt.",
-    "coach": "Des conseils personnalisés arrivent bientôt."
+    "insights": "Des analyses personnalisées arrivent bientôt."
   },
   "nav": {
     "home": "Accueil",
-    "coach": "Coach",
+    "insights": "Analyses",
     "sleep": "Sommeil",
     "recovery": "Récupération",
     "strain": "Effort",
@@ -560,6 +563,44 @@
     "syncedToDevice": "Sur l'appareil",
     "notSyncedToDevice": "Non synchronisé",
     "basedOnSleepNeed": "Basé sur {{duration}} de sommeil"
+  },
+  "habits": {
+    "logHabits": "Journal",
+    "chooseHabits": "Choisir des habitudes",
+    "addCustom": "Ajouter",
+    "date": "Date",
+    "noActiveHabits": "Aucune habitude sélectionnée.",
+    "noActiveHabitsHint": "Appuyez sur Choisir des habitudes pour commencer.",
+    "save": "Enregistrer",
+    "unit": {
+      "cups": "tasses",
+      "cans": "canettes",
+      "servings": "doses",
+      "minutes": "min",
+      "drinks": "verres"
+    },
+    "catalog": {
+      "noScreensBeforeBed": "Pas d'écran avant de dormir",
+      "heavyMealBeforeBed": "Repas lourd avant de dormir",
+      "caffeine": "Caféine",
+      "preworkout": "Pré-entraînement",
+      "energyDrink": "Boisson énergisante",
+      "alcohol": "Alcool",
+      "strengthTraining": "Musculation",
+      "cardio": "Cardio",
+      "fastedTraining": "Entraînement à jeun",
+      "restDay": "Jour de repos",
+      "stretching": "Étirements",
+      "coldPlunge": "Bain froid",
+      "sauna": "Sauna",
+      "massage": "Massage",
+      "meditation": "Méditation",
+      "journaling": "Journaling",
+      "highStress": "Journée stressante",
+      "creatine": "Créatine",
+      "cannabis": "Cannabis",
+      "nicotine": "Nicotine"
+    }
   },
   "notifications": {
     "title": "Notifications",

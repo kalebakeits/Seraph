@@ -8,7 +8,7 @@ import { FloatingTabBar } from './FloatingTabBar';
 import { HomeStackNavigator } from './HomeStackNavigator';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
 import { useDeviceInit } from '../hooks/useDeviceInit';
-import { CoachScreen } from '../features/coach/CoachScreen';
+import { InsightsScreen } from '../features/coach/InsightsScreen';
 import { navigationRef } from './navigationRef';
 import { seraphEmitter } from '../services/ble/nativeModule';
 
@@ -82,10 +82,10 @@ export const RootNavigator: React.FC = () => {
             }}
           />
           <Tab.Screen
-            name="Coach"
-            component={CoachScreen}
+            name="Insights"
+            component={InsightsScreen}
             options={{
-              tabBarLabel: t('nav.coach'),
+              tabBarLabel: t('nav.insights'),
             }}
           />
           <Tab.Screen

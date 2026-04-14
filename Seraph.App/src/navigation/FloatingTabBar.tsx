@@ -29,7 +29,7 @@ interface TabConfig {
 
 const TAB_CONFIG: TabConfig[] = [
   { route: 'Home', icon: 'home-outline', iconActive: 'home' },
-  { route: 'Coach', icon: 'sparkles-outline', iconActive: 'sparkles' },
+  { route: 'Insights', icon: 'sparkles-outline', iconActive: 'sparkles' },
   { route: 'Settings', icon: 'settings-outline', iconActive: 'settings' },
 ];
 

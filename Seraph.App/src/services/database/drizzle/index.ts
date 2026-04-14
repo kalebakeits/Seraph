@@ -7,3 +7,5 @@ export { dailyAggregationsRepository } from './repositories/dailyAggregationsRep
 export { sleepEventsRepository } from './repositories/sleepEventsRepository';
 export { activityEventsRepository } from './repositories/activityEventsRepository';
 export { notificationsRepository } from './repositories/notificationsRepository';
+export { habitDefinitionsRepository } from './repositories/habitDefinitionsRepository';
+export { habitLogsRepository } from './repositories/habitLogsRepository';
