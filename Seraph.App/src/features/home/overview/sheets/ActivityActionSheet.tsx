@@ -49,7 +49,6 @@ export const ActivityActionSheet: React.FC<ActivityActionSheetProps> = ({
     };
   }, [isToday, pulse]);
 
-
   if (subSheet === 'sleep') {
     return (
       <LogActivitySheet

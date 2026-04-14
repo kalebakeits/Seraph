@@ -15,7 +15,7 @@ export const HabitCatalogRow: React.FC<HabitCatalogRowProps> = ({ habit, onToggl
   const { t } = useTranslation();
   const active = habit.is_active === 1;
 
-  const label = habit.is_manual === 1 ? habit.name_custom ?? '' : t(habit.name_key ?? '');
+  const label = habit.is_manual === 1 ? (habit.name_custom ?? '') : t(habit.name_key ?? '');
 
   const typeLabel = t(`habits.type.${habit.type}`);
 
