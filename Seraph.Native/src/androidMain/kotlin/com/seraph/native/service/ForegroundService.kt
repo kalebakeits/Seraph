@@ -147,6 +147,7 @@ class ForegroundService : Service() {
 
     private var idleShutdownJob: Job? = null
     private var headlessTimeoutJob: Job? = null
+    private var syncStateJob: Job? = null
 
     var onInAppNotification: ((type: String, payload: String?) -> Unit)? = null
 
@@ -308,6 +309,8 @@ class ForegroundService : Service() {
     }
 
     override fun onDestroy() {
+        syncStateJob?.cancel()
+        syncStateJob = null
         scope.cancel()
         super.onDestroy()
     }
@@ -318,11 +321,14 @@ class ForegroundService : Service() {
         headlessTimeoutJob?.cancel()
         headlessTimeoutJob = null
 
-        syncRunner.state
-            .onEach { state ->
-                notifications.onSyncState(state)
-                if (state is SyncState.Complete) doPostSyncWork(state)
-            }.launchIn(scope)
+        if (syncStateJob?.isActive == true) return
+
+        syncStateJob =
+            syncRunner.state
+                .onEach { state ->
+                    notifications.onSyncState(state)
+                    if (state is SyncState.Complete) doPostSyncWork(state)
+                }.launchIn(scope)
 
         scope.launch {
             syncRunner.onConnectReady {
