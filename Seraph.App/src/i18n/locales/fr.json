@@ -573,9 +573,7 @@
     "noActiveHabits": "Aucune habitude sélectionnée.",
     "noActiveHabitsHint": "Appuyez sur Choisir des habitudes pour commencer.",
     "save": "Enregistrer",
-    "chooseHint": "{{count}} sélectionnées. Choisissez les habitudes à noter chaque jour.",
-    "tooManyTitle": "C'est beaucoup",
-    "tooManyMessage": "Essayez de rester sous 15. Moins d'habitudes, meilleures sont les données.",
+    "chooseHint": "Choisissez les habitudes à noter chaque jour.",
     "type": {
       "boolean": "Oui / Non",
       "count": "Quantité",
@@ -589,7 +587,7 @@
       "drinks": "verres"
     },
     "catalog": {
-      "noScreensBeforeBed": "Pas d'écran avant de dormir",
+      "noScreensBeforeBed": "Écran avant de dormir",
       "heavyMealBeforeBed": "Repas lourd avant de dormir",
       "caffeine": "Caféine",
       "preworkout": "Pré-entraînement",

@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { Modal, View, TouchableOpacity, Pressable, ScrollView, StyleSheet } from 'react-native';
+import {
+  Modal,
+  View,
+  TouchableOpacity,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Platform,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
@@ -79,7 +87,13 @@ export const LogHabitsSheet: React.FC<LogHabitsSheetProps> = ({ selectedDate, on
 
   return (
     <>
-      <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+      <Modal
+        visible
+        transparent
+        animationType="slide"
+        onRequestClose={onClose}
+        statusBarTranslucent={Platform.OS === 'android'}
+      >
         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
           <Pressable
             style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}
@@ -130,7 +144,12 @@ export const LogHabitsSheet: React.FC<LogHabitsSheetProps> = ({ selectedDate, on
                 <SafeText style={styles.emptyHint}>{t('habits.noActiveHabitsHint')}</SafeText>
               </View>
             ) : (
-              <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
+              <ScrollView
+                style={styles.list}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
                 {habits.map(habit => (
                   <HabitRow
                     key={habit.id}
@@ -186,7 +205,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: theme.borderRadius.xl,
     borderTopRightRadius: theme.borderRadius.xl,
     padding: theme.spacing.lg,
-    maxHeight: '80%',
+    maxHeight: '85%',
+    flexShrink: 1,
   },
   header: {
     flexDirection: 'row',
@@ -244,7 +264,12 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.weights.semibold,
   },
   list: {
+    flexGrow: 1,
+    flexShrink: 1,
     marginBottom: theme.spacing.md,
+  },
+  listContent: {
+    flexGrow: 1,
   },
   empty: {
     paddingVertical: theme.spacing.xl,

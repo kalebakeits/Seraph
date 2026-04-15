@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -17,24 +17,7 @@ export function ChooseHabitsScreen() {
   const { data: habits = [] } = useAllHabits();
   const [pending, setPending] = useState<Record<number, boolean>>({});
 
-  const activeCount = habits.filter(h => {
-    if (h.id in pending) return pending[h.id];
-    return h.is_active === 1;
-  }).length;
-
   const handleToggle = (id: number, active: boolean) => {
-    const wouldBeActive = habits.filter(h => {
-      const hId = h.id;
-      if (hId === id) return active;
-      if (hId in pending) return pending[hId];
-      return h.is_active === 1;
-    }).length;
-
-    if (wouldBeActive > 15) {
-      Alert.alert(t('habits.tooManyTitle'), t('habits.tooManyMessage'));
-      return;
-    }
-
     setPending(prev => ({ ...prev, [id]: active }));
   };
 
@@ -58,9 +41,7 @@ export function ChooseHabitsScreen() {
         keyExtractor={item => String(item.id)}
         renderItem={({ item }) => <HabitCatalogRow habit={item} onToggle={handleToggle} />}
         contentContainerStyle={styles.list}
-        ListHeaderComponent={
-          <SafeText style={styles.hint}>{t('habits.chooseHint', { count: activeCount })}</SafeText>
-        }
+        ListHeaderComponent={<SafeText style={styles.hint}>{t('habits.chooseHint')}</SafeText>}
         ListFooterComponent={
           <TouchableOpacity
             style={styles.addCustomBtn}

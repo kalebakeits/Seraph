@@ -573,9 +573,7 @@
     "noActiveHabits": "No habits selected.",
     "noActiveHabitsHint": "Tap Choose Habits to pick what you want to track.",
     "save": "Save",
-    "chooseHint": "{{count}} selected. Pick the habits you want to log each day.",
-    "tooManyTitle": "That's a lot",
-    "tooManyMessage": "Try to keep it under 15. Fewer habits means cleaner data.",
+    "chooseHint": "Pick the habits you want to log each day.",
     "type": {
       "boolean": "Yes / No",
       "count": "Count",
@@ -589,7 +587,7 @@
       "drinks": "drinks"
     },
     "catalog": {
-      "noScreensBeforeBed": "No screens before bed",
+      "noScreensBeforeBed": "Screens before bed",
       "heavyMealBeforeBed": "Heavy meal before bed",
       "caffeine": "Caffeine",
       "preworkout": "Pre-workout",

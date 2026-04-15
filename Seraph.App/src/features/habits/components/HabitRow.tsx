@@ -17,6 +17,8 @@ export const HabitRow: React.FC<HabitRowProps> = ({ habit, value, onChange }) =>
   const { t } = useTranslation();
 
   const label = habit.is_manual === 1 ? (habit.name_custom ?? '') : t(habit.name_key ?? '');
+  const unit =
+    habit.unit != null ? t(`habits.unit.${habit.unit}`, { defaultValue: habit.unit }) : null;
 
   const handleChange = (v: number | null) => {
     onChange(habit.id, v);
@@ -24,15 +26,20 @@ export const HabitRow: React.FC<HabitRowProps> = ({ habit, value, onChange }) =>
 
   return (
     <View style={styles.row}>
-      <SafeText style={styles.label} numberOfLines={1}>
-        {label}
-      </SafeText>
+      <View style={styles.labelWrap}>
+        <SafeText style={styles.label} numberOfLines={1}>
+          {label}
+        </SafeText>
+        {habit.type !== 'boolean' && unit != null && (
+          <SafeText style={styles.unit}>{unit}</SafeText>
+        )}
+      </View>
       {habit.type === 'boolean' && <BooleanHabitInput value={value} onChange={handleChange} />}
       {habit.type === 'count' && (
-        <StepperHabitInput value={value} unit={habit.unit} step={1} onChange={handleChange} />
+        <StepperHabitInput value={value} step={1} onChange={handleChange} />
       )}
       {habit.type === 'duration' && (
-        <StepperHabitInput value={value} unit={habit.unit} step={5} onChange={handleChange} />
+        <StepperHabitInput value={value} step={5} onChange={handleChange} />
       )}
     </View>
   );
@@ -47,10 +54,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: theme.colors.overlay.light,
   },
-  label: {
+  labelWrap: {
     flex: 1,
+    marginRight: theme.spacing.md,
+    gap: 2,
+  },
+  label: {
     fontSize: theme.typography.sizes.md,
     color: theme.colors.text.primary,
-    marginRight: theme.spacing.md,
+  },
+  unit: {
+    fontSize: theme.typography.sizes.xs,
+    color: theme.colors.text.muted,
   },
 });
