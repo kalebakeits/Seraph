@@ -126,8 +126,8 @@ export const WakeUpScreen: React.FC = () => {
         </Section>
 
         {/* ── Mode segmented control ── */}
-        <Section title={t('alarm.off')}>
-          <HelperText translationKey="alarm.modeHelper" />
+        <Section title={t(`alarm.modeLabel.${pendingMode}`)}>
+          <HelperText translationKey={`alarm.modeDesc.${pendingMode}`} />
           <View style={styles.segmented}>
             {MODES.map((m, idx) => {
               const active = pendingMode === m.key;

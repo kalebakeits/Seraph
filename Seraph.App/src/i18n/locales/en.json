@@ -287,10 +287,13 @@
     "durationOption": "{{count}} min",
     "mode": "Mode",
     "modeSimple": "Simple",
-    "modeSimpleDesc": "Alarm fires after the set time. Sleep is tracked from when you fall asleep.",
+    "modeSimpleDesc": "Your strap wakes you at this time.",
     "modeSmart": "Smart",
-    "modeSmartDesc": "Alarm fires once you've slept the set amount. Sleep is tracked from onset.",
+    "modeSmartDesc": "Your strap will wake you within the duration window if you're in light sleep. It will always ring at the set time at the latest.",
     "wakeUpBy": "Wake up by",
+    "wakeUpHelper": "Set the time you want to wake up. Your strap will ring no later than this.",
+    "durationHelper": "How long you plan to sleep. Your strap will wake you early if you're in light sleep.",
+    "derivedDuration": "About {{duration}} from now",
     "smartNapActive": "Smart nap in progress",
     "simpleNapActive": "Nap in progress",
     "cutoffIn": "Cutoff in {{time}}",
@@ -559,8 +562,18 @@
     "screenHelper": "Set a time to wake up. Your strap will vibrate at that time.",
     "wakeTime": "Wake up",
     "bedtime": "Bedtime",
-    "modeHelper": "Once fires one time then turns off. Schedule repeats on selected days.",
-    "activeDaysHelper": "The alarm fires on the days you pick.",
+    "modeHelper": "Choose how your alarm repeats.",
+    "modeLabel": {
+      "disabled": "Off",
+      "single": "Once",
+      "schedule": "Schedule"
+    },
+    "modeDesc": {
+      "disabled": "No alarm. Your strap won't vibrate.",
+      "single": "The alarm rings once at this time, then turns itself off.",
+      "schedule": "The alarm rings on the days you choose, every week."
+    },
+    "activeDaysHelper": "Pick the days you want to wake up at this time.",
     "syncedToDevice": "On device",
     "notSyncedToDevice": "Not synced",
     "basedOnSleepNeed": "Based on {{duration}} sleep need"

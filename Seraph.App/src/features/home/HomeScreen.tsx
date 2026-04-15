@@ -11,6 +11,7 @@ import { DeviceState } from '../device-management/types/DeviceState';
 import { useLastSynced } from '../../hooks/useLastSynced';
 import { useUnreadCount } from '../../hooks/useUnreadCount';
 import { todayISO, addDaysISO } from '../../utils/dateUtils';
+import { useHomeDateStore } from './store/homeDateStore';
 import { ActivityType } from '../../types/ActivityType';
 import { useNapState } from '../nap/hooks/useNapState';
 
@@ -45,7 +46,7 @@ export const HomeScreen: React.FC = () => {
   }
 
   const today = todayISO();
-  const [selectedDate, setSelectedDate] = useState(today);
+  const { selectedDate, setSelectedDate } = useHomeDateStore();
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   const handleDateSelect = (date: string) => {
@@ -54,13 +55,11 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handlePrevDay = () => {
-    setSelectedDate(d => addDaysISO(d, -1));
+    setSelectedDate(addDaysISO(selectedDate, -1));
   };
   const handleNextDay = () => {
-    setSelectedDate(d => {
-      const next = addDaysISO(d, 1);
-      return next <= today ? next : d;
-    });
+    const next = addDaysISO(selectedDate, 1);
+    if (next <= today) setSelectedDate(next);
   };
 
   return (

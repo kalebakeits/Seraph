@@ -28,7 +28,9 @@ import { RecordWorkoutScreen } from '../features/record-workout/RecordWorkoutScr
 import { NotificationCenterScreen } from '../features/notifications/NotificationCenterScreen';
 import { SystemNotificationDetailScreen } from '../features/notifications/SystemNotificationDetailScreen';
 import { NapActiveScreen } from '../features/nap/NapActiveScreen';
+import { NapSetupScreen } from '../features/nap/NapSetupScreen';
 import { ChooseHabitsScreen } from '../features/habits/ChooseHabitsScreen';
+import { LogHabitsScreen } from '../features/habits/LogHabitsScreen';
 
 export interface HomeStackParamList {
   [key: string]: object | undefined;
@@ -59,7 +61,9 @@ export interface HomeStackParamList {
   NotificationCenter: undefined;
   SystemNotificationDetail: { contentId: string | undefined; title: string; type: string };
   NapActive: undefined;
+  NapSetup: undefined;
   ChooseHabits: undefined;
+  LogHabits: { selectedDate?: string } | undefined;
 }
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -246,6 +250,26 @@ export const HomeStackNavigator: React.FC = () => {
           presentation: 'modal',
           headerTitle: t('nav.chooseHabits'),
           headerBackTitle: '',
+        }}
+      />
+      <Stack.Screen
+        name="NapSetup"
+        component={NapSetupScreen}
+        options={{
+          headerShown: true,
+          headerTitle: t('nap.startNap'),
+          headerBackTitle: '',
+          presentation: 'fullScreenModal',
+        }}
+      />
+      <Stack.Screen
+        name="LogHabits"
+        component={LogHabitsScreen}
+        options={{
+          headerShown: true,
+          headerTitle: t('habits.logHabits'),
+          headerBackTitle: '',
+          presentation: 'fullScreenModal',
         }}
       />
     </Stack.Navigator>

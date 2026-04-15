@@ -1,11 +1,13 @@
-import React, { useRef, useEffect } from 'react';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { Animated, Pressable, StyleSheet, View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import type { NavigationState } from '@react-navigation/native';
 import { theme } from '../theme';
 import { SafeText } from '../components/common/SafeText';
+import { ActivityActionSheet } from '../features/home/overview/sheets/ActivityActionSheet';
+import { useHomeDateStore } from '../features/home/store/homeDateStore';
 
 /** Screens where the floating tab bar should be hidden. */
 const HIDE_ON_SCREENS = new Set([
@@ -33,11 +35,16 @@ const TAB_CONFIG: TabConfig[] = [
   { route: 'Settings', icon: 'settings-outline', iconActive: 'settings' },
 ];
 
+const TAB_MIN_WIDTH = 60;
+const TAB_ACTIVE_WIDTH = 110;
+
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const slideX = useRef(new Animated.Value(state.index)).current;
   const focusedLeaf = getFocusedLeafRoute(state);
   const hidden = focusedLeaf != null && HIDE_ON_SCREENS.has(focusedLeaf);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const { selectedDate } = useHomeDateStore();
 
   useEffect(() => {
     Animated.spring(slideX, {
@@ -49,71 +56,100 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
     }).start();
   }, [state.index, slideX]);
 
-  const TAB_WIDTH = 100;
-
   if (hidden) return null;
 
   return (
-    <View style={[styles.wrapper, { bottom: insets.bottom + 12 }]}>
-      <View style={styles.pill}>
-        {/* Sliding highlight pill */}
-        <Animated.View
-          style={[
-            styles.highlight,
-            {
-              width: TAB_WIDTH,
-              transform: [
+    <>
+      <View style={[styles.wrapper, { bottom: insets.bottom + 12 }]}>
+        <View style={styles.row}>
+          <View style={styles.pill}>
+            {/* Sliding highlight pill */}
+            <Animated.View
+              style={[
+                styles.highlight,
                 {
-                  translateX: slideX.interpolate({
-                    inputRange: state.routes.map((_, i) => i),
-                    outputRange: state.routes.map((_, i) => i * (TAB_WIDTH + 4) + 2),
-                  }),
+                  width: TAB_ACTIVE_WIDTH,
+                  transform: [
+                    {
+                      translateX: slideX.interpolate({
+                        inputRange: state.routes.map((_, i) => i),
+                        outputRange: state.routes.map((_, i) => {
+                          // offset = sum of widths of tabs before index i + gaps
+                          let x = 2;
+                          for (let j = 0; j < i; j++) {
+                            x += (j === state.index ? TAB_ACTIVE_WIDTH : TAB_MIN_WIDTH) + 4;
+                          }
+                          return x;
+                        }),
+                      }),
+                    },
+                  ],
                 },
-              ],
-            },
-          ]}
-        />
+              ]}
+            />
 
-        {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
-          const label = typeof options.tabBarLabel === 'string' ? options.tabBarLabel : route.name;
-          const isFocused = state.index === index;
-          const cfg = TAB_CONFIG.find(c => c.route === route.name);
-          type IconName = React.ComponentProps<typeof Ionicons>['name'];
-          let iconName: IconName = 'ellipse-outline';
-          if (cfg) iconName = isFocused ? cfg.iconActive : cfg.icon;
+            {state.routes.map((route, index) => {
+              const { options } = descriptors[route.key];
+              const label =
+                typeof options.tabBarLabel === 'string' ? options.tabBarLabel : route.name;
+              const isFocused = state.index === index;
+              const cfg = TAB_CONFIG.find(c => c.route === route.name);
+              type IconName = React.ComponentProps<typeof Ionicons>['name'];
+              let iconName: IconName = 'ellipse-outline';
+              if (cfg) iconName = isFocused ? cfg.iconActive : cfg.icon;
 
-          const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
+              const onPress = () => {
+                const event = navigation.emit({
+                  type: 'tabPress',
+                  target: route.key,
+                  canPreventDefault: true,
+                });
+                if (!isFocused && !event.defaultPrevented) {
+                  navigation.navigate(route.name);
+                }
+              };
 
-          return (
-            <Pressable
-              key={route.key}
-              onPress={onPress}
-              style={[styles.tab, { width: TAB_WIDTH }]}
-              accessibilityRole="tab"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
-            >
-              <Ionicons
-                name={iconName}
-                size={22}
-                color={isFocused ? theme.colors.text.primary : theme.colors.text.muted}
-              />
-              {isFocused && <SafeText style={styles.label}>{label}</SafeText>}
-            </Pressable>
-          );
-        })}
+              return (
+                <Pressable
+                  key={route.key}
+                  onPress={onPress}
+                  style={[styles.tab, { width: isFocused ? TAB_ACTIVE_WIDTH : TAB_MIN_WIDTH }]}
+                  accessibilityRole="tab"
+                  accessibilityState={isFocused ? { selected: true } : {}}
+                  accessibilityLabel={options.tabBarAccessibilityLabel}
+                >
+                  <Ionicons
+                    name={iconName}
+                    size={22}
+                    color={isFocused ? theme.colors.text.primary : theme.colors.text.muted}
+                  />
+                  {isFocused && <SafeText style={styles.label}>{label}</SafeText>}
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <TouchableOpacity
+            style={styles.plusBtn}
+            activeOpacity={0.85}
+            onPress={() => {
+              setSheetOpen(true);
+            }}
+          >
+            <Ionicons name="add" size={26} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+
+      {sheetOpen && (
+        <ActivityActionSheet
+          selectedDate={selectedDate}
+          onClose={() => {
+            setSheetOpen(false);
+          }}
+        />
+      )}
+    </>
   );
 }
 
@@ -123,6 +159,11 @@ const styles = StyleSheet.create({
     left: 24,
     right: 24,
     alignItems: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   pill: {
     flexDirection: 'row',
@@ -160,5 +201,20 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontSize: 11,
     fontWeight: theme.typography.weights.semibold,
+  },
+  plusBtn: {
+    width: 68,
+    height: 68,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: 'rgba(18, 0, 40, 0.88)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 12,
   },
 });

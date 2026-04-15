@@ -7,9 +7,7 @@ import { SafeText } from '../../../../components/common/SafeText';
 import { useActivities } from '../../hooks/useActivities';
 import type { ActivityItem } from '../../hooks/useActivities';
 import { ActivityType } from '../../../../types/ActivityType';
-import { ActivityActionSheet } from '../sheets/ActivityActionSheet';
 import { Section } from '../../../../components/common/Section';
-import { todayISO } from '../../../../utils/dateUtils';
 
 const COLLAPSED_COUNT = 3;
 
@@ -37,27 +35,13 @@ export const ActivitiesCard: React.FC<ActivitiesCardProps> = ({
 }) => {
   const { t } = useTranslation();
   const { data: activities = [] } = useActivities(selectedDate);
-  const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const isToday = !selectedDate || selectedDate === todayISO();
 
   const visible = expanded ? activities : activities.slice(0, COLLAPSED_COUNT);
   const hasMore = activities.length > COLLAPSED_COUNT;
 
-  const addButton = (
-    <TouchableOpacity
-      style={styles.addButton}
-      activeOpacity={0.7}
-      onPress={() => {
-        setActionSheetOpen(true);
-      }}
-    >
-      <Ionicons name="add" size={18} color={theme.colors.text.primary} />
-    </TouchableOpacity>
-  );
-
   return (
-    <Section title={t('home.activities')} action={addButton}>
+    <Section title={t('home.activities')}>
       {activities.length === 0 && (
         <View style={styles.emptyCard}>
           <SafeText style={styles.empty}>{t('home.noActivitiesRecorded')}</SafeText>
@@ -112,38 +96,11 @@ export const ActivitiesCard: React.FC<ActivitiesCardProps> = ({
           />
         </TouchableOpacity>
       )}
-
-      {actionSheetOpen && selectedDate && (
-        <ActivityActionSheet
-          selectedDate={selectedDate}
-          isToday={isToday}
-          onClose={() => {
-            setActionSheetOpen(false);
-          }}
-        />
-      )}
     </Section>
   );
 };
 
 const styles = StyleSheet.create({
-  headingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.xs,
-    paddingHorizontal: 2,
-  },
-  addButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   emptyCard: {
     ...theme.cardStyles.default,
     alignItems: 'center',

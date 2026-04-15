@@ -287,10 +287,13 @@
     "durationOption": "{{count}} min",
     "mode": "Mode",
     "modeSimple": "Simple",
-    "modeSimpleDesc": "L'alarme sonne après le temps défini. Le sommeil est suivi à partir de l'endormissement.",
+    "modeSimpleDesc": "Votre strap vous réveille à cette heure.",
     "modeSmart": "Intelligent",
-    "modeSmartDesc": "L'alarme sonne une fois le temps de sommeil effectif atteint.",
+    "modeSmartDesc": "Votre strap vous réveille dans la fenêtre de durée si vous êtes en sommeil léger. Il sonnera au plus tard à l'heure fixée.",
     "wakeUpBy": "Réveil au plus tard à",
+    "wakeUpHelper": "Choisissez l'heure à laquelle vous souhaitez vous réveiller. Votre strap sonnera au plus tard à cette heure.",
+    "durationHelper": "La durée de sommeil prévue. Votre strap vous réveillera plus tôt si vous êtes en sommeil léger.",
+    "derivedDuration": "Dans environ {{duration}}",
     "smartNapActive": "Sieste intelligente en cours",
     "simpleNapActive": "Sieste en cours",
     "cutoffIn": "Limite dans {{time}}",
@@ -559,8 +562,18 @@
     "screenHelper": "Choisissez une heure de réveil. Votre strap vibrera à cette heure.",
     "wakeTime": "Réveil",
     "bedtime": "Heure de coucher",
-    "modeHelper": "Une fois sonne une seule fois. Programmé se répète les jours choisis.",
-    "activeDaysHelper": "L'alarme sonne les jours que vous choisissez.",
+    "modeHelper": "Choisissez comment votre alarme se répète.",
+    "modeLabel": {
+      "disabled": "Désactivé",
+      "single": "Une fois",
+      "schedule": "Programmé"
+    },
+    "modeDesc": {
+      "disabled": "Pas d'alarme. Votre strap ne vibrera pas.",
+      "single": "L'alarme sonne une seule fois à cette heure, puis se désactive.",
+      "schedule": "L'alarme sonne les jours que vous choisissez, chaque semaine."
+    },
+    "activeDaysHelper": "Choisissez les jours où vous voulez vous réveiller à cette heure.",
     "syncedToDevice": "Sur l'appareil",
     "notSyncedToDevice": "Non synchronisé",
     "basedOnSleepNeed": "Basé sur {{duration}} de sommeil"
