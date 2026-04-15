@@ -15,6 +15,9 @@ const HIDE_ON_SCREENS = new Set([
   'RecordWorkout',
   'SleepSessionDetail',
   'NapActive',
+  'NapSetup',
+  'LogHabits',
+  'ChooseHabits',
 ]);
 
 function getFocusedLeafRoute(state: NavigationState): string | undefined {

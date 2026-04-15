@@ -2,16 +2,12 @@ import React, { useState } from 'react';
 import { Modal, View, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeText } from '../../../../components/common/SafeText';
 import { LogActivitySheet } from './LogActivitySheet';
 import { theme } from '../../../../theme';
 import { ActivityType } from '../../../../types/ActivityType';
-import type { HomeStackParamList } from '../../../../navigation/HomeStackNavigator';
-
-type NavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>;
+import { navigationRef } from '../../../../navigation/navigationRef';
 
 interface ActivityActionSheetProps {
   selectedDate: string;
@@ -25,7 +21,6 @@ export const ActivityActionSheet: React.FC<ActivityActionSheetProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
-  const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const [subSheet, setSubSheet] = useState<SubSheet>(null);
 
@@ -97,7 +92,7 @@ export const ActivityActionSheet: React.FC<ActivityActionSheetProps> = ({
             activeOpacity={0.75}
             onPress={() => {
               onClose();
-              navigation.navigate('LogHabits', { selectedDate });
+              navigationRef.navigate('LogHabits', { selectedDate });
             }}
           >
             <View style={[styles.iconCircle, { backgroundColor: 'rgba(180,140,255,0.18)' }]}>
@@ -114,7 +109,7 @@ export const ActivityActionSheet: React.FC<ActivityActionSheetProps> = ({
             activeOpacity={0.75}
             onPress={() => {
               onClose();
-              navigation.navigate('RecordWorkout');
+              navigationRef.navigate('RecordWorkout');
             }}
           >
             <View style={[styles.iconCircle, { backgroundColor: 'rgba(245,87,108,0.22)' }]}>
@@ -131,7 +126,7 @@ export const ActivityActionSheet: React.FC<ActivityActionSheetProps> = ({
             activeOpacity={0.75}
             onPress={() => {
               onClose();
-              navigation.navigate('NapSetup');
+              navigationRef.navigate('NapSetup');
             }}
           >
             <View style={[styles.iconCircle, { backgroundColor: 'rgba(81,181,239,0.12)' }]}>

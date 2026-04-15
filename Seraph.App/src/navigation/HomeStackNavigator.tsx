@@ -247,7 +247,6 @@ export const HomeStackNavigator: React.FC = () => {
         name="ChooseHabits"
         component={ChooseHabitsScreen}
         options={{
-          presentation: 'modal',
           headerTitle: t('nav.chooseHabits'),
           headerBackTitle: '',
         }}
@@ -256,20 +255,16 @@ export const HomeStackNavigator: React.FC = () => {
         name="NapSetup"
         component={NapSetupScreen}
         options={{
-          headerShown: true,
           headerTitle: t('nap.startNap'),
           headerBackTitle: '',
-          presentation: 'fullScreenModal',
         }}
       />
       <Stack.Screen
         name="LogHabits"
         component={LogHabitsScreen}
         options={{
-          headerShown: true,
           headerTitle: t('habits.logHabits'),
           headerBackTitle: '',
-          presentation: 'fullScreenModal',
         }}
       />
     </Stack.Navigator>
