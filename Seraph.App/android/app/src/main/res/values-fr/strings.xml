@@ -18,8 +18,8 @@
   <string name="notifications_avg_hr">moy %d bpm</string>
   <string name="notifications_duration_h_m">%dh %dmin</string>
   <string name="notifications_duration_m">%dmin</string>
-  <string name="notifications_low_battery_body">Batterie du bracelet à %d%% — chargez bientôt</string>
-  <string name="notifications_alarm_not_synced_body">Votre alarme n'a pas été synchronisée. Ouvrez Seraph pour connecter votre appareil.</string>
+  <string name="notifications_low_battery_body">Batterie du bracelet à %d%%. Chargez bientôt.</string>
+  <string name="notifications_alarm_not_synced_body">Votre alarme n\'a pas été synchronisée. Ouvrez Seraph pour connecter votre appareil.</string>
 
   <!-- Sport labels -->
   <string name="sport_crossfit">CrossFit</string>

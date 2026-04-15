@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { View, StyleSheet, Switch, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
@@ -19,30 +19,72 @@ interface Props {
   onChange: (prefs: NotificationPreferences) => void;
 }
 
+const SUB_ROW_HEIGHT = 48;
+
+interface ExpandableSectionProps {
+  expanded: boolean;
+  count: number;
+  children: React.ReactNode;
+}
+
+const ExpandableSection: React.FC<ExpandableSectionProps> = ({ expanded, count, children }) => {
+  const heightAnim = useRef(new Animated.Value(expanded ? count * SUB_ROW_HEIGHT : 0)).current;
+  const opacityAnim = useRef(new Animated.Value(expanded ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(heightAnim, {
+        toValue: expanded ? count * SUB_ROW_HEIGHT : 0,
+        duration: 220,
+        useNativeDriver: false,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: expanded ? 1 : 0,
+        duration: 180,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [expanded, count, heightAnim, opacityAnim]);
+
+  return (
+    <Animated.View style={{ height: heightAnim, opacity: opacityAnim, overflow: 'hidden' }}>
+      {children}
+    </Animated.View>
+  );
+};
+
 export const NotificationsSection: React.FC<Props> = ({ preferences, onChange }) => {
   const { t } = useTranslation();
   const [expandedDevice, setExpandedDevice] = useState(false);
   const [expandedActivity, setExpandedActivity] = useState(false);
 
-  const toggleGlobal = () => {
-    onChange({ ...preferences, globalEnabled: !preferences.globalEnabled });
-  };
+  const chevronDeviceAnim = useRef(new Animated.Value(0)).current;
+  const chevronActivityAnim = useRef(new Animated.Value(0)).current;
 
-  const toggleDeviceLowBattery = () => {
-    onChange({ ...preferences, deviceLowBattery: !preferences.deviceLowBattery });
-  };
+  useEffect(() => {
+    Animated.timing(chevronDeviceAnim, {
+      toValue: expandedDevice ? 1 : 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+  }, [expandedDevice, chevronDeviceAnim]);
 
-  const toggleDeviceAlarmNotSet = () => {
-    onChange({ ...preferences, deviceAlarmNotSet: !preferences.deviceAlarmNotSet });
-  };
+  useEffect(() => {
+    Animated.timing(chevronActivityAnim, {
+      toValue: expandedActivity ? 1 : 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+  }, [expandedActivity, chevronActivityAnim]);
 
-  const toggleActivitySleep = () => {
-    onChange({ ...preferences, activitySleep: !preferences.activitySleep });
-  };
-
-  const toggleActivityWorkout = () => {
-    onChange({ ...preferences, activityWorkout: !preferences.activityWorkout });
-  };
+  const deviceChevronRotation = chevronDeviceAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+  const activityChevronRotation = chevronActivityAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
 
   return (
     <>
@@ -54,11 +96,15 @@ export const NotificationsSection: React.FC<Props> = ({ preferences, onChange })
         <View style={styles.row}>
           <View style={styles.rowLeft}>
             <SafeText style={styles.rowLabel}>{t('settings.notificationsGlobalToggle')}</SafeText>
-            <SafeText style={styles.rowDesc}>{t('settings.notificationsGlobalToggleDesc')}</SafeText>
+            <SafeText style={styles.rowDesc}>
+              {t('settings.notificationsGlobalToggleDesc')}
+            </SafeText>
           </View>
           <Switch
             value={preferences.globalEnabled}
-            onValueChange={toggleGlobal}
+            onValueChange={() => {
+              onChange({ ...preferences, globalEnabled: !preferences.globalEnabled });
+            }}
             trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
             thumbColor="#ffffff"
             ios_backgroundColor="rgba(255,255,255,0.1)"
@@ -67,118 +113,115 @@ export const NotificationsSection: React.FC<Props> = ({ preferences, onChange })
 
         <View style={styles.divider} />
 
-        {/* Device notifications section */}
+        {/* Device notifications */}
         <TouchableOpacity
           style={styles.row}
           onPress={() => {
-            setExpandedDevice(!expandedDevice);
+            setExpandedDevice(v => !v);
           }}
           activeOpacity={0.7}
           disabled={!preferences.globalEnabled}
         >
-          <SafeText
-            style={[
-              styles.rowLabel,
-              !preferences.globalEnabled && { color: theme.colors.text.muted },
-            ]}
-          >
+          <SafeText style={[styles.rowLabel, !preferences.globalEnabled && styles.dimmed]}>
             {t('settings.notificationsDeviceTitle')}
           </SafeText>
-          <Ionicons
-            name={expandedDevice ? 'chevron-up' : 'chevron-down'}
-            size={16}
-            color={preferences.globalEnabled ? theme.colors.text.muted : theme.colors.text.muted}
-            style={{ opacity: preferences.globalEnabled ? 1 : 0.5 }}
-          />
+          <Animated.View
+            style={{
+              transform: [{ rotate: deviceChevronRotation }],
+              opacity: preferences.globalEnabled ? 1 : 0.4,
+            }}
+          >
+            <Ionicons name="chevron-down" size={16} color={theme.colors.text.muted} />
+          </Animated.View>
         </TouchableOpacity>
 
-        {expandedDevice && preferences.globalEnabled && (
-          <>
-            <View style={styles.subRow}>
-              <SafeText style={styles.subRowLabel}>
-                {t('settings.notificationsDeviceLowBattery')}
-              </SafeText>
-              <Switch
-                value={preferences.deviceLowBattery}
-                onValueChange={toggleDeviceLowBattery}
-                trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
-                thumbColor="#ffffff"
-                ios_backgroundColor="rgba(255,255,255,0.1)"
-              />
-            </View>
-            <View style={styles.subRow}>
-              <SafeText style={styles.subRowLabel}>
-                {t('settings.notificationsDeviceAlarmNotSet')}
-              </SafeText>
-              <Switch
-                value={preferences.deviceAlarmNotSet}
-                onValueChange={toggleDeviceAlarmNotSet}
-                trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
-                thumbColor="#ffffff"
-                ios_backgroundColor="rgba(255,255,255,0.1)"
-              />
-            </View>
-          </>
-        )}
+        <ExpandableSection expanded={expandedDevice && preferences.globalEnabled} count={2}>
+          <View style={styles.subRow}>
+            <SafeText style={styles.subRowLabel}>
+              {t('settings.notificationsDeviceLowBattery')}
+            </SafeText>
+            <Switch
+              value={preferences.deviceLowBattery}
+              onValueChange={() => {
+                onChange({ ...preferences, deviceLowBattery: !preferences.deviceLowBattery });
+              }}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
+              thumbColor="#ffffff"
+              ios_backgroundColor="rgba(255,255,255,0.1)"
+            />
+          </View>
+          <View style={styles.subRow}>
+            <SafeText style={styles.subRowLabel}>
+              {t('settings.notificationsDeviceAlarmNotSet')}
+            </SafeText>
+            <Switch
+              value={preferences.deviceAlarmNotSet}
+              onValueChange={() => {
+                onChange({ ...preferences, deviceAlarmNotSet: !preferences.deviceAlarmNotSet });
+              }}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
+              thumbColor="#ffffff"
+              ios_backgroundColor="rgba(255,255,255,0.1)"
+            />
+          </View>
+        </ExpandableSection>
 
         <View style={styles.divider} />
 
-        {/* Activity detection section */}
+        {/* Activity detection */}
         <TouchableOpacity
           style={styles.row}
           onPress={() => {
-            setExpandedActivity(!expandedActivity);
+            setExpandedActivity(v => !v);
           }}
           activeOpacity={0.7}
           disabled={!preferences.globalEnabled}
         >
-          <SafeText
-            style={[
-              styles.rowLabel,
-              !preferences.globalEnabled && { color: theme.colors.text.muted },
-            ]}
-          >
+          <SafeText style={[styles.rowLabel, !preferences.globalEnabled && styles.dimmed]}>
             {t('settings.notificationsActivityTitle')}
           </SafeText>
-          <Ionicons
-            name={expandedActivity ? 'chevron-up' : 'chevron-down'}
-            size={16}
-            color={preferences.globalEnabled ? theme.colors.text.muted : theme.colors.text.muted}
-            style={{ opacity: preferences.globalEnabled ? 1 : 0.5 }}
-          />
+          <Animated.View
+            style={{
+              transform: [{ rotate: activityChevronRotation }],
+              opacity: preferences.globalEnabled ? 1 : 0.4,
+            }}
+          >
+            <Ionicons name="chevron-down" size={16} color={theme.colors.text.muted} />
+          </Animated.View>
         </TouchableOpacity>
 
-        {expandedActivity && preferences.globalEnabled && (
-          <>
-            <View style={styles.subRow}>
-              <SafeText style={styles.subRowLabel}>
-                {t('settings.notificationsActivitySleep')}
-              </SafeText>
-              <Switch
-                value={preferences.activitySleep}
-                onValueChange={toggleActivitySleep}
-                trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
-                thumbColor="#ffffff"
-                ios_backgroundColor="rgba(255,255,255,0.1)"
-              />
-            </View>
-            <View style={styles.subRow}>
-              <SafeText style={styles.subRowLabel}>
-                {t('settings.notificationsActivityWorkout')}
-              </SafeText>
-              <Switch
-                value={preferences.activityWorkout}
-                onValueChange={toggleActivityWorkout}
-                trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
-                thumbColor="#ffffff"
-                ios_backgroundColor="rgba(255,255,255,0.1)"
-              />
-            </View>
-          </>
-        )}
+        <ExpandableSection expanded={expandedActivity && preferences.globalEnabled} count={2}>
+          <View style={styles.subRow}>
+            <SafeText style={styles.subRowLabel}>
+              {t('settings.notificationsActivitySleep')}
+            </SafeText>
+            <Switch
+              value={preferences.activitySleep}
+              onValueChange={() => {
+                onChange({ ...preferences, activitySleep: !preferences.activitySleep });
+              }}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
+              thumbColor="#ffffff"
+              ios_backgroundColor="rgba(255,255,255,0.1)"
+            />
+          </View>
+          <View style={styles.subRow}>
+            <SafeText style={styles.subRowLabel}>
+              {t('settings.notificationsActivityWorkout')}
+            </SafeText>
+            <Switch
+              value={preferences.activityWorkout}
+              onValueChange={() => {
+                onChange({ ...preferences, activityWorkout: !preferences.activityWorkout });
+              }}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
+              thumbColor="#ffffff"
+              ios_backgroundColor="rgba(255,255,255,0.1)"
+            />
+          </View>
+        </ExpandableSection>
       </View>
 
-      {/* Note at the bottom */}
       <SafeText style={styles.note}>{t('settings.notificationsNote')}</SafeText>
     </>
   );
@@ -198,6 +241,7 @@ const styles = StyleSheet.create({
   rowLeft: {
     flex: 1,
     gap: 2,
+    marginRight: theme.spacing.md,
   },
   rowLabel: {
     fontSize: theme.typography.sizes.sm,
@@ -207,19 +251,23 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.sizes.xs,
     color: theme.colors.text.muted,
     lineHeight: 18,
-    paddingRight: theme.spacing.sm,
+  },
+  dimmed: {
+    color: theme.colors.text.muted,
+    opacity: 0.5,
   },
   subRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing.sm,
+    height: SUB_ROW_HEIGHT,
     paddingLeft: theme.spacing.lg,
-    minHeight: 44,
   },
   subRowLabel: {
     fontSize: theme.typography.sizes.sm,
     color: theme.colors.text.secondary,
+    flex: 1,
+    marginRight: theme.spacing.md,
   },
   divider: {
     height: StyleSheet.hairlineWidth,

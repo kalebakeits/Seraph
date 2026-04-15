@@ -39,7 +39,10 @@ class AndroidNotificationChannel(
             "low_battery" -> db.seraphDbQueries.getAppParameter("notif_device_low_battery").executeAsOneOrNull() != "0"
             "alarm_not_synced" -> db.seraphDbQueries.getAppParameter("notif_device_alarm_not_set").executeAsOneOrNull() != "0"
             "sleep_detected", "sleep_edited" -> db.seraphDbQueries.getAppParameter("notif_activity_sleep").executeAsOneOrNull() != "0"
-            "workout_detected", "workout_edited", "workout_recorded" -> db.seraphDbQueries.getAppParameter("notif_activity_workout").executeAsOneOrNull() != "0"
+            "workout_detected", "workout_edited", "workout_recorded" -> {
+                val v = db.seraphDbQueries.getAppParameter("notif_activity_workout").executeAsOneOrNull()
+                v != "0"
+            }
             else -> true // Default to enabled for unknown types
         }
     }

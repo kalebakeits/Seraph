@@ -33,7 +33,13 @@ export type AppParameter =
   | 'nap_active_duration_ms'   // target sleep duration in ms; presence = nap active
   | 'nap_hard_cutoff_sec'      // unix seconds — device alarm / hard deadline
   | 'nap_mode'                 // "manual" | "auto" — active nap session state
-  | 'nap_default_mode';        // "simple" | "smart" — remembered UI preference
+  | 'nap_default_mode'        // "simple" | "smart" — remembered UI preference
+  // Notification preferences
+  | 'notif_global_enabled'
+  | 'notif_device_low_battery'
+  | 'notif_device_alarm_not_set'
+  | 'notif_activity_sleep'
+  | 'notif_activity_workout';
 
 class AppParametersRepository {
   async get(key: AppParameter): Promise<string | null> {

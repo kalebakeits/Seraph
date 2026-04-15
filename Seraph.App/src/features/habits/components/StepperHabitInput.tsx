@@ -36,14 +36,6 @@ export const StepperHabitInput: React.FC<StepperHabitInputProps> = ({ value, ste
 
   return (
     <View style={styles.row}>
-      <TouchableOpacity style={styles.iconBtn} onPress={decrement} activeOpacity={0.7}>
-        <Ionicons
-          name="remove-circle-outline"
-          size={26}
-          color={displayed > 0 ? theme.colors.text.primary : theme.colors.text.muted}
-        />
-      </TouchableOpacity>
-
       <TouchableOpacity
         style={styles.valueBtn}
         activeOpacity={0.7}
@@ -70,6 +62,14 @@ export const StepperHabitInput: React.FC<StepperHabitInputProps> = ({ value, ste
         )}
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.iconBtn} onPress={decrement} activeOpacity={0.7}>
+        <Ionicons
+          name="remove-circle-outline"
+          size={26}
+          color={displayed > 0 ? theme.colors.text.primary : theme.colors.text.muted}
+        />
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.iconBtn} onPress={increment} activeOpacity={0.7}>
         <Ionicons name="add-circle-outline" size={26} color={theme.colors.text.primary} />
       </TouchableOpacity>
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   valueBtn: {
-    minWidth: 36,
+    width: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.sizes.md,
     fontWeight: theme.typography.weights.bold,
     color: theme.colors.text.primary,
-    minWidth: 36,
+    width: 48,
     textAlign: 'center',
     padding: 0,
   },

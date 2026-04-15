@@ -22,8 +22,8 @@
   <string name="notifications_avg_hr">avg %d bpm</string>
   <string name="notifications_duration_h_m">%dh %dm</string>
   <string name="notifications_duration_m">%dm</string>
-  <string name="notifications_low_battery_body">Strap battery at %d%% — charge soon</string>
-  <string name="notifications_alarm_not_synced_body">Your alarm hasn't been synced. Open Seraph to connect your device.</string>
+  <string name="notifications_low_battery_body">Strap battery at %d%%. Charge soon.</string>
+  <string name="notifications_alarm_not_synced_body">Your alarm hasn\'t been synced. Open Seraph to connect your device.</string>
 
   <!-- Sport labels -->
   <string name="sport_crossfit">CrossFit</string>
