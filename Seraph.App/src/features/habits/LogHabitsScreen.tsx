@@ -15,10 +15,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import DatePicker from 'react-native-date-picker';
 import { SafeText } from '../../components/common/SafeText';
+import { Section } from '../../components/common/Section';
 import { HabitRow } from './components/HabitRow';
 import { useActiveHabitsForDate } from './hooks/useActiveHabitsForDate';
 import { useHabitLogs } from './hooks/useHabitLogs';
 import { habitLogsRepository } from '../../services/database/drizzle';
+import { navigationRef } from '../../navigation/navigationRef';
 import type { HomeStackParamList } from '../../navigation/HomeStackNavigator';
 import { theme } from '../../theme';
 
@@ -85,60 +87,56 @@ export const LogHabitsScreen: React.FC = () => {
       ? t('common.today')
       : dateFromISO(date).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
 
+  const chooseAction = (
+    <TouchableOpacity
+      style={styles.chooseBtn}
+      activeOpacity={0.7}
+      onPress={() => {
+        navigationRef.navigate('ChooseHabits');
+      }}
+    >
+      <Ionicons name="options-outline" size={14} color={theme.colors.recovery} />
+      <SafeText style={styles.chooseBtnText}>{t('habits.chooseHabits')}</SafeText>
+    </TouchableOpacity>
+  );
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Date row */}
-      <TouchableOpacity
-        style={styles.dateRow}
-        onPress={() => {
-          setDatePickerOpen(true);
-        }}
-        activeOpacity={0.7}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <SafeText style={styles.dateLabel}>{t('habits.date')}</SafeText>
-        <View style={styles.datePill}>
-          <SafeText style={styles.dateValue}>{dateLabel}</SafeText>
-          <Ionicons name="chevron-down" size={14} color={theme.colors.text.muted} />
-        </View>
-      </TouchableOpacity>
-
-      {/* Choose habits link */}
-      <TouchableOpacity
-        style={styles.chooseBtn}
-        onPress={() => {
-          navigation.navigate('ChooseHabits' as never);
-        }}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="options-outline" size={16} color={theme.colors.recovery} />
-        <SafeText style={styles.chooseBtnText}>{t('habits.chooseHabits')}</SafeText>
-      </TouchableOpacity>
-
-      {habits.length === 0 ? (
-        <View style={styles.empty}>
-          <SafeText style={styles.emptyTitle}>{t('habits.noActiveHabits')}</SafeText>
-          <SafeText style={styles.emptyHint}>{t('habits.noActiveHabitsHint')}</SafeText>
-        </View>
-      ) : (
-        <ScrollView
-          style={styles.list}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <Section
+          title={dateLabel}
+          onTitlePress={() => {
+            setDatePickerOpen(true);
+          }}
+          action={chooseAction}
         >
-          {habits.map(habit => (
-            <HabitRow
-              key={habit.id}
-              habit={habit}
-              value={valueFor(habit.id)}
-              onChange={handleChange}
-            />
-          ))}
-        </ScrollView>
-      )}
+          {habits.length === 0 ? (
+            <View style={styles.empty}>
+              <SafeText style={styles.emptyTitle}>{t('habits.noActiveHabits')}</SafeText>
+              <SafeText style={styles.emptyHint}>{t('habits.noActiveHabitsHint')}</SafeText>
+            </View>
+          ) : (
+            <View style={styles.habitList}>
+              {habits.map(habit => (
+                <HabitRow
+                  key={habit.id}
+                  habit={habit}
+                  value={valueFor(habit.id)}
+                  onChange={handleChange}
+                />
+              ))}
+            </View>
+          )}
+        </Section>
+      </ScrollView>
 
       <TouchableOpacity
         style={[styles.saveBtn, { marginBottom: insets.bottom + 16 }, saving && styles.disabled]}
@@ -174,69 +172,44 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  dateRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.overlay.light,
+  scroll: {
+    flex: 1,
   },
-  dateLabel: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.secondary,
-  },
-  datePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  dateValue: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
+  content: {
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: 100,
+    paddingBottom: theme.spacing.xxl,
+    gap: theme.spacing.lg,
   },
   chooseBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.xs,
-    alignSelf: 'flex-end',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
+    gap: 4,
   },
   chooseBtnText: {
-    fontSize: theme.typography.sizes.sm,
+    fontSize: theme.typography.sizes.xs,
     color: theme.colors.recovery,
     fontWeight: theme.typography.weights.semibold,
   },
-  list: {
-    flex: 1,
-  },
-  listContent: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
+  habitList: {
+    gap: theme.spacing.sm,
+    paddingTop: theme.spacing.sm,
   },
   empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop: theme.spacing.lg,
     gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.xl,
   },
   emptyTitle: {
     fontSize: theme.typography.sizes.md,
     color: theme.colors.text.secondary,
     fontWeight: theme.typography.weights.semibold,
-    textAlign: 'center',
   },
   emptyHint: {
     fontSize: theme.typography.sizes.sm,
     color: theme.colors.text.muted,
-    textAlign: 'center',
   },
   saveBtn: {
-    margin: theme.spacing.lg,
+    marginHorizontal: theme.spacing.lg,
     backgroundColor: theme.colors.recovery,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
