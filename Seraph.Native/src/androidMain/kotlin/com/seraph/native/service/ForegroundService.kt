@@ -342,7 +342,7 @@ class ForegroundService : Service() {
         scope.launch {
             val device = connectionManager.device ?: return@launch
             val currentDb = db ?: return@launch
-            notifications.checkAndNotifyBattery(device)
+            notifications.checkAndNotifyBattery(device, notificationWriter)
             notifications.checkAndNotifySleepAndActivity(
                 state.affectedDates,
                 state.closedActivityStartTs,
@@ -395,7 +395,7 @@ class ForegroundService : Service() {
                     log.w(e) { "Failed to set alarm" }
                 }
             }
-            is AlarmChecker.AlarmAction.NotifyUser -> notifications.sendAlarmNotification()
+            is AlarmChecker.AlarmAction.NotifyUser -> notifications.sendAlarmNotification(notificationWriter)
             is AlarmChecker.AlarmAction.None -> {}
         }
     }

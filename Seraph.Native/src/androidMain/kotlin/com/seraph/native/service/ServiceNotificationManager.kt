@@ -110,22 +110,24 @@ class ServiceNotificationManager(
 
     fun cancelAlarmNotification() = nm.cancel(ALARM_NOTIFICATION)
 
-    fun sendAlarmNotification() =
-        sendAlert(
-            id = ALARM_NOTIFICATION,
-            title = "Alarm Not Synced",
-            text = "Your alarm hasn't been synced. Open Seraph to connect your device.",
-            deepLink = "seraph://wakeup",
-        )
+    fun sendAlarmNotification(writer: NotificationWriter) {
+        writer.write(type = "alarm_not_synced")
+    }
 
-    suspend fun checkAndNotifyBattery(device: Device) {
+    suspend fun checkAndNotifyBattery(
+        device: Device,
+        writer: NotificationWriter,
+    ) {
         if (System.currentTimeMillis() - prefs.getLong("battery_low", 0L) < BATTERY_COOLDOWN_MS) return
         try {
             val battery = device.getBattery() ?: return
             if (battery.level <= LOW_BATTERY) {
                 log.i { "Low battery: ${battery.level}%" }
                 prefs.edit().putLong("battery_low", System.currentTimeMillis()).apply()
-                sendAlert(title = "Low Battery", text = "Strap battery at ${battery.level.toInt()}% — charge soon")
+                writer.write(
+                    type = "low_battery",
+                    payload = """{"level":${battery.level.toInt()}}""",
+                )
             }
         } catch (e: Exception) {
             log.d { "Battery check skipped: ${e.message}" }

@@ -13,6 +13,8 @@
   <string name="notifications_types_update_available">Update available</string>
   <string name="notifications_types_announcement">Announcement</string>
   <string name="notifications_announcement_body">Tap to view.</string>
+  <string name="notifications_types_low_battery">Low Battery</string>
+  <string name="notifications_types_alarm_not_synced">Alarm Not Synced</string>
 
   <!-- Notification body fragments (mirrors notifications.* in i18n) -->
   <string name="notifications_update_body">Version %s is ready to install.</string>
@@ -20,6 +22,8 @@
   <string name="notifications_avg_hr">avg %d bpm</string>
   <string name="notifications_duration_h_m">%dh %dm</string>
   <string name="notifications_duration_m">%dm</string>
+  <string name="notifications_low_battery_body">Strap battery at %d%% — charge soon</string>
+  <string name="notifications_alarm_not_synced_body">Your alarm hasn't been synced. Open Seraph to connect your device.</string>
 
   <!-- Sport labels -->
   <string name="sport_crossfit">CrossFit</string>

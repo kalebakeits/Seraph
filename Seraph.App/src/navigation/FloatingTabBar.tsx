@@ -49,6 +49,10 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
   const [sheetOpen, setSheetOpen] = useState(false);
   const { selectedDate } = useHomeDateStore();
 
+  // Get the current top-level tab (Home, Insights, or Settings)
+  const currentTab = state.routes[state.index]?.name;
+  const showPlusButton = currentTab === 'Home';
+
   useEffect(() => {
     Animated.spring(slideX, {
       toValue: state.index,
@@ -132,15 +136,17 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
             })}
           </View>
 
-          <TouchableOpacity
-            style={styles.plusBtn}
-            activeOpacity={0.85}
-            onPress={() => {
-              setSheetOpen(true);
-            }}
-          >
-            <Ionicons name="add" size={26} color="#fff" />
-          </TouchableOpacity>
+          {showPlusButton && (
+            <TouchableOpacity
+              style={styles.plusBtn}
+              activeOpacity={0.85}
+              onPress={() => {
+                setSheetOpen(true);
+              }}
+            >
+              <Ionicons name="add" size={26} color="#fff" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 

@@ -9,6 +9,8 @@
   <string name="notifications_types_update_available">Mise à jour disponible</string>
   <string name="notifications_types_announcement">Annonce</string>
   <string name="notifications_announcement_body">Appuyez pour voir.</string>
+  <string name="notifications_types_low_battery">Batterie faible</string>
+  <string name="notifications_types_alarm_not_synced">Alarme non synchronisée</string>
 
   <!-- Notification body fragments (mirrors notifications.* in i18n) -->
   <string name="notifications_update_body">La version %s est prête à installer.</string>
@@ -16,6 +18,8 @@
   <string name="notifications_avg_hr">moy %d bpm</string>
   <string name="notifications_duration_h_m">%dh %dmin</string>
   <string name="notifications_duration_m">%dmin</string>
+  <string name="notifications_low_battery_body">Batterie du bracelet à %d%% — chargez bientôt</string>
+  <string name="notifications_alarm_not_synced_body">Votre alarme n'a pas été synchronisée. Ouvrez Seraph pour connecter votre appareil.</string>
 
   <!-- Sport labels -->
   <string name="sport_crossfit">CrossFit</string>

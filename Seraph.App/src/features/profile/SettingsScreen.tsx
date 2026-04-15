@@ -39,10 +39,18 @@ export const SettingsScreen: React.FC = () => {
         <SafeText style={sectionStyles.sectionTitle}>{t('settings.title')}</SafeText>
         <View style={sectionStyles.container}>
           <SettingsRow
-            label={t('settings.profileAndPreferences')}
+            label={t('settings.profile')}
             iconName="person-outline"
             onPress={() => {
-              navigation.navigate('ProfileSettings');
+              navigation.navigate('Profile');
+            }}
+          />
+          <View style={styles.divider} />
+          <SettingsRow
+            label={t('settings.preferencesMenu')}
+            iconName="options-outline"
+            onPress={() => {
+              navigation.navigate('Preferences');
             }}
           />
           <View style={styles.divider} />
