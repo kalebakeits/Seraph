@@ -46,6 +46,8 @@ kotlin {
             implementation("androidx.sqlite:sqlite:2.4.0")
             // EncryptedSharedPreferences — wraps the DB passphrase with a hardware-backed KeyStore key
             implementation("androidx.security:security-crypto:1.1.0-alpha06")
+            // Firebase Cloud Messaging — remote push notifications
+            implementation("com.google.firebase:firebase-messaging:24.1.1")
             // Nordic Android BLE Library — handles GATT sequencing, write serialisation,
             // CCCD setup, and reconnection reliably.
             implementation("no.nordicsemi.android:ble:2.9.0")

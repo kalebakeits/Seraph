@@ -140,49 +140,63 @@ class SeraphModule(
 
         val cm = service?.connectionManager ?: return
 
+        // Emit current connection state immediately, then subscribe to changes
+        emitters.emitConnectionState(cm.connectionState.value)
+
         flowJobs.add(cm.connectionState.onEach { emitters.emitConnectionState(it) }.launchIn(scope))
+
+        // Helper to subscribe to orchestrator flows
+        fun subscribeToOrchestrator(orc: com.seraph.native.sync.WorkOrchestrator) {
+            // Emit current orchestrator state immediately
+            emitters.emitSyncState(orc.state.value)
+
+            orchestratorJobs.add(
+                orc.state
+                    .onEach { emitters.emitSyncState(it) }
+                    .launchIn(scope),
+            )
+            orchestratorJobs.add(
+                orc.deviceEvents
+                    .onEach { emitters.emitDeviceEvent(it) }
+                    .launchIn(scope),
+            )
+            orchestratorJobs.add(
+                orc.trimAcked
+                    .onEach { trim ->
+                        emitters.emit(
+                            "onTrimUpdated",
+                            Arguments.createMap().apply {
+                                putInt("trimValue", trim)
+                            },
+                        )
+                    }.launchIn(scope),
+            )
+            orchestratorJobs.add(
+                orc.realtimeHR
+                    .onEach { hr ->
+                        emitters.emit(
+                            "onRealtimeHR",
+                            Arguments.createMap().apply {
+                                putInt("hr", hr)
+                            },
+                        )
+                    }.launchIn(scope),
+            )
+            orc.startSyncLoop()
+            orc.triggerImmediately()
+        }
+
+        // Subscribe to orchestrator if already connected
+        if (cm.connectionState.value is ConnectionState.Connected) {
+            service?.orchestrator?.let { subscribeToOrchestrator(it) }
+        }
 
         flowJobs.add(
             cm.connectionState
                 .onEach { state ->
                     when (state) {
                         is ConnectionState.Connected ->
-                            service?.orchestrator?.let { orc ->
-                                orchestratorJobs.add(
-                                    orc.state
-                                        .onEach { emitters.emitSyncState(it) }
-                                        .launchIn(scope),
-                                )
-                                orchestratorJobs.add(
-                                    orc.deviceEvents
-                                        .onEach { emitters.emitDeviceEvent(it) }
-                                        .launchIn(scope),
-                                )
-                                orchestratorJobs.add(
-                                    orc.trimAcked
-                                        .onEach { trim ->
-                                            emitters.emit(
-                                                "onTrimUpdated",
-                                                Arguments.createMap().apply {
-                                                    putInt("trimValue", trim)
-                                                },
-                                            )
-                                        }.launchIn(scope),
-                                )
-                                orchestratorJobs.add(
-                                    orc.realtimeHR
-                                        .onEach { hr ->
-                                            emitters.emit(
-                                                "onRealtimeHR",
-                                                Arguments.createMap().apply {
-                                                    putInt("hr", hr)
-                                                },
-                                            )
-                                        }.launchIn(scope),
-                                )
-                                orc.startSyncLoop()
-                                orc.triggerImmediately()
-                            }
+                            service?.orchestrator?.let { subscribeToOrchestrator(it) }
                         is ConnectionState.Disconnected, is ConnectionState.Error -> {}
 
                         else -> {}
@@ -967,7 +981,8 @@ class SeraphModule(
             val clazz = Class.forName("com.seraph.native.blob.BlobUploader")
             val method = clazz.getMethod("getConfig", android.content.Context::class.java)
 
-            @Suppress("UNCHECKED_CAST") val pair = method.invoke(clazz.kotlin.objectInstance, reactApplicationContext) as Pair<String, String>
+            @Suppress("UNCHECKED_CAST")
+            val pair = method.invoke(clazz.kotlin.objectInstance, reactApplicationContext) as Pair<String, String>
             val (url, token) = pair
             val map =
                 Arguments.createMap().apply {

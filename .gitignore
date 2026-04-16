@@ -2,6 +2,12 @@
 .DS_Store
 **/.DS_Store
 
+# Service account keys and local scripts
+*.json.key
+*-firebase-adminsdk-*.json
+seraph-fitness-*.json
+send_fcm.py
+
 # Android build
 *.apk
 *.aab
@@ -26,6 +32,7 @@
 
 # Claude
 CLAUDE.md
+.claude/
 
 # React Native
 **/.expo/
@@ -35,6 +42,7 @@ CLAUDE.md
 **/sentry.properties
 **/debug.keystore
 **/release.keystore
+**/google-services.json
 *.jks
 *.p12
 .env*

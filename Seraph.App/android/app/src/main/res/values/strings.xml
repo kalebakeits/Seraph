@@ -3,19 +3,22 @@
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
 
-  <!-- Notification titles -->
-  <string name="notif_sleep_recorded">Sleep recorded</string>
-  <string name="notif_sleep_updated">Sleep updated</string>
-  <string name="notif_activity_detected">Activity detected</string>
-  <string name="notif_workout_updated">Workout updated</string>
-  <string name="notif_workout_saved">Workout saved</string>
-  <string name="notif_workout_logged">Workout logged</string>
+  <!-- Notification types (mirrors notifications.types.* in i18n) -->
+  <string name="notifications_types_sleep_detected">Sleep recorded</string>
+  <string name="notifications_types_sleep_edited">Sleep updated</string>
+  <string name="notifications_types_workout_detected">Activity detected</string>
+  <string name="notifications_types_workout_edited">Workout updated</string>
+  <string name="notifications_types_workout_recorded">Workout saved</string>
+  <string name="notifications_types_workout_logged">Workout logged</string>
+  <string name="notifications_types_update_available">Update available</string>
+  <string name="notifications_types_announcement">Announcement</string>
 
-  <!-- Notification body fragments -->
-  <string name="notif_score">Score %d</string>
-  <string name="notif_avg_hr">avg %d bpm</string>
-  <string name="notif_duration_h_m">%dh %dm</string>
-  <string name="notif_duration_m">%dm</string>
+  <!-- Notification body fragments (mirrors notifications.* in i18n) -->
+  <string name="notifications_update_body">Version %s is ready to install.</string>
+  <string name="notifications_score">Score %d</string>
+  <string name="notifications_avg_hr">avg %d bpm</string>
+  <string name="notifications_duration_h_m">%dh %dm</string>
+  <string name="notifications_duration_m">%dm</string>
 
   <!-- Sport labels -->
   <string name="sport_crossfit">CrossFit</string>

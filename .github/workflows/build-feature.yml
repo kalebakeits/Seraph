@@ -2,22 +2,19 @@ name: Feature Build
 
 on:
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to build (e.g. feat/notifications)'
-        required: true
-        default: ''
 
 jobs:
   build:
     name: Build feature APK
     runs-on: ubuntu-latest
 
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.branch }}
           fetch-depth: 0
 
       - name: Set up JDK 17
@@ -54,11 +51,17 @@ jobs:
           DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
         run: echo "$DEBUG_KEYSTORE_BASE64" | base64 --decode > debug.keystore
 
+      - name: Restore google-services.json
+        working-directory: Seraph.App/android/app
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: echo "$GOOGLE_SERVICES_JSON" > google-services.json
+
       - name: Compute version name
         id: version
         run: |
           BASE=$(grep versionName Seraph.App/android/app/build.gradle | grep -oP '"\K[^"]+')
-          BRANCH="${{ github.event.inputs.branch }}"
+          BRANCH="${{ github.ref_name }}"
           SLUG=$(echo "$BRANCH" | sed 's|.*/||' | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
           SHA=$(git rev-parse --short HEAD)
           echo "version=${BASE}-dev-${SLUG}+${SHA}" >> $GITHUB_OUTPUT
@@ -103,3 +106,22 @@ jobs:
           name: seraph-${{ steps.version.outputs.version }}
           path: Seraph.App/android/app/build/outputs/apk/staging/seraph-${{ steps.version.outputs.version }}.apk
           retention-days: 14
+
+  distribute:
+    name: Distribute to Firebase (you)
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: seraph-${{ needs.build.outputs.version }}
+
+      - name: Upload to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          token: ${{ secrets.FIREBASE_TOKEN }}
+          testers: ${{ secrets.FIREBASE_TESTER_EMAIL }}
+          file: seraph-${{ needs.build.outputs.version }}.apk

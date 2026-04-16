@@ -12,6 +12,9 @@ export interface NotificationPayload {
   score?: number;
   avg_hr?: number;
   sport?: string;
+  version?: string;
+  message?: string;
+  content_id?: string;
 }
 
 export function parsePayload(raw: string | null): NotificationPayload {
@@ -26,10 +29,19 @@ export function parsePayload(raw: string | null): NotificationPayload {
 /**
  * Maps notification type + payload sport to the activity-card icon style.
  */
+const SYSTEM_TYPES = new Set(['update_available', 'announcement']);
+
+export function isSystemNotification(type: string): boolean {
+  return SYSTEM_TYPES.has(type);
+}
+
 export function iconForNotification(
   type: string,
   sport: string | undefined,
 ): { name: React.ComponentProps<typeof Ionicons>['name']; color: string } {
+  if (type === 'update_available' || type === 'announcement')
+    return { name: 'megaphone-outline', color: theme.colors.primary };
+
   const isSleep = type === 'sleep_detected' || type === 'sleep_edited';
   if (isSleep) return { name: 'moon', color: theme.colors.sleep };
 

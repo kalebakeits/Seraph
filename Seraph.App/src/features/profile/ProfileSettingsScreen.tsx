@@ -96,6 +96,7 @@ export const ProfileSettingsScreen: React.FC = () => {
 
       if (patch.language && patch.language !== i18n.language.slice(0, 2)) {
         await i18n.changeLanguage(patch.language);
+        await appParametersRepository.set('language', patch.language);
       }
 
       void queryClient.invalidateQueries({ queryKey: ['sleepGoal'] });

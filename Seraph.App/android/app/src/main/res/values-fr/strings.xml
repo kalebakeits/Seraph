@@ -1,17 +1,20 @@
 <resources>
-  <!-- Notification titles -->
-  <string name="notif_sleep_recorded">Sommeil enregistré</string>
-  <string name="notif_sleep_updated">Sommeil mis à jour</string>
-  <string name="notif_activity_detected">Activité détectée</string>
-  <string name="notif_workout_updated">Séance mise à jour</string>
-  <string name="notif_workout_saved">Séance sauvegardée</string>
-  <string name="notif_workout_logged">Séance enregistrée</string>
+  <!-- Notification types (mirrors notifications.types.* in i18n) -->
+  <string name="notifications_types_sleep_detected">Sommeil enregistré</string>
+  <string name="notifications_types_sleep_edited">Sommeil mis à jour</string>
+  <string name="notifications_types_workout_detected">Activité détectée</string>
+  <string name="notifications_types_workout_edited">Séance mise à jour</string>
+  <string name="notifications_types_workout_recorded">Séance sauvegardée</string>
+  <string name="notifications_types_workout_logged">Séance enregistrée</string>
+  <string name="notifications_types_update_available">Mise à jour disponible</string>
+  <string name="notifications_types_announcement">Annonce</string>
 
-  <!-- Notification body fragments -->
-  <string name="notif_score">Note %d</string>
-  <string name="notif_avg_hr">moy %d bpm</string>
-  <string name="notif_duration_h_m">%dh %dmin</string>
-  <string name="notif_duration_m">%dmin</string>
+  <!-- Notification body fragments (mirrors notifications.* in i18n) -->
+  <string name="notifications_update_body">La version %s est prête à installer.</string>
+  <string name="notifications_score">Note %d</string>
+  <string name="notifications_avg_hr">moy %d bpm</string>
+  <string name="notifications_duration_h_m">%dh %dmin</string>
+  <string name="notifications_duration_m">%dmin</string>
 
   <!-- Sport labels -->
   <string name="sport_crossfit">CrossFit</string>
