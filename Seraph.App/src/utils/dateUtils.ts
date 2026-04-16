@@ -132,6 +132,46 @@ export function formatDuration(
   return parts.join(' ');
 }
 
+/**
+ * Parses a 'HH:mm' time string into a Date (today's date, time set to h:m).
+ */
+export function timeStringToDate(time: string): Date {
+  const [h, m] = time.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
+/**
+ * Formats a Date into { hours, minutes, ampm } parts for 12-hour display.
+ */
+export function formatDisplayTime(date: Date): { hours: string; minutes: string; ampm: string } {
+  const h = date.getHours();
+  const m = date.getMinutes();
+  return {
+    hours: String(h % 12 || 12),
+    minutes: String(m).padStart(2, '0'),
+    ampm: h >= 12 ? 'PM' : 'AM',
+  };
+}
+
+/**
+ * Parses an ISO date string ('YYYY-MM-DD') into a local Date at midnight.
+ */
+export function dateFromISO(iso: string): Date {
+  return new Date(iso + 'T00:00:00');
+}
+
+/**
+ * Formats a Date as a local 'YYYY-MM-DD' string.
+ */
+export function isoFromDate(date: Date): string {
+  const y = String(date.getFullYear());
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 /** Returns today's date as a local 'YYYY-MM-DD' string. */
 export function todayISO(): string {
   const d = new Date();

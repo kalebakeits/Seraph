@@ -22,6 +22,7 @@ import { theme } from '../../theme';
 import { appParametersRepository } from '../../services/database/drizzle/repositories/appParametersRepository';
 import { sleepEventsRepository } from '../../services/database/drizzle/repositories/sleepEventsRepository';
 import { nativeSetAlarm, nativeStartNap } from '../../services/ble/nativeModule';
+import { formatDuration, formatDisplayTime } from '../../utils/dateUtils';
 
 type NapMode = 'simple' | 'smart';
 
@@ -33,24 +34,6 @@ function defaultWakeUpDate(): Date {
 
 function durationFromNow(wakeUpDate: Date): number {
   return Math.max(0, wakeUpDate.getTime() - Date.now());
-}
-
-function formatDurationMs(ms: number): string {
-  const totalMin = Math.round(ms / 60000);
-  if (totalMin < 60) return `${String(totalMin)} min`;
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  return m === 0 ? `${String(h)} hr` : `${String(h)} hr ${String(m)} min`;
-}
-
-function formatDisplayTime(date: Date): { hours: string; minutes: string; ampm: string } {
-  const h = date.getHours();
-  const m = date.getMinutes();
-  return {
-    hours: String(h % 12 || 12),
-    minutes: String(m).padStart(2, '0'),
-    ampm: h >= 12 ? 'PM' : 'AM',
-  };
 }
 
 /** Duration picker: a Date whose h:mm = duration in hours+minutes */
@@ -97,15 +80,21 @@ export const NapSetupScreen: React.FC = () => {
   };
 
   const handleWakeUpConfirm = (date: Date) => {
-    setWakeUpDate(date);
-    setDurationMs(durationFromNow(date));
+    const proposedCutoff = date.getTime();
+    const minCutoff = Date.now() + durationMs;
+    // Only push cutoff forward if it would land before duration ends
+    const resolvedCutoff = proposedCutoff > minCutoff ? proposedCutoff : minCutoff + 60_000;
+    setWakeUpDate(new Date(resolvedCutoff));
     setShowWakeUpPicker(false);
   };
 
   const handleDurationConfirm = (date: Date) => {
     const ms = (date.getHours() * 60 + date.getMinutes()) * 60 * 1000;
     setDurationMs(ms);
-    setWakeUpDate(new Date(Date.now() + ms));
+    // Only push cutoff forward if duration now exceeds it
+    if (Date.now() + ms > wakeUpDate.getTime()) {
+      setWakeUpDate(new Date(Date.now() + ms + 60_000));
+    }
     setShowDurationPicker(false);
   };
 
@@ -236,7 +225,7 @@ export const NapSetupScreen: React.FC = () => {
                 if (mode === 'smart') setShowDurationPicker(true);
               }}
             >
-              <SafeText style={styles.durationText}>{formatDurationMs(durationMs)}</SafeText>
+              <SafeText style={styles.durationText}>{formatDuration(durationMs)}</SafeText>
               <Ionicons name="pencil-outline" size={14} color={theme.colors.text.muted} />
             </TouchableOpacity>
           </Section>

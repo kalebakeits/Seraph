@@ -10,6 +10,7 @@ import { Section } from '../../components/common/Section';
 import { HelperText } from '../../components/common/HelperText';
 import { theme } from '../../theme';
 import type { AlarmMode } from '../../services/database/userPreferences/alarmPreferences';
+import { timeStringToDate, formatDisplayTime } from '../../utils/dateUtils';
 
 const MODES: { key: AlarmMode; labelKey: string }[] = [
   { key: 'disabled', labelKey: 'alarm.off' },
@@ -18,23 +19,6 @@ const MODES: { key: AlarmMode; labelKey: string }[] = [
 ];
 
 const DAY_KEYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-
-function timeStringToDate(time: string): Date {
-  const [h, m] = time.split(':').map(Number);
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  return d;
-}
-
-function formatDisplayTime(time: string): { hours: string; minutes: string; ampm: string } {
-  const date = timeStringToDate(time);
-  const h = date.getHours();
-  const m = date.getMinutes();
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const hours = String(h % 12 || 12);
-  const minutes = String(m).padStart(2, '0');
-  return { hours, minutes, ampm };
-}
 
 export const WakeUpScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -92,7 +76,7 @@ export const WakeUpScreen: React.FC = () => {
     scheduleAutoSave(pendingTime, pendingMode, next);
   };
 
-  const { hours, minutes, ampm } = formatDisplayTime(pendingTime);
+  const { hours, minutes, ampm } = formatDisplayTime(timeStringToDate(pendingTime));
   const isEnabled = pendingMode !== 'disabled';
 
   return (

@@ -52,7 +52,14 @@ export const PreferencesScreen: React.FC = () => {
         'notif_activity_workout',
       ];
       const values = await Promise.all(keys.map(k => appParametersRepository.get(k)));
-      const [minTrimp, globalEnabled, deviceLowBattery, deviceAlarmNotSet, activitySleep, activityWorkout] = values;
+      const [
+        minTrimp,
+        globalEnabled,
+        deviceLowBattery,
+        deviceAlarmNotSet,
+        activitySleep,
+        activityWorkout,
+      ] = values;
 
       setState(s => ({
         ...s,
