@@ -197,6 +197,7 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route }) => {
         onCancel={() => {
           setStartPickerOpen(false);
         }}
+        mode="datetime"
       />
       <TimePicker
         time={detail.endDate}
@@ -206,6 +207,7 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route }) => {
         onCancel={() => {
           setEndPickerOpen(false);
         }}
+        mode="datetime"
       />
       <BlockingOverlay visible={saving} />
     </ScreenLayout>

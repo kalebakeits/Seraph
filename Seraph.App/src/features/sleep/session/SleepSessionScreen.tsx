@@ -201,6 +201,7 @@ export const SleepSessionScreen: React.FC<Props> = ({ route }) => {
         onCancel={() => {
           setStartPickerOpen(false);
         }}
+        mode="datetime"
       />
 
       <TimePicker
@@ -211,6 +212,7 @@ export const SleepSessionScreen: React.FC<Props> = ({ route }) => {
         onCancel={() => {
           setEndPickerOpen(false);
         }}
+        mode="datetime"
       />
 
       <BlockingOverlay visible={saving} />

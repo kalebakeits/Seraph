@@ -77,13 +77,35 @@ export const NapSetupSheet: React.FC<NapSetupSheetProps> = ({ onClose }) => {
     // Interpret the picked time as h:mm → duration in ms
     const ms = snapToMinute((date.getHours() * 60 + date.getMinutes()) * 60 * 1000);
     setDurationMs(ms);
-    setCutoffDate(defaultCutoffDate(ms));
-    setPickerDate(defaultCutoffDate(ms));
+
+    // Only update cutoff if it would conflict (now + duration > cutoff)
+    const nowMs = Date.now();
+    const proposedAlarmMs = nowMs + ms;
+    if (proposedAlarmMs >= cutoffDate.getTime()) {
+      // Conflict: cutoff would fire before duration completes
+      // Set cutoff to duration + 1 minute buffer
+      const newCutoff = new Date(proposedAlarmMs + 60000);
+      setCutoffDate(newCutoff);
+      setPickerDate(newCutoff);
+    }
+
     setShowDurationPicker(false);
   };
 
   const handleCutoffConfirm = (date: Date) => {
-    setCutoffDate(date);
+    // Check if cutoff conflicts with duration
+    const nowMs = Date.now();
+    const proposedAlarmMs = nowMs + durationMs;
+
+    if (date.getTime() <= proposedAlarmMs) {
+      // Conflict: user set cutoff before duration would complete
+      // Adjust cutoff to be after duration + 1 minute buffer
+      const adjustedCutoff = new Date(proposedAlarmMs + 60000);
+      setCutoffDate(adjustedCutoff);
+    } else {
+      setCutoffDate(date);
+    }
+
     setShowCutoffPicker(false);
   };
 

@@ -232,6 +232,7 @@ export const LogActivitySheet: React.FC<LogActivitySheetProps> = ({
           onCancel={() => {
             setStartPickerOpen(false);
           }}
+          mode="datetime"
         />
         <TimePicker
           time={endDate}
@@ -241,6 +242,7 @@ export const LogActivitySheet: React.FC<LogActivitySheetProps> = ({
           onCancel={() => {
             setEndPickerOpen(false);
           }}
+          mode="datetime"
         />
       </Modal>
 
