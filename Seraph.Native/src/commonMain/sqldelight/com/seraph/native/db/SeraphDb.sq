@@ -443,8 +443,8 @@ SELECT last_insert_rowid();
 -- ─── habit_definitions ────────────────────────────────────────────────────────
 
 insertHabitDefinition:
-INSERT INTO habit_definitions(name_key, name_custom, type, unit, default_quantity, is_manual, is_active, sort_order, created_at)
-VALUES (:name_key, :name_custom, :type, :unit, :default_quantity, :is_manual, :is_active, :sort_order, :created_at);
+INSERT INTO habit_definitions(name_key, name_custom, type, unit, default_quantity, step, is_manual, is_active, sort_order, created_at)
+VALUES (:name_key, :name_custom, :type, :unit, :default_quantity, :step, :is_manual, :is_active, :sort_order, :created_at);
 
 getAllHabitDefinitions:
 SELECT * FROM habit_definitions ORDER BY sort_order ASC, id ASC;
@@ -455,11 +455,20 @@ SELECT * FROM habit_definitions WHERE is_active = 1 ORDER BY sort_order ASC, id 
 setHabitActive:
 UPDATE habit_definitions SET is_active = :is_active WHERE id = :id;
 
+setHabitSortOrder:
+UPDATE habit_definitions SET sort_order = :sort_order WHERE id = :id;
+
+updateHabitDefinition:
+UPDATE habit_definitions SET name_custom = :name_custom, type = :type, unit = :unit, step = :step WHERE id = :id;
+
 deleteHabitDefinition:
 DELETE FROM habit_definitions WHERE id = :id AND is_manual = 1;
 
 habitDefinitionCount:
 SELECT COUNT(*) FROM habit_definitions;
+
+maxHabitSortOrder:
+SELECT COALESCE(MAX(sort_order), -1) FROM habit_definitions WHERE is_active = 1;
 
 -- ─── habit_logs ───────────────────────────────────────────────────────────────
 

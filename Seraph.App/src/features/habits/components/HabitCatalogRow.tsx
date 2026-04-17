@@ -9,24 +9,38 @@ import type { HabitDefinition } from '../../../services/database/drizzle/schema'
 interface HabitCatalogRowProps {
   habit: HabitDefinition;
   onToggle: (id: number, active: boolean) => void;
+  onDrag?: () => void;
+  dragging?: boolean;
 }
 
-export const HabitCatalogRow: React.FC<HabitCatalogRowProps> = ({ habit, onToggle }) => {
+export const HabitCatalogRow: React.FC<HabitCatalogRowProps> = ({
+  habit,
+  onToggle,
+  onDrag,
+  dragging = false,
+}) => {
   const { t } = useTranslation();
   const active = habit.is_active === 1;
 
   const label = habit.is_manual === 1 ? (habit.name_custom ?? '') : t(habit.name_key ?? '');
-
   const typeLabel = t(`habits.type.${habit.type}`);
 
   return (
     <TouchableOpacity
-      style={styles.row}
+      style={[styles.row, dragging && styles.rowDragging]}
       onPress={() => {
         onToggle(habit.id, !active);
       }}
       activeOpacity={0.7}
     >
+      <TouchableOpacity
+        style={styles.dragHandle}
+        onLongPress={onDrag}
+        delayLongPress={150}
+        activeOpacity={0.5}
+      >
+        <Ionicons name="reorder-three-outline" size={20} color={theme.colors.text.muted} />
+      </TouchableOpacity>
       <View style={styles.text}>
         <SafeText style={styles.label}>{label}</SafeText>
         <SafeText style={styles.meta}>
@@ -49,6 +63,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: theme.colors.overlay.light,
+  },
+  rowDragging: {
+    backgroundColor: theme.colors.overlay.light,
+  },
+  dragHandle: {
+    paddingRight: theme.spacing.md,
+    paddingVertical: 4,
   },
   text: {
     flex: 1,

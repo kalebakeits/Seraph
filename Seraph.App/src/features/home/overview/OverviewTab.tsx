@@ -18,6 +18,7 @@ import type { HomeStackParamList } from '../../../navigation/HomeStackNavigator'
 import { ActivityType } from '../../../types/ActivityType';
 import { StressTimelineCard } from './components/StressTimelineCard';
 import { Section } from '../../../components/common/Section';
+import { HabitConsistencyStrip } from '../../habits/components/HabitConsistencyStrip';
 import { todayISO } from '../../../utils/dateUtils';
 
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>;
@@ -118,6 +119,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         )}
 
         <StressTimelineCard selectedDate={selectedDate} />
+        <HabitConsistencyStrip selectedDate={selectedDate} />
       </Animated.ScrollView>
       {showCompact && (
         <CompactRingsBar

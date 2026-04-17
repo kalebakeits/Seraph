@@ -43,6 +43,45 @@ class HabitDefinitionsRepository {
       .where(eq(habitDefinitions.id, id));
   }
 
+  async setSortOrder(id: number, sortOrder: number): Promise<void> {
+    await getDb()
+      .update(habitDefinitions)
+      .set({ sort_order: sortOrder })
+      .where(eq(habitDefinitions.id, id));
+  }
+
+  async maxActiveSortOrder(): Promise<number> {
+    const rows = await getDb()
+      .select({ sort_order: habitDefinitions.sort_order })
+      .from(habitDefinitions)
+      .where(eq(habitDefinitions.is_active, 1))
+      .orderBy(habitDefinitions.sort_order);
+    return rows.length > 0 ? rows[rows.length - 1].sort_order : -1;
+  }
+
+  async insertCustom(params: {
+    name: string;
+    type: 'boolean' | 'count' | 'duration';
+    unit: string | null;
+    step: number | null;
+  }): Promise<number> {
+    const nextOrder = (await this.maxActiveSortOrder()) + 1;
+    const result = await getDb()
+      .insert(habitDefinitions)
+      .values({
+        name_custom: params.name,
+        type: params.type,
+        unit: params.unit,
+        step: params.step,
+        is_manual: 1,
+        is_active: 1,
+        sort_order: nextOrder,
+        created_at: Date.now(),
+      })
+      .returning({ id: habitDefinitions.id });
+    return result[0].id;
+  }
+
   async insert(habit: Omit<HabitDefinition, 'id'>): Promise<number> {
     const result = await getDb()
       .insert(habitDefinitions)

@@ -17,6 +17,7 @@ export async function seedHabitsIfNeeded(): Promise<void> {
       type: entry.type,
       unit: entry.unit,
       default_quantity: entry.default_quantity,
+      step: null,
       is_manual: 0,
       is_active: 0,
       sort_order: entry.sort_order,

@@ -632,7 +632,15 @@
       "creatine": "Créatine",
       "cannabis": "Cannabis",
       "nicotine": "Nicotine"
-    }
+    },
+    "customName": "Nom",
+    "customNamePlaceholder": "ex. Douche froide",
+    "customType": "Type",
+    "customUnit": "Unité (optionnel)",
+    "customUnitPlaceholderCount": "ex. tasses",
+    "customUnitPlaceholderDuration": "ex. minutes",
+    "customStep": "Incrément (défaut : {{default}})",
+    "consistency": "Habitudes cette semaine"
   },
   "notifications": {
     "title": "Notifications",

@@ -1,45 +1,83 @@
-import React, { useState } from 'react';
-import { View, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import DraggableFlatList, {
+  type RenderItemParams,
+  ScaleDecorator,
+} from 'react-native-draggable-flatlist';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useQueryClient } from '@tanstack/react-query';
 import { SafeText } from '../../components/common/SafeText';
 import { HabitCatalogRow } from './components/HabitCatalogRow';
+import { AddCustomHabitSheet } from './AddCustomHabitSheet';
 import { useAllHabits } from './hooks/useAllHabits';
 import { habitDefinitionsRepository } from '../../services/database/drizzle';
 import { theme, tabStyles } from '../../theme';
+import type { HabitDefinition } from '../../services/database/drizzle/schema';
 
 export function ChooseHabitsScreen() {
   const { t } = useTranslation();
-  const navigation = useNavigation();
   const queryClient = useQueryClient();
+  const [addSheetOpen, setAddSheetOpen] = useState(false);
   const { data: habits = [] } = useAllHabits();
-  const [pending, setPending] = useState<Record<number, boolean>>({});
 
-  const handleToggle = (id: number, active: boolean) => {
-    setPending(prev => ({ ...prev, [id]: active }));
-  };
+  const [items, setItems] = useState<HabitDefinition[] | null>(null);
+  const displayItems = items ?? habits;
 
-  const handleSave = async () => {
-    for (const [idStr, active] of Object.entries(pending)) {
-      await habitDefinitionsRepository.setActive(Number(idStr), active);
-    }
-    void queryClient.invalidateQueries({ queryKey: ['habits'] });
-    navigation.goBack();
-  };
+  const saveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const displayHabits = habits.map(h => {
-    if (!(h.id in pending)) return h;
-    return { ...h, is_active: pending[h.id] ? 1 : 0 };
-  });
+  const scheduleSave = useCallback(
+    (snapshot: HabitDefinition[]) => {
+      if (saveRef.current) clearTimeout(saveRef.current);
+      saveRef.current = setTimeout(() => {
+        void (async () => {
+          for (const h of snapshot) {
+            await habitDefinitionsRepository.setActive(h.id, h.is_active === 1);
+          }
+          for (let i = 0; i < snapshot.length; i++) {
+            await habitDefinitionsRepository.setSortOrder(snapshot[i].id, i);
+          }
+          void queryClient.invalidateQueries({ queryKey: ['habits'] });
+        })();
+      }, 400);
+    },
+    [queryClient],
+  );
+
+  const handleToggle = useCallback(
+    (id: number, active: boolean) => {
+      const next = displayItems.map(h => (h.id === id ? { ...h, is_active: active ? 1 : 0 } : h));
+      setItems(next);
+      scheduleSave(next);
+    },
+    [displayItems, scheduleSave],
+  );
+
+  const handleDragEnd = useCallback(
+    ({ data }: { data: HabitDefinition[] }) => {
+      setItems(data);
+      scheduleSave(data);
+    },
+    [scheduleSave],
+  );
+
+  const renderItem = useCallback(
+    ({ item, drag, isActive }: RenderItemParams<HabitDefinition>) => (
+      <ScaleDecorator>
+        <HabitCatalogRow habit={item} onToggle={handleToggle} onDrag={drag} dragging={isActive} />
+      </ScaleDecorator>
+    ),
+    [handleToggle],
+  );
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={displayHabits}
+    <GestureHandlerRootView style={styles.root}>
+      <DraggableFlatList
+        data={displayItems}
         keyExtractor={item => String(item.id)}
-        renderItem={({ item }) => <HabitCatalogRow habit={item} onToggle={handleToggle} />}
+        renderItem={renderItem}
+        onDragEnd={handleDragEnd}
         contentContainerStyle={styles.list}
         ListHeaderComponent={<SafeText style={styles.hint}>{t('habits.chooseHint')}</SafeText>}
         ListFooterComponent={
@@ -47,7 +85,7 @@ export function ChooseHabitsScreen() {
             style={styles.addCustomBtn}
             activeOpacity={0.7}
             onPress={() => {
-              navigation.navigate('AddCustomHabit' as never);
+              setAddSheetOpen(true);
             }}
           >
             <Ionicons name="add-circle-outline" size={20} color={theme.colors.recovery} />
@@ -55,27 +93,24 @@ export function ChooseHabitsScreen() {
           </TouchableOpacity>
         }
       />
-
-      <TouchableOpacity
-        style={styles.saveBtn}
-        onPress={() => {
-          void handleSave();
-        }}
-        activeOpacity={0.7}
-      >
-        <SafeText style={styles.saveBtnText}>{t('common.save')}</SafeText>
-      </TouchableOpacity>
-    </View>
+      {addSheetOpen && (
+        <AddCustomHabitSheet
+          onClose={() => {
+            setAddSheetOpen(false);
+          }}
+        />
+      )}
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
   },
   list: {
     paddingTop: 80,
-    paddingBottom: tabStyles.content.paddingBottom + 64,
+    paddingBottom: tabStyles.content.paddingBottom + 16,
   },
   hint: {
     fontSize: theme.typography.sizes.sm,
@@ -95,20 +130,5 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.sizes.md,
     color: theme.colors.recovery,
     fontWeight: theme.typography.weights.semibold,
-  },
-  saveBtn: {
-    position: 'absolute',
-    bottom: tabStyles.content.paddingBottom,
-    left: theme.spacing.lg,
-    right: theme.spacing.lg,
-    backgroundColor: theme.colors.recovery,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    alignItems: 'center',
-  },
-  saveBtnText: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    color: '#000',
   },
 });

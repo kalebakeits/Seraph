@@ -131,6 +131,7 @@ export const habitDefinitions = sqliteTable('habit_definitions', {
   type:             text('type').notNull(),    // 'boolean' | 'count' | 'duration'
   unit:             text('unit'),              // display only: 'cups', 'hours', 'sessions', etc.
   default_quantity: real('default_quantity'),  // pre-filled value when logging
+  step:             real('step'),              // stepper increment; null = type default (1 for count, 5 for duration)
   is_manual:        integer('is_manual').notNull().default(0),  // 0 = seeded, 1 = user-created
   is_active:        integer('is_active').notNull().default(0),  // 1 = user is tracking this habit
   sort_order:       integer('sort_order').notNull().default(0),

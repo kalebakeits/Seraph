@@ -36,10 +36,10 @@ export const HabitRow: React.FC<HabitRowProps> = ({ habit, value, onChange }) =>
       </View>
       {habit.type === 'boolean' && <BooleanHabitInput value={value} onChange={handleChange} />}
       {habit.type === 'count' && (
-        <StepperHabitInput value={value} step={1} onChange={handleChange} />
+        <StepperHabitInput value={value} step={habit.step ?? 1} onChange={handleChange} />
       )}
       {habit.type === 'duration' && (
-        <StepperHabitInput value={value} step={5} onChange={handleChange} />
+        <StepperHabitInput value={value} step={habit.step ?? 5} onChange={handleChange} />
       )}
     </View>
   );

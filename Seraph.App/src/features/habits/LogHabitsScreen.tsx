@@ -38,36 +38,56 @@ export const LogHabitsScreen: React.FC = () => {
   const { data: habits = [] } = useActiveHabitsForDate(date);
   const { data: existingLogs = [] } = useHabitLogs(date);
 
+  const [pending, setPending] = useState<Record<number, number | null>>({});
+  const pendingRef = useRef<Record<number, number | null>>({});
   const saveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const valueFor = (habitId: number): number | null => {
+    if (habitId in pending) return pending[habitId];
     const log = existingLogs.find(l => l.habit_id === habitId);
     return log?.quantity ?? null;
   };
 
-  const persist = useCallback(
-    async (habitId: number, value: number | null, currentDate: string) => {
-      if (value === null) {
-        await habitLogsRepository.delete(habitId, currentDate);
-      } else {
-        await habitLogsRepository.upsert({ habit_id: habitId, date: currentDate, quantity: value });
-      }
+  const flushPending = useCallback(
+    async (snapshot: Record<number, number | null>, currentDate: string) => {
+      await Promise.all(
+        Object.entries(snapshot).map(([idStr, value]) => {
+          const habitId = Number(idStr);
+          if (value === null) {
+            return habitLogsRepository.delete(habitId, currentDate);
+          }
+          return habitLogsRepository.upsert({
+            habit_id: habitId,
+            date: currentDate,
+            quantity: value,
+          });
+        }),
+      );
       void queryClient.invalidateQueries({ queryKey: ['habitLogs', currentDate] });
+      void queryClient.invalidateQueries({ queryKey: ['habitConsistency'] });
     },
     [queryClient],
   );
 
   const handleChange = (habitId: number, value: number | null) => {
+    const next = { ...pendingRef.current, [habitId]: value };
+    pendingRef.current = next;
+    setPending(next);
     if (saveRef.current) clearTimeout(saveRef.current);
     saveRef.current = setTimeout(() => {
-      void persist(habitId, value, date);
+      void flushPending(pendingRef.current, date);
     }, 800);
   };
 
   const dateLabel =
     date === today
       ? t('common.today')
-      : dateFromISO(date).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' });
+      : dateFromISO(date).toLocaleDateString(i18n.language, {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        });
 
   const chooseAction = (
     <TouchableOpacity
@@ -129,6 +149,8 @@ export const LogHabitsScreen: React.FC = () => {
         onConfirm={d => {
           setDatePickerOpen(false);
           setDate(isoFromDate(d));
+          setPending({});
+          pendingRef.current = {};
         }}
         onCancel={() => {
           setDatePickerOpen(false);

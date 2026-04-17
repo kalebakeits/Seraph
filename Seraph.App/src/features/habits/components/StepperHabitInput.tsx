@@ -16,18 +16,19 @@ export const StepperHabitInput: React.FC<StepperHabitInputProps> = ({ value, ste
   const displayed = value ?? 0;
 
   const increment = () => {
-    onChange(displayed + step);
+    onChange(value === null ? 0 : displayed + step);
   };
 
   const decrement = () => {
+    if (value === null) return;
     const next = displayed - step;
-    onChange(next <= 0 ? null : next);
+    onChange(next < 0 ? null : next);
   };
 
   const commitInput = () => {
     setEditing(false);
     const parsed = parseFloat(inputText);
-    if (!isNaN(parsed) && parsed > 0) {
+    if (!isNaN(parsed) && parsed >= 0) {
       onChange(parsed);
     } else {
       onChange(null);
@@ -40,7 +41,7 @@ export const StepperHabitInput: React.FC<StepperHabitInputProps> = ({ value, ste
         style={styles.valueBtn}
         activeOpacity={0.7}
         onPress={() => {
-          setInputText(displayed > 0 ? String(displayed) : '');
+          setInputText(value !== null ? String(displayed) : '');
           setEditing(true);
         }}
       >
@@ -56,8 +57,8 @@ export const StepperHabitInput: React.FC<StepperHabitInputProps> = ({ value, ste
             selectTextOnFocus
           />
         ) : (
-          <SafeText style={[styles.value, displayed === 0 && styles.valueMuted]}>
-            {displayed > 0 ? String(displayed) : '—'}
+          <SafeText style={[styles.value, value === null && styles.valueMuted]}>
+            {value !== null ? String(displayed) : '—'}
           </SafeText>
         )}
       </TouchableOpacity>
@@ -66,7 +67,7 @@ export const StepperHabitInput: React.FC<StepperHabitInputProps> = ({ value, ste
         <Ionicons
           name="remove-circle-outline"
           size={26}
-          color={displayed > 0 ? theme.colors.text.primary : theme.colors.text.muted}
+          color={value !== null ? theme.colors.text.primary : theme.colors.text.muted}
         />
       </TouchableOpacity>
 

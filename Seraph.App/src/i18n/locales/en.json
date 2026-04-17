@@ -632,7 +632,15 @@
       "creatine": "Creatine",
       "cannabis": "Cannabis",
       "nicotine": "Nicotine"
-    }
+    },
+    "customName": "Name",
+    "customNamePlaceholder": "e.g. Cold shower",
+    "customType": "Type",
+    "customUnit": "Unit (optional)",
+    "customUnitPlaceholderCount": "e.g. cups",
+    "customUnitPlaceholderDuration": "e.g. minutes",
+    "customStep": "Step size (default: {{default}})",
+    "consistency": "Habits this week"
   },
   "notifications": {
     "title": "Notifications",
