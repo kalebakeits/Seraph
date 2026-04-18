@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
 import { ActivityRing } from '../../../components/common/ActivityRing';
 import { RecoveryStatItem } from './RecoveryStatItem';
-import { theme } from '../../../theme';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
+import { useTheme, type Theme } from '../../../theme';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { scoreColor } from './RecoveryScore';
 import type { RecoveryFactorsData } from '../hooks/useRecoveryFactors';
 import { formatDuration } from '../../../utils/dateUtils';
@@ -16,10 +16,13 @@ interface Props {
 }
 
 export const RecoveryCard: React.FC<Props> = ({ data }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
 
   const score = data?.score ?? null;
-  const ringColor = score !== null ? scoreColor(score) : theme.colors.recovery;
+  const ringColor = score !== null ? scoreColor(score, theme) : theme.colors.recovery;
 
   const hrv = data?.factors.find(f => f.key === 'hrv');
   const rhr = data?.factors.find(f => f.key === 'rhr');
@@ -84,27 +87,29 @@ export const RecoveryCard: React.FC<Props> = ({ data }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  leftCol: { flex: 1 },
-  heroRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginTop: theme.spacing.xs,
-  },
-  heroValue: {
-    fontSize: theme.typography.sizes.hero,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-  statGrid: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  statCol: { flex: 1 },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.md,
+      gap: theme.spacing.sm,
+    },
+    leftCol: { flex: 1 },
+    heroRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      marginTop: theme.spacing.xs,
+    },
+    heroValue: {
+      fontSize: theme.typography.sizes.hero,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    statGrid: {
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+    },
+    statCol: { flex: 1 },
+  });
+}

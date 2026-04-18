@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../components/common/SafeText';
-import { theme } from '../../theme';
+import { useTheme } from '../../theme';
 import { PageContainer } from './PageContainer';
-import { styles } from './OnboardingStyles';
+import { buildStyles } from './OnboardingStyles';
 
 interface Props {
   width: number;
 }
 
 export const DonePage: React.FC<Props> = ({ width }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   return (
     <PageContainer width={width}>

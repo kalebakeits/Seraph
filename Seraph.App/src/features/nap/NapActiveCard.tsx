@@ -1,10 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Alert, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { SafeText } from '../../components/common/SafeText';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import { appParametersRepository } from '../../services/database/drizzle/repositories/appParametersRepository';
 import { nativeCancelNap } from '../../services/ble/nativeModule';
 import { syncAlarmToDevice } from '../../services/alarm/syncAlarmToDevice';
@@ -16,6 +16,8 @@ interface NapActiveCardProps {
 }
 
 export const NapActiveCard: React.FC<NapActiveCardProps> = ({ napState }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
@@ -72,48 +74,50 @@ export const NapActiveCard: React.FC<NapActiveCardProps> = ({ napState }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(81,181,239,0.10)',
-    borderWidth: 1,
-    borderColor: 'rgba(81,181,239,0.25)',
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  iconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: 'rgba(81,181,239,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    flex: 1,
-    gap: 2,
-  },
-  label: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.sleep,
-  },
-  sub: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-  },
-  cancelBtn: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: 'rgba(81,181,239,0.4)',
-  },
-  cancelText: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.sleep,
-    fontWeight: theme.typography.weights.semibold,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.overlay.light,
+      borderWidth: 1,
+      borderColor: theme.colors.border.sleep.faint,
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.md,
+      gap: theme.spacing.sm,
+    },
+    iconWrap: {
+      width: theme.layout.iconSize.sm,
+      height: theme.layout.iconSize.sm,
+      borderRadius: theme.borderRadius.full,
+      backgroundColor: theme.colors.overlay.medium,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    content: {
+      flex: 1,
+      gap: theme.spacing.xxs,
+    },
+    label: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.sleep,
+    },
+    sub: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+    },
+    cancelBtn: {
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.sm,
+      borderWidth: 1,
+      borderColor: theme.colors.border.sleep.medium,
+    },
+    cancelText: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.sleep,
+      fontWeight: theme.typography.weights.semibold,
+    },
+  });
+}

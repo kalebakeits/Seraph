@@ -1,6 +1,6 @@
 import type { Ionicons } from '@expo/vector-icons';
+import type { Theme } from '../../theme';
 import { formatDuration } from '../../utils/dateUtils';
-import { theme } from '../../theme';
 
 export interface NotificationPayload {
   screen?: string;
@@ -26,9 +26,6 @@ export function parsePayload(raw: string | null): NotificationPayload {
   }
 }
 
-/**
- * Maps notification type + payload sport to the activity-card icon style.
- */
 const SYSTEM_TYPES = new Set(['update_available', 'announcement']);
 
 export function isSystemNotification(type: string): boolean {
@@ -38,27 +35,41 @@ export function isSystemNotification(type: string): boolean {
 export function iconForNotification(
   type: string,
   sport: string | undefined,
-): { name: React.ComponentProps<typeof Ionicons>['name']; color: string } {
+  theme: Theme,
+): { name: React.ComponentProps<typeof Ionicons>['name']; color: string; tint: string } {
   if (type === 'update_available' || type === 'announcement')
-    return { name: 'megaphone-outline', color: theme.colors.primary };
+    return {
+      name: 'megaphone-outline',
+      color: theme.colors.primary,
+      tint: theme.colors.iconTint.primary,
+    };
 
   const isSleep = type === 'sleep_detected' || type === 'sleep_edited';
-  if (isSleep) return { name: 'moon', color: theme.colors.sleep };
+  if (isSleep)
+    return { name: 'moon-outline', color: theme.colors.sleep, tint: theme.colors.iconTint.sleep };
 
   const s = (sport ?? '').toLowerCase();
   if (s.includes('run') || s.includes('course'))
-    return { name: 'walk-outline', color: theme.colors.active };
+    return { name: 'walk-outline', color: theme.colors.active, tint: theme.colors.iconTint.active };
   if (s.includes('cycl') || s.includes('bike') || s.includes('vél'))
-    return { name: 'bicycle-outline', color: theme.colors.active };
+    return {
+      name: 'bicycle-outline',
+      color: theme.colors.active,
+      tint: theme.colors.iconTint.active,
+    };
   if (s.includes('swim') || s.includes('nata'))
-    return { name: 'water-outline', color: theme.colors.active };
-  return { name: 'barbell-outline', color: theme.colors.active };
+    return {
+      name: 'water-outline',
+      color: theme.colors.active,
+      tint: theme.colors.iconTint.active,
+    };
+  return {
+    name: 'barbell-outline',
+    color: theme.colors.active,
+    tint: theme.colors.iconTint.active,
+  };
 }
 
-/**
- * Notification title — event type with optional sport prefix.
- * e.g. "Running · Workout recorded" / "Sleep recorded"
- */
 export function formatNotificationTitle(
   typeLabel: string,
   sportLabel?: string,
@@ -69,10 +80,6 @@ export function formatNotificationTitle(
   return typeLabel;
 }
 
-/**
- * Notification body — date, duration, and a key metric (score or avg HR).
- * e.g. "Wednesday, April 8 · 1h 30m · avg 142 bpm"
- */
 export function formatNotificationDetail(
   payload: NotificationPayload,
   lang: string,

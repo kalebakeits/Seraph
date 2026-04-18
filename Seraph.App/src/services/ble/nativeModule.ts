@@ -206,7 +206,7 @@ export function nativeGetNapState(): Promise<NapState> {
 // ── Workout Recording ─────────────────────────────────────────────────────────
 
 export interface RecordingStateInfo {
-  state: 'idle' | 'recording' | 'paused';
+  state: 'idle' | 'recording' | 'paused' | 'auto_paused';
   elapsedMs: number;
   currentHr: number | null;
 }

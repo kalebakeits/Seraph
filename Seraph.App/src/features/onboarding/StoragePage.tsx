@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../components/common/SafeText';
+import { useTheme } from '../../theme';
 import { PageContainer } from './PageContainer';
-import { styles } from './OnboardingStyles';
+import { buildStyles } from './OnboardingStyles';
 import { GranularityPicker } from '../profile/components/GranularityPicker';
 import { StorageEstimateCard } from '../profile/components/StorageEstimateCard';
 import type { GranularitySeconds } from '../profile/utils/storageUtils';
@@ -14,6 +15,8 @@ interface Props {
 }
 
 export const StoragePage: React.FC<Props> = ({ width, granularity, setGranularity }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
 
   return (

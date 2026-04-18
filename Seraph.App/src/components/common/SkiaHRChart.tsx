@@ -5,9 +5,8 @@ import { Canvas, Path, Skia, Line, vec, Circle, DashPathEffect } from '@shopify/
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-worklets';
 import { SafeText } from './SafeText';
-import { theme } from '../../theme';
-
-const ZONE_COLORS = theme.colors.zones;
+import { useTheme, type Theme } from '../../theme';
+import { formatTime } from '../../utils/dateUtils';
 
 // FTHR-based zone boundaries (matches ActivityAggregator.kt)
 const ZONE_THRESHOLDS = [0.72, 0.83, 0.94, 1.05];
@@ -20,8 +19,8 @@ function hrZoneIndex(hr: number, fthr: number | null): number {
   return 4;
 }
 
-function zoneColor(zone: number, fallback: string): string {
-  return zone >= 0 ? ZONE_COLORS[zone] : fallback;
+function zoneColor(zone: number, fallback: string, theme: Theme): string {
+  return zone >= 0 ? theme.colors.zones[zone] : fallback;
 }
 
 export interface HRChartPoint {
@@ -43,20 +42,16 @@ const PADDING_TOP = 8;
 const X_AXIS_HEIGHT = 20;
 const NUM_Y_SECTIONS = 4;
 
-function formatTime(ts: number): string {
-  const d = new Date(ts);
-  const h = d.getHours();
-  const m = d.getMinutes().toString().padStart(2, '0');
-  return `${String(h % 12 || 12)}:${m} ${h >= 12 ? 'PM' : 'AM'}`;
-}
-
 export const SkiaHRChart: React.FC<SkiaHRChartProps> = ({
   data,
   fthr,
   height = 200,
   avgHr,
-  fallbackColor = theme.colors.strain,
+  fallbackColor,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const resolvedFallbackColor = fallbackColor ?? theme.colors.strain;
   const [containerWidth, setContainerWidth] = useState(0);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
@@ -117,7 +112,7 @@ export const SkiaHRChart: React.FC<SkiaHRChartProps> = ({
       const midHr = (data[i].hr + data[i + 1].hr) / 2;
       const zone = hrZoneIndex(midHr, fthr);
 
-      const c = zoneColor(zone, fallbackColor);
+      const c = zoneColor(zone, resolvedFallbackColor, theme);
 
       const seg = Skia.Path.Make();
       seg.moveTo(x1, y1);
@@ -134,7 +129,7 @@ export const SkiaHRChart: React.FC<SkiaHRChartProps> = ({
     }
 
     return { segments, areaFills };
-  }, [data, chartWidth, chartHeight, toX, toY, fthr, fallbackColor]);
+  }, [data, chartWidth, chartHeight, toX, toY, fthr, resolvedFallbackColor, theme]);
 
   // Avg HR reference line
   const avgPath = useMemo(() => {
@@ -206,7 +201,9 @@ export const SkiaHRChart: React.FC<SkiaHRChartProps> = ({
   const focusX = focusedIndex !== null ? toX(focusedIndex) : 0;
   const focusY = focusedIndex !== null ? toY(data[focusedIndex].hr) : 0;
   const focusZone = focused ? hrZoneIndex(focused.hr, fthr) : -1;
-  const focusColor = focused ? zoneColor(focusZone, fallbackColor) : '#fff';
+  const focusColor = focused
+    ? zoneColor(focusZone, resolvedFallbackColor, theme)
+    : theme.colors.text.primary;
 
   return (
     <View onLayout={onLayout}>
@@ -241,7 +238,7 @@ export const SkiaHRChart: React.FC<SkiaHRChartProps> = ({
                 key={`g${String(i)}`}
                 p1={vec(Y_AXIS_WIDTH, toY(tick))}
                 p2={vec(containerWidth - PADDING_RIGHT, toY(tick))}
-                color="rgba(255,255,255,0.05)"
+                color={theme.colors.overlay.dim}
                 strokeWidth={1}
               />
             ))}
@@ -271,7 +268,12 @@ export const SkiaHRChart: React.FC<SkiaHRChartProps> = ({
 
             {/* Avg HR dashed reference */}
             {avgPath && (
-              <Path path={avgPath} color="rgba(255,255,255,0.3)" style="stroke" strokeWidth={1}>
+              <Path
+                path={avgPath}
+                color={theme.colors.overlay.stroke}
+                style="stroke"
+                strokeWidth={1}
+              >
                 <DashPathEffect intervals={[4, 4]} />
               </Path>
             )}
@@ -282,7 +284,7 @@ export const SkiaHRChart: React.FC<SkiaHRChartProps> = ({
                 <Line
                   p1={vec(focusX, PADDING_TOP)}
                   p2={vec(focusX, PADDING_TOP + chartHeight)}
-                  color="rgba(255,255,255,0.15)"
+                  color={theme.colors.overlay.medium}
                   strokeWidth={1}
                 />
                 <Circle cx={focusX} cy={focusY} r={5} color={focusColor} />
@@ -329,48 +331,50 @@ export const SkiaHRChart: React.FC<SkiaHRChartProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  empty: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    color: theme.colors.text.tertiary,
-    fontSize: theme.typography.sizes.sm,
-  },
-  yLabel: {
-    position: 'absolute',
-    left: 0,
-    width: Y_AXIS_WIDTH - 4,
-    alignItems: 'flex-end',
-    zIndex: 1,
-  },
-  axisText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 10,
-  },
-  xAxisRow: {
-    height: X_AXIS_HEIGHT,
-    position: 'relative',
-  },
-  tooltip: {
-    position: 'absolute',
-    top: -4,
-    zIndex: 10,
-    backgroundColor: 'rgba(30,15,50,0.98)',
-    borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 4,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
-  tooltipValue: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.bold,
-  },
-  tooltipTime: {
-    fontSize: 9,
-    color: 'rgba(255,255,255,0.7)',
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    empty: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emptyText: {
+      color: theme.colors.text.tertiary,
+      fontSize: theme.typography.sizes.sm,
+    },
+    yLabel: {
+      position: 'absolute',
+      left: 0,
+      width: Y_AXIS_WIDTH - 4,
+      alignItems: 'flex-end',
+      zIndex: 1,
+    },
+    axisText: {
+      color: theme.colors.overlay.label,
+      fontSize: 10,
+    },
+    xAxisRow: {
+      height: X_AXIS_HEIGHT,
+      position: 'relative',
+    },
+    tooltip: {
+      position: 'absolute',
+      top: -4,
+      zIndex: 10,
+      backgroundColor: theme.colors.surface.tooltipDeepHigh,
+      borderRadius: theme.borderRadius.sm,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border.subtle,
+    },
+    tooltipValue: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.bold,
+    },
+    tooltipTime: {
+      fontSize: 9,
+      color: theme.colors.overlay.label,
+    },
+  });
+}

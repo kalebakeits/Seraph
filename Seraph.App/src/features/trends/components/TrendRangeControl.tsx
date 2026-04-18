@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
-import { trendSharedStyles as s } from '../shared/TrendSharedStyles';
+import { buildTrendSharedStyles } from '../shared/TrendSharedStyles';
+import { useTheme } from '../../../theme';
 import { daysAgoISO, todayISO } from '../../../utils/dateUtils';
 import type { TrendRange } from '../useTrendData';
 
@@ -22,11 +23,14 @@ function formatDateShort(iso: string): string {
 interface Props {
   range: TrendRange;
   color: string;
+  tint: string;
   anchorDate?: string;
   onRangeChange: (r: TrendRange) => void;
 }
 
-export const TrendRangeControl: React.FC<Props> = ({ range, color, anchorDate, onRangeChange }) => {
+export const TrendRangeControl: React.FC<Props> = ({ range, color, tint, anchorDate, onRangeChange }) => {
+  const { theme } = useTheme();
+  const s = useMemo(() => buildTrendSharedStyles(theme), [theme]);
   const { t } = useTranslation();
   const anchor = anchorDate ?? todayISO();
   const from = daysAgoISO(rangeDays(range), anchor);
@@ -44,13 +48,8 @@ export const TrendRangeControl: React.FC<Props> = ({ range, color, anchorDate, o
         {RANGES.map(r => (
           <TouchableOpacity
             key={r}
-            style={[
-              s.rangeBtn,
-              range === r && { borderColor: color, backgroundColor: color.slice(0, 7) + '22' },
-            ]}
-            onPress={() => {
-              onRangeChange(r);
-            }}
+            style={[s.rangeBtn, range === r && { borderColor: color, backgroundColor: tint }]}
+            onPress={() => { onRangeChange(r); }}
             activeOpacity={0.7}
           >
             <SafeText style={[s.rangeBtnText, range === r && { color }]}>{rangeLabels[r]}</SafeText>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   Alert,
   Animated,
@@ -17,7 +17,7 @@ import { SafeText } from '../../components/common/SafeText';
 import { TimePicker } from '../../components/TimePicker';
 import { Section } from '../../components/common/Section';
 import { HelperText } from '../../components/common/HelperText';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 
 import { appParametersRepository } from '../../services/database/drizzle/repositories/appParametersRepository';
 import { sleepEventsRepository } from '../../services/database/drizzle/repositories/sleepEventsRepository';
@@ -44,6 +44,8 @@ function durationAsPickerDate(ms: number): Date {
 }
 
 export const NapSetupScreen: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const navigation = useNavigation();
   const queryClient = useQueryClient();
@@ -209,7 +211,7 @@ export const NapSetupScreen: React.FC = () => {
               value={mode === 'smart'}
               onValueChange={handleModeToggle}
               trackColor={{ false: theme.colors.overlay.light, true: theme.colors.sleep }}
-              thumbColor="#fff"
+              thumbColor={theme.colors.thumb}
             />
           </View>
         </Section>
@@ -271,91 +273,93 @@ export const NapSetupScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: 100,
-    paddingBottom: theme.spacing.xxl,
-    gap: theme.spacing.lg,
-  },
-  timeHero: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.lg,
-    gap: theme.spacing.xs,
-  },
-  timeRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: theme.spacing.sm,
-  },
-  timeDigits: {
-    fontSize: 72,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-    letterSpacing: -2,
-    lineHeight: 80,
-  },
-  timeAmPm: {
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.secondary,
-    paddingBottom: theme.spacing.sm,
-  },
-  editHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  editHintText: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-  },
-  modeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.xs,
-  },
-  modeLabelCol: {
-    flex: 1,
-    marginRight: theme.spacing.md,
-  },
-  modeDesc: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.muted,
-  },
-  durationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.overlay.light,
-  },
-  durationText: {
-    fontSize: theme.typography.sizes.xxl,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-  startBtn: {
-    margin: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.colors.sleep,
-    alignItems: 'center',
-  },
-  startText: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    color: '#000',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    scroll: {
+      flex: 1,
+    },
+    content: {
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.layout.screenPadding,
+      paddingBottom: theme.spacing.xxl,
+      gap: theme.spacing.lg,
+    },
+    timeHero: {
+      alignItems: 'center',
+      paddingVertical: theme.spacing.lg,
+      gap: theme.spacing.xs,
+    },
+    timeRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: theme.spacing.sm,
+    },
+    timeDigits: {
+      fontSize: 72,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+      letterSpacing: -2,
+      lineHeight: 80,
+    },
+    timeAmPm: {
+      fontSize: theme.typography.sizes.xl,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.secondary,
+      paddingBottom: theme.spacing.sm,
+    },
+    editHint: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    editHintText: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+    },
+    modeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: theme.spacing.xs,
+    },
+    modeLabelCol: {
+      flex: 1,
+      marginRight: theme.spacing.md,
+    },
+    modeDesc: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.muted,
+    },
+    durationRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: theme.spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.overlay.light,
+    },
+    durationText: {
+      fontSize: theme.typography.sizes.xxl,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    startBtn: {
+      margin: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: theme.colors.sleep,
+      alignItems: 'center',
+    },
+    startText: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.icon.onLight,
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+  });
+}

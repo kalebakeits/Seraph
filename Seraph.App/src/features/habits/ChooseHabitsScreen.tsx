@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useMemo } from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,10 +13,12 @@ import { HabitCatalogRow } from './components/HabitCatalogRow';
 import { AddCustomHabitSheet } from './AddCustomHabitSheet';
 import { useAllHabits } from './hooks/useAllHabits';
 import { habitDefinitionsRepository } from '../../services/database/drizzle';
-import { theme, tabStyles } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import type { HabitDefinition } from '../../services/database/drizzle/schema';
 
 export function ChooseHabitsScreen() {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [addSheetOpen, setAddSheetOpen] = useState(false);
@@ -104,31 +106,33 @@ export function ChooseHabitsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  list: {
-    paddingTop: 80,
-    paddingBottom: tabStyles.content.paddingBottom + 16,
-  },
-  hint: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.muted,
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-  },
-  addCustomBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    marginTop: theme.spacing.sm,
-  },
-  addCustomText: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.recovery,
-    fontWeight: theme.typography.weights.semibold,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+    },
+    list: {
+      paddingTop: theme.layout.screenPadding,
+      paddingBottom: theme.tabStyles.content.paddingBottom + 16,
+    },
+    hint: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.muted,
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.md,
+    },
+    addCustomBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      marginTop: theme.spacing.sm,
+    },
+    addCustomText: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.recovery,
+      fontWeight: theme.typography.weights.semibold,
+    },
+  });
+}

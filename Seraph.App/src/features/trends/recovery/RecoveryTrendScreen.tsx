@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, ScrollView, ActivityIndicator } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { Section } from '../../../components/common/Section';
-import { theme } from '../../../theme';
+import { useTheme } from '../../../theme';
 import { TrendRangeControl } from '../components/TrendRangeControl';
 import { TrendSummaryRow } from '../components/TrendSummaryRow';
 import { TrendChart } from '../TrendChart';
@@ -13,7 +12,7 @@ import { RecoveryBars } from '../../recovery/components/RecoveryBars';
 import { useRecoveryHistory } from '../../recovery/hooks/useRecoveryHistory';
 import { SkiaDualAxisChart } from '../../../components/common/SkiaDualAxisChart';
 import { useStrainRecoveryTrend } from '../shared/useStrainRecoveryTrend';
-import { trendSharedStyles as s } from '../shared/TrendSharedStyles';
+import { buildTrendSharedStyles } from '../shared/TrendSharedStyles';
 import { HelperText } from '../../../components/common/HelperText';
 import { fmtInteger } from '../shared/trendFormatUtils';
 import type { TrendRange } from '../useTrendData';
@@ -22,13 +21,14 @@ import type { HomeStackParamList } from '../../../navigation/HomeStackNavigator'
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'TrendRecovery'>;
 
-const COLOR = theme.colors.recovery;
 const UNIT = '%';
 
 export const RecoveryTrendScreen: React.FC<Props> = ({ route }) => {
+  const { theme } = useTheme();
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
+  const s = buildTrendSharedStyles(theme);
   const { anchorDate } = route.params ?? {};
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const [range, setRange] = useState<TrendRange>('1W');
   const { data, isLoading } = useTrendData('recovery', range, anchorDate);
   const { data: history = [] } = useRecoveryHistory(anchorDate);
@@ -38,27 +38,33 @@ export const RecoveryTrendScreen: React.FC<Props> = ({ route }) => {
   const summary = data?.summary ?? null;
 
   return (
-    <View style={[s.container, { paddingTop: insets.top + 48 }]}>
+    <View style={s.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
         <TrendRangeControl
           range={range}
-          color={COLOR}
+          color={theme.colors.recovery}
+          tint={theme.colors.iconTint.recovery}
           anchorDate={anchorDate}
           onRangeChange={setRange}
         />
         <HelperText translationKey="trends.helper_recovery" />
         <View style={sectionStyles.container}>
           {summary && (
-            <TrendSummaryRow summary={summary} color={COLOR} unit={UNIT} fmt={fmtInteger} />
+            <TrendSummaryRow
+              summary={summary}
+              color={theme.colors.recovery}
+              unit={UNIT}
+              fmt={fmtInteger}
+            />
           )}
           {isLoading ? (
             <View style={s.loading}>
-              <ActivityIndicator color={COLOR} />
+              <ActivityIndicator color={theme.colors.recovery} />
             </View>
           ) : (
             <TrendChart
               points={points}
-              color={COLOR}
+              color={theme.colors.recovery}
               unit={UNIT}
               range={range}
               format={fmtInteger}

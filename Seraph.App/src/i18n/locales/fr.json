@@ -118,6 +118,15 @@
       "invalidTrim": "Entrez un entier valide",
       "syncError": "Demande de sync échouée",
       "reaggError": "Ré-agrégation échouée"
+    },
+    "connection": {
+      "title": "Connexion de l'appareil",
+      "lastConnected": "Dernière connexion — appuyer pour reconnecter",
+      "scan": "Rechercher des appareils",
+      "scanning": "Recherche en cours...",
+      "connecting": "Connexion en cours...",
+      "found": "{{count}} appareil trouvé",
+      "found_other": "{{count}} appareils trouvés"
     }
   },
   "home": {
@@ -343,7 +352,12 @@
     "paused": "EN PAUSE",
     "liveStrain": "Effort en direct",
     "preliminary": "préliminaire",
-    "autoPaused": "Pause automatique",
+    "autoPaused": "PAUSE AUTO",
+    "autoPauseToggle": "Pause automatique",
+    "autoPauseHelper": "Se met en pause automatiquement si votre fréquence cardiaque reste sous {{threshold}} bpm.",
+    "autoPauseHelperNoThreshold": "Définissez une fréquence cardiaque seuil dans votre profil pour utiliser la pause automatique.",
+    "autoPauseDelay": "Pause après",
+    "autoPauseDelayUnit": "secondes",
     "finishedTitle": "Entraînement terminé",
     "finishedMessage": "Enregistrez ou supprimez votre entraînement.",
     "saveWorkout": "Enregistrer",
@@ -363,36 +377,26 @@
   "onboarding": {
     "welcome": {
       "title": "Bienvenue sur Seraph",
-      "body": "Les données de votre bracelet, à votre façon. Lit directement via Bluetooth. Sans abonnement, sans compte, sans cloud."
+      "body": "Le suivi sportif ouvert."
     },
-    "rings": {
-      "title": "Vos anneaux",
-      "subtitle": "Trois chiffres, mis à jour à chaque synchronisation de votre bracelet.",
-      "strain": "Effort",
-      "strainDesc": "La charge cardiovasculaire accumulée aujourd'hui. Augmente avec toute activité qui élève votre fréquence cardiaque.",
-      "recovery": "Récupération",
-      "recoveryDesc": "La capacité de votre corps à fournir un effort aujourd'hui, basée sur votre VRC nocturne, votre FC au repos et votre sommeil.",
-      "sleep": "Sommeil",
-      "sleepDesc": "La part de votre objectif de sommeil atteinte la nuit dernière. Appuyez pour voir le détail complet."
-    },
-    "tour": {
-      "title": "S'y retrouver",
-      "subtitle": "Un aperçu rapide de l'organisation de l'application.",
-      "settings": "Réglages, votre profil et vos préférences",
-      "dateNav": "La date du jour. Appuyez sur les flèches ou sur la date pour accéder à un jour passé.",
-      "device": "L'état de connexion de votre bracelet et l'heure de la dernière sync. Appuyez pour gérer votre appareil.",
-      "rings": "Vos anneaux pour le jour sélectionné. Appuyez sur un anneau pour aller plus loin.",
-      "activitiesDesc": "Les séances et le sommeil apparaissent ici dès que votre bracelet les détecte, ou quand vous les enregistrez manuellement.",
-      "swipeHint": "Glissez à gauche ou à droite n'importe où sur l'aperçu pour changer de jour."
+    "theme": {
+      "title": "Choisir un thème",
+      "subtitle": "Vous pouvez le changer à tout moment dans les réglages."
     },
     "connect": {
       "title": "Connectez votre bracelet",
-      "body": "Allez dans l'onglet appareil après ceci et connectez votre bracelet. La première synchronisation récupère jusqu'à 14 jours d'historique.",
+      "subtitle": "La première synchronisation récupère jusqu'à 14 jours d'historique.",
+      "scan": "Rechercher des appareils",
+      "scanning": "Recherche en cours...",
+      "connecting": "Connexion en cours...",
+      "found": "{{count}} appareil trouvé",
+      "found_other": "{{count}} appareils trouvés",
       "tip": "Gardez le Bluetooth activé et l'application en arrière-plan pour une synchronisation automatique."
     },
     "profile": {
       "title": "À propos de vous",
       "subtitle": "Optionnel — aide à calibrer vos calculs de récupération et de sommeil.",
+      "privacy": "Ces informations ne quittent jamais votre appareil.",
       "name": "NOM",
       "namePlaceholder": "Votre nom",
       "dob": "DATE DE NAISSANCE",
@@ -429,7 +433,7 @@
     },
     "done": {
       "title": "C'est parti",
-      "body": "Allez dans l'onglet appareil et connectez votre bracelet pour commencer.",
+      "body": "Tout ce que vous avez configuré ici peut être modifié dans les réglages.",
       "tip": "Gardez le Bluetooth activé et l'application en arrière-plan pour une synchronisation automatique."
     },
     "next": "Suivant",
@@ -495,6 +499,17 @@
     "dataAndStorageDesc": "Granularité, partitionnement, purge",
     "about": "À propos",
     "aboutDesc": "Version, infos de build",
+    "appearance": "Apparence",
+    "appearanceDesc": "Thème et affichage",
+    "theme": "Thème",
+    "themeMidnightPurple": "Minuit Violet",
+    "themeDark": "Sombre",
+    "themeLight": "Clair",
+    "themeSystem": "Suivre le système",
+    "themeMonokai": "Monokai",
+    "themeTomorrowNightBlue": "Tomorrow Night Blue",
+    "themeSierraSunset": "Sierra Sunset",
+    "themeKimbieDark": "Kimbie Dark",
     "notifications": "Notifications",
     "notificationsGlobalToggle": "Toutes les notifications",
     "notificationsGlobalToggleDesc": "Interrupteur principal pour toutes les notifications système",

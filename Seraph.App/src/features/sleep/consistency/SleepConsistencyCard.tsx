@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 import { useSleepConsistency } from '../hooks/useSleepConsistency';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { formatDecimalHour, formatDuration } from '../../../utils/dateUtils';
 
 interface Props {
@@ -13,6 +13,9 @@ interface Props {
 }
 
 export const SleepConsistencyCard: React.FC<Props> = ({ anchorDate }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
   const { data } = useSleepConsistency(anchorDate);
 
@@ -28,7 +31,7 @@ export const SleepConsistencyCard: React.FC<Props> = ({ anchorDate }) => {
   if (overallRange !== null) {
     if (overallRange <= 30) {
       consistencyKey = 'sleep.veryConsistent';
-      consistencyColor = theme.colors.success;
+      consistencyColor = theme.colors.recoveryColors.high;
     } else if (overallRange <= 90) {
       consistencyKey = 'sleep.consistent';
       consistencyColor = theme.colors.warning;
@@ -97,40 +100,42 @@ export const SleepConsistencyCard: React.FC<Props> = ({ anchorDate }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  badge: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 4,
-    borderRadius: theme.borderRadius.sm,
-  },
-  badgeText: {
-    fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.semibold,
-  },
-  grid: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  cell: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  cellLabel: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    marginBottom: theme.spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  avgText: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-    marginVertical: 2,
-  },
-  rangeText: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    marginVertical: 1,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    badge: {
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.sm,
+    },
+    badgeText: {
+      fontSize: theme.typography.sizes.xs,
+      fontWeight: theme.typography.weights.semibold,
+    },
+    grid: {
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+    },
+    cell: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    cellLabel: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      marginBottom: theme.spacing.xs,
+      textTransform: 'uppercase',
+      letterSpacing: 0.6,
+    },
+    avgText: {
+      fontSize: theme.typography.sizes.lg,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+      marginVertical: theme.spacing.xxs,
+    },
+    rangeText: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      marginVertical: 1,
+    },
+  });
+}

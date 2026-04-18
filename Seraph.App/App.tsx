@@ -3,9 +3,13 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useColorScheme } from 'react-native';
 
 import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider, useTheme, THEME_STORAGE_KEY } from './src/theme/ThemeContext';
+import type { ThemeName } from './src/theme';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { useAutoConnect } from './src/hooks/useAutoConnect';
 import { initDb, appParametersRepository } from './src/services/database/drizzle';
@@ -52,10 +56,15 @@ function AppContent() {
   useDeviceInit();
   useSyncState();
   useNotificationPermission();
+  const { themeName } = useTheme();
+  const systemScheme = useColorScheme();
+  const isLight =
+    themeName === 'light' || (themeName === 'system' && systemScheme === 'light');
+  const statusBarStyle = isLight ? 'dark' : 'light';
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style={statusBarStyle} />
       <RootNavigator />
       <InAppBanner />
     </>
@@ -66,10 +75,20 @@ type AppState = 'onboarding' | 'ready';
 
 export default Sentry.wrap(function App() {
   const [appState, setAppState] = useState<AppState | null>(null);
+  const [initialTheme, setInitialTheme] = useState<ThemeName>('system');
 
   useEffect(() => {
-    initDb()
-      .then(async () => {
+    const init = async () => {
+      const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+      const validThemes: ThemeName[] = [
+        'midnightPurple', 'dark', 'light', 'system',
+        'monokai', 'tomorrowNightBlue', 'sierraSunset', 'kimbieDark',
+      ];
+      if (savedTheme && (validThemes as string[]).includes(savedTheme)) {
+        setInitialTheme(savedTheme as ThemeName);
+      }
+      try {
+        await initDb();
         const savedLang = await appParametersRepository.get('language');
         if (!savedLang) {
           await appParametersRepository.set('language', i18n.language.slice(0, 2));
@@ -77,14 +96,14 @@ export default Sentry.wrap(function App() {
         await seedHabitsIfNeeded();
         const onboarded = await appParametersRepository.get('onboarding_complete');
         setAppState(onboarded === '1' ? 'ready' : 'onboarding');
-      })
-      .catch(() => {
+      } catch {
         setAppState('onboarding');
-      })
-      .finally(() => {
+      } finally {
         SplashScreen.setOptions({ fade: true, duration: 500 });
         void SplashScreen.hideAsync();
-      });
+      }
+    };
+    void init();
   }, []);
 
   if (appState === null) {
@@ -94,21 +113,23 @@ export default Sentry.wrap(function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          {appState === 'onboarding' ? (
-            <OnboardingScreen
-              onComplete={() => {
-                initDb()
-                  .finally(() => {
-                    setAppState('ready');
-                  })
-                  .catch(console.error);
-              }}
-            />
-          ) : (
-            <AppContent />
-          )}
-        </QueryClientProvider>
+        <ThemeProvider initialTheme={initialTheme}>
+          <QueryClientProvider client={queryClient}>
+            {appState === 'onboarding' ? (
+              <OnboardingScreen
+                onComplete={() => {
+                  initDb()
+                    .finally(() => {
+                      setAppState('ready');
+                    })
+                    .catch(console.error);
+                }}
+              />
+            ) : (
+              <AppContent />
+            )}
+          </QueryClientProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

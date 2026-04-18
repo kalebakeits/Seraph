@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { ActivityRing } from '../../../../components/common/ActivityRing';
-import { theme } from '../../../../theme';
+import { useTheme, type Theme } from '../../../../theme';
 import type { HomeStackParamList } from '../../../../navigation/HomeStackNavigator';
 import type { ActivityRingsData } from '../../hooks/useActivityRings';
 import { useRecommendedStrain } from '../../../strain/hooks/useRecommendedStrain';
@@ -17,6 +17,8 @@ interface ActivityRingsProps {
 }
 
 export const ActivityRings: React.FC<ActivityRingsProps> = ({ selectedDate, rings }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
   const ringSize = 85;
@@ -66,12 +68,14 @@ export const ActivityRings: React.FC<ActivityRingsProps> = ({ selectedDate, ring
   );
 };
 
-const styles = StyleSheet.create({
-  ringsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    marginBottom: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    ringsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      marginBottom: theme.spacing.xl,
+      paddingVertical: theme.spacing.md,
+    },
+  });
+}

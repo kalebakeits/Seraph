@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -21,12 +21,14 @@ import { useHabitLogs } from './hooks/useHabitLogs';
 import { habitLogsRepository } from '../../services/database/drizzle';
 import { navigationRef } from '../../navigation/navigationRef';
 import type { HomeStackParamList } from '../../navigation/HomeStackNavigator';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import { dateFromISO, isoFromDate, todayISO } from '../../utils/dateUtils';
 
 type RouteType = RouteProp<HomeStackParamList, 'LogHabits'>;
 
 export const LogHabitsScreen: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t, i18n } = useTranslation();
   const route = useRoute<RouteType>();
   const queryClient = useQueryClient();
@@ -160,44 +162,46 @@ export const LogHabitsScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: 100,
-    paddingBottom: theme.spacing.xxl,
-    gap: theme.spacing.lg,
-  },
-  chooseBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  chooseBtnText: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.recovery,
-    fontWeight: theme.typography.weights.semibold,
-  },
-  habitList: {
-    gap: theme.spacing.sm,
-    paddingTop: theme.spacing.sm,
-  },
-  empty: {
-    paddingTop: theme.spacing.lg,
-    gap: theme.spacing.xs,
-  },
-  emptyTitle: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.secondary,
-    fontWeight: theme.typography.weights.semibold,
-  },
-  emptyHint: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.muted,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    scroll: {
+      flex: 1,
+    },
+    content: {
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.layout.screenPadding,
+      paddingBottom: theme.spacing.xxl,
+      gap: theme.spacing.lg,
+    },
+    chooseBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    chooseBtnText: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.recovery,
+      fontWeight: theme.typography.weights.semibold,
+    },
+    habitList: {
+      gap: theme.spacing.sm,
+      paddingTop: theme.spacing.sm,
+    },
+    empty: {
+      paddingTop: theme.spacing.lg,
+      gap: theme.spacing.xs,
+    },
+    emptyTitle: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.secondary,
+      fontWeight: theme.typography.weights.semibold,
+    },
+    emptyHint: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.muted,
+    },
+  });
+}

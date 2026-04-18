@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { GradientBackground } from '../../components/common/GradientBackground';
 import { ScreenLayout } from '../../components/common/ScreenLayout';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import { appParametersRepository } from '../../services/database/drizzle';
 import { GranularityPicker } from './components/GranularityPicker';
 import { StorageEstimateCard } from './components/StorageEstimateCard';
 import { GRANULARITY_OPTIONS, type GranularitySeconds } from './utils/storageUtils';
 
 export const DataStorageScreen: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const [granularity, setGranularity] = useState<GranularitySeconds>(1);
 
   useEffect(() => {
@@ -35,9 +37,11 @@ export const DataStorageScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    content: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.xxl,
+    },
+  });
+}

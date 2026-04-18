@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { GradientBackground } from '../../components/common/GradientBackground';
 import { ScreenLayout } from '../../components/common/ScreenLayout';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import { appParametersRepository } from '../../services/database/drizzle';
 import type { AppParameter } from '../../services/database/drizzle/repositories/appParametersRepository';
 import { PreferencesSection } from './sections/PreferencesSection';
@@ -16,6 +16,8 @@ import type { SettingsState, SensitivityPreset } from './ProfileSettingsTypes';
 import { SENSITIVITY_PRESETS, LANGUAGES, trimpToPreset } from './ProfileSettingsTypes';
 
 export const PreferencesScreen: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { i18n } = useTranslation();
   const queryClient = useQueryClient();
 
@@ -176,10 +178,12 @@ export const PreferencesScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-    gap: theme.spacing.xs,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    content: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.xxl,
+      gap: theme.spacing.xs,
+    },
+  });
+}

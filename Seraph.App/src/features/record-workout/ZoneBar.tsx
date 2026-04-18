@@ -1,12 +1,14 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 
 interface Props {
   zone: 1 | 2 | 3 | 4 | 5 | null;
 }
 
 export const ZoneBar: React.FC<Props> = ({ zone }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const zoneSeconds = useRef([0, 0, 0, 0, 0]);
   const lastTickRef = useRef(Date.now());
   const [, forceRender] = useState(0);
@@ -46,17 +48,19 @@ export const ZoneBar: React.FC<Props> = ({ zone }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    height: 8,
-    borderRadius: 4,
-    overflow: 'hidden',
-    width: '100%',
-    gap: 2,
-  },
-  segment: {
-    borderRadius: 4,
-    minWidth: 4,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      height: theme.layout.legendDotLg,
+      borderRadius: 4,
+      overflow: 'hidden',
+      width: '100%',
+      gap: theme.spacing.xxs,
+    },
+    segment: {
+      borderRadius: 4,
+      minWidth: 4,
+    },
+  });
+}

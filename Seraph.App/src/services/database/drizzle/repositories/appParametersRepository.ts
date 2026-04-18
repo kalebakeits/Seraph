@@ -28,6 +28,7 @@ export type AppParameter =
   // Computed baselines (written by Native)
   | 'baseline_max_hr'
   | 'onboarding_complete'
+  | 'onboarding_page'           // max page index reached — used to resume mid-onboarding
   | 'language'
   // Nap recording state (written by app, read by NapSyncStrategy)
   | 'nap_active_duration_ms'   // target sleep duration in ms; presence = nap active
@@ -39,7 +40,10 @@ export type AppParameter =
   | 'notif_device_low_battery'
   | 'notif_device_alarm_not_set'
   | 'notif_activity_sleep'
-  | 'notif_activity_workout';
+  | 'notif_activity_workout'
+  // Workout recording preferences
+  | 'recording_auto_pause_enabled'    // "1" | "0"
+  | 'recording_auto_pause_z1_seconds'; // integer string, default 90
 
 class AppParametersRepository {
   async get(key: AppParameter): Promise<string | null> {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -6,7 +6,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { sql, gte } from 'drizzle-orm';
 import { SafeText } from '../../../../../components/common/SafeText';
 import { ActionRow } from '../ActionRow';
-import { theme } from '../../../../../theme';
+import { useTheme, type Theme } from '../../../../../theme';
 import { getDb } from '../../../../../services/database/drizzle/db';
 import { r24 } from '../../../../../services/database/drizzle/schema';
 import {
@@ -19,6 +19,8 @@ import {
 import { errorMessage } from '../../../../../utils/errorUtils';
 
 export const CommandsSection: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -132,25 +134,27 @@ export const CommandsSection: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  sectionTitle: {
-    fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.muted,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginTop: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    marginLeft: theme.spacing.xs,
-  },
-  card: {
-    ...theme.cardStyles.default,
-    padding: 0,
-    overflow: 'hidden',
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: theme.colors.overlay.light,
-    marginLeft: 52,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    sectionTitle: {
+      fontSize: theme.typography.sizes.xs,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.muted,
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+      marginTop: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
+      marginLeft: theme.spacing.xs,
+    },
+    card: {
+      ...theme.cardStyles.default,
+      padding: 0,
+      overflow: 'hidden',
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: theme.colors.overlay.light,
+      marginLeft: 52,
+    },
+  });
+}

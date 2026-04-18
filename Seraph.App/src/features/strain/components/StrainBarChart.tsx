@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
-import { theme } from '../../../theme';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
+import { useTheme, type Theme } from '../../../theme';
 import { StrainBars } from './StrainBars';
 
 interface Props {
@@ -11,6 +11,9 @@ interface Props {
 }
 
 export const StrainBarChart: React.FC<Props> = ({ anchorDate }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
   return (
     <View style={sectionStyles.container}>
@@ -20,11 +23,13 @@ export const StrainBarChart: React.FC<Props> = ({ anchorDate }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  title: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    title: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+      marginBottom: theme.spacing.sm,
+    },
+  });
+}

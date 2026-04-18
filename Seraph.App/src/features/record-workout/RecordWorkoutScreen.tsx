@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { errorMessage } from '../../utils/errorUtils';
 import { Alert, ScrollView, StyleSheet, View, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,7 +18,9 @@ import { ZoneBar } from './ZoneBar';
 import { useRealtimeHR } from './hooks/useRealtimeHR';
 import { useWorkoutTimer } from './hooks/useWorkoutTimer';
 import { useLiveStrain } from './hooks/useLiveStrain';
-import { theme } from '../../theme';
+import { useAutoPauseSettings } from './hooks/useAutoPauseSettings';
+import { AutoPausePanel } from './components/AutoPausePanel';
+import { useTheme, type Theme } from '../../theme';
 import type { HomeStackParamList } from '../../navigation/HomeStackNavigator';
 import { activityEventsRepository } from '../../services/database/drizzle/repositories/activityEventsRepository';
 import { appParametersRepository } from '../../services/database/drizzle/repositories/appParametersRepository';
@@ -33,11 +35,13 @@ import {
 import { formatDuration } from '../../utils/dateUtils';
 
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, 'RecordWorkout'>;
-type RecordingPhase = 'idle' | 'recording' | 'paused';
+type RecordingPhase = 'idle' | 'recording' | 'paused' | 'auto_paused';
 
 const STRAIN_GOAL = 21;
 
 export const RecordWorkoutScreen: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
   const queryClient = useQueryClient();
@@ -50,6 +54,7 @@ export const RecordWorkoutScreen: React.FC = () => {
   const [fthr, setFthr] = useState<number | null>(null);
   const [recentSports, setRecentSports] = useState<string[]>([]);
   const [saveSheetOpen, setSaveSheetOpen] = useState(false);
+  const { settings: autoPauseSettings, setEnabled: setAutoPauseEnabled, setZ1Seconds } = useAutoPauseSettings();
 
   const handleExitRequest = useCallback(async () => {
     if (phase === 'idle') {
@@ -59,7 +64,7 @@ export const RecordWorkoutScreen: React.FC = () => {
 
     setBusy(true);
     try {
-      if (phase === 'recording') {
+      if (phase === 'recording' || phase === 'auto_paused') {
         await nativePauseWorkoutRecording();
         setPhase('paused');
       }
@@ -102,10 +107,15 @@ export const RecordWorkoutScreen: React.FC = () => {
       void queryClient.invalidateQueries({ queryKey: ['activityRings'] });
       void queryClient.invalidateQueries({ queryKey: ['strainDetail'] });
     });
-    return () => {
-      sub.remove();
-    };
+    return () => sub.remove();
   }, [queryClient]);
+
+  useEffect(() => {
+    const sub = seraphEmitter.addListener('onRecordingAutoPaused', () => {
+      setPhase('auto_paused');
+    });
+    return () => sub.remove();
+  }, []);
 
   const { hr, zone, zoneColor } = useRealtimeHR(fthr);
   const elapsedMs = useWorkoutTimer(phase === 'recording', startTs);
@@ -151,7 +161,7 @@ export const RecordWorkoutScreen: React.FC = () => {
   const handleStop = useCallback(async () => {
     setBusy(true);
     try {
-      if (phase === 'recording') {
+      if (phase === 'recording' || phase === 'auto_paused') {
         await nativePauseWorkoutRecording();
         setPhase('paused');
       }
@@ -234,6 +244,12 @@ export const RecordWorkoutScreen: React.FC = () => {
           </View>
 
           {phase !== 'idle' && <ZoneBar zone={zone} />}
+
+          <AutoPausePanel
+            settings={autoPauseSettings}
+            onToggle={v => void setAutoPauseEnabled(v)}
+            onZ1Change={v => void setZ1Seconds(v)}
+          />
         </ScrollView>
 
         <View style={styles.controls}>
@@ -267,36 +283,38 @@ export const RecordWorkoutScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  content: {
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
-    gap: theme.spacing.xl,
-    paddingBottom: theme.tabStyles.content.paddingBottom,
-  },
-  ringSection: { alignItems: 'center', gap: theme.spacing.xs },
-  prelimLabel: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    letterSpacing: 0.5,
-  },
-  timerSection: { alignItems: 'center', gap: 4 },
-  timer: {
-    fontSize: 52,
-    fontWeight: '700',
-    color: theme.colors.text.primary,
-    letterSpacing: -1,
-  },
-  timerLabel: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  controls: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    safe: { flex: 1 },
+    content: {
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.lg,
+      gap: theme.spacing.xl,
+      paddingBottom: theme.tabStyles.content.paddingBottom,
+    },
+    ringSection: { alignItems: 'center', gap: theme.spacing.xs },
+    prelimLabel: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      letterSpacing: 0.5,
+    },
+    timerSection: { alignItems: 'center', gap: theme.spacing.xs },
+    timer: {
+      fontSize: 52,
+      fontWeight: '700',
+      color: theme.colors.text.primary,
+      letterSpacing: -1,
+    },
+    timerLabel: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    controls: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.md,
+    },
+  });
+}

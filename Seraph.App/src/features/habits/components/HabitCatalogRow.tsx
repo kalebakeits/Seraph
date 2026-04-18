@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 import type { HabitDefinition } from '../../../services/database/drizzle/schema';
 
 interface HabitCatalogRowProps {
@@ -19,6 +19,8 @@ export const HabitCatalogRow: React.FC<HabitCatalogRowProps> = ({
   onDrag,
   dragging = false,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const active = habit.is_active === 1;
 
@@ -49,52 +51,54 @@ export const HabitCatalogRow: React.FC<HabitCatalogRowProps> = ({
         </SafeText>
       </View>
       <View style={[styles.check, active && styles.checkActive]}>
-        {active && <Ionicons name="checkmark" size={16} color="#000" />}
+        {active && <Ionicons name="checkmark" size={16} color={theme.colors.icon.onLight} />}
       </View>
     </TouchableOpacity>
   );
 };
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.overlay.light,
-  },
-  rowDragging: {
-    backgroundColor: theme.colors.overlay.light,
-  },
-  dragHandle: {
-    paddingRight: theme.spacing.md,
-    paddingVertical: 4,
-  },
-  text: {
-    flex: 1,
-    gap: 2,
-  },
-  label: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.weights.semibold,
-  },
-  meta: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-  },
-  check: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.overlay.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkActive: {
-    backgroundColor: theme.colors.recovery,
-    borderColor: theme.colors.recovery,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.lg,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.overlay.light,
+    },
+    rowDragging: {
+      backgroundColor: theme.colors.overlay.light,
+    },
+    dragHandle: {
+      paddingRight: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
+    },
+    text: {
+      flex: 1,
+      gap: theme.spacing.xxs,
+    },
+    label: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.primary,
+      fontWeight: theme.typography.weights.semibold,
+    },
+    meta: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+    },
+    check: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.overlay.medium,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkActive: {
+      backgroundColor: theme.colors.recovery,
+      borderColor: theme.colors.recovery,
+    },
+  });
+}

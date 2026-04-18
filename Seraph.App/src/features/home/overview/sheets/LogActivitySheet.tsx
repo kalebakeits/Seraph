@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Alert, Modal, View, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { SafeText } from '../../../../components/common/SafeText';
 import { TimePicker } from '../../../../components/TimePicker';
 import { BlockingOverlay } from '../../../../components/BlockingOverlay';
-import { theme } from '../../../../theme';
+import { useTheme, type Theme } from '../../../../theme';
 import {
   sleepEventsRepository,
   activityEventsRepository,
@@ -31,6 +31,8 @@ export const LogActivitySheet: React.FC<LogActivitySheetProps> = ({
   initialType,
   onClose,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
@@ -251,84 +253,86 @@ export const LogActivitySheet: React.FC<LogActivitySheetProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  sheet: {
-    backgroundColor: theme.colors.surface.sheet,
-    borderTopLeftRadius: theme.borderRadius.xl,
-    borderTopRightRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-  },
-  title: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-  closeBtn: {
-    padding: theme.spacing.xs,
-  },
-  editRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.overlay.light,
-  },
-  editLabel: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.secondary,
-  },
-  editValue: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-  },
-  buttons: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginTop: theme.spacing.lg,
-  },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.overlay.light,
-    alignItems: 'center',
-  },
-  cancelText: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.secondary,
-  },
-  saveBtn: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    alignItems: 'center',
-  },
-  saveText: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    color: '#000',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: theme.colors.scrim.medium,
+    },
+    sheet: {
+      backgroundColor: theme.colors.surface.sheet,
+      borderTopLeftRadius: theme.borderRadius.xl,
+      borderTopRightRadius: theme.borderRadius.xl,
+      padding: theme.spacing.lg,
+      paddingBottom: theme.spacing.xxl,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.lg,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    title: {
+      fontSize: theme.typography.sizes.lg,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    closeBtn: {
+      padding: theme.spacing.xs,
+    },
+    editRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: theme.spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.overlay.light,
+    },
+    editLabel: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.secondary,
+    },
+    editValue: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+    },
+    buttons: {
+      flexDirection: 'row',
+      gap: theme.spacing.md,
+      marginTop: theme.spacing.lg,
+    },
+    cancelBtn: {
+      flex: 1,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.overlay.light,
+      alignItems: 'center',
+    },
+    cancelText: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.secondary,
+    },
+    saveBtn: {
+      flex: 1,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      alignItems: 'center',
+    },
+    saveText: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.icon.onLight,
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+  });
+}

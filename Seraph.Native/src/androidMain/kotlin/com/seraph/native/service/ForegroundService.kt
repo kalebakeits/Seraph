@@ -19,6 +19,7 @@ import com.seraph.native.notifications.NotificationWriter
 import com.seraph.native.parsers.PacketRouter
 import com.seraph.native.recording.RecordingManager
 import com.seraph.native.recording.RecordingRunner
+import com.seraph.native.recording.RecordingState
 import com.seraph.native.sync.AggregationCoordinator
 import com.seraph.native.sync.AlarmChecker
 import com.seraph.native.sync.ConnectionState
@@ -234,6 +235,18 @@ class ForegroundService : Service() {
                         onRealtimeHR = { hr -> rm.onHrSample(hr) },
                     )
                     napRunner.onAttachBle(device)
+                    // If a recording is in progress (e.g. app was backgrounded),
+                    // re-enable realtime HR on the strap so samples keep flowing.
+                    if (rm.state.value != RecordingState.IDLE) {
+                        scope.launch {
+                            try {
+                                device.toggleRealtimeHR(true)
+                                log.i { "Re-enabled realtime HR for in-progress recording" }
+                            } catch (e: Exception) {
+                                log.w(e) { "Failed to re-enable realtime HR on reconnect" }
+                            }
+                        }
+                    }
                 },
                 onConnected = { _, _ -> onConnected() },
                 onDisconnected = { notifications.onConnectionState(ConnectionState.Disconnected) },

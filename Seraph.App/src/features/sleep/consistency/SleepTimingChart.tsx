@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- runOnJS: scheduleOnRN crashes, pending worklets upgrade */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -7,8 +7,8 @@ import { Canvas, RoundedRect, Line, vec } from '@shopify/react-native-skia';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
+import { useTheme, type Theme } from '../../../theme';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { scoreColor } from '../../recovery/components/RecoveryScore';
 import { formatDuration, formatTime } from '../../../utils/dateUtils';
 import { useSleepTimingData } from '../hooks/useSleepTimingData';
@@ -18,9 +18,6 @@ const PADDING_TOP = 20;
 const PADDING_BOTTOM = 32;
 const Y_AXIS_WIDTH = 30;
 const BAR_RADIUS = 4;
-const GRID_COLOR = 'rgba(255,255,255,0.08)';
-const BAR_COLOR = theme.colors.sleep;
-
 const Y_MIN_DEFAULT = 20;
 const Y_MAX_DEFAULT = 35;
 
@@ -62,6 +59,9 @@ interface Props {
 }
 
 export const SleepTimingChart: React.FC<Props> = ({ anchorDate }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
   const [chartAreaWidth, setChartAreaWidth] = useState(0);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -136,7 +136,7 @@ export const SleepTimingChart: React.FC<Props> = ({ anchorDate }) => {
           <SafeText style={styles.tooltipLabel}>
             {focused.weekday} {focused.day}
           </SafeText>
-          <SafeText style={[styles.tooltipValue, { color: BAR_COLOR }]}>
+          <SafeText style={[styles.tooltipValue, { color: theme.colors.sleep }]}>
             {formatDuration(focused.durationMin * 60_000)}
           </SafeText>
           {focused.bedTs !== null && focused.wakeTs !== null && (
@@ -166,7 +166,7 @@ export const SleepTimingChart: React.FC<Props> = ({ anchorDate }) => {
                   {
                     left: Y_AXIS_WIDTH + barCenterX(i) - 16,
                     top: toY(n.bedHour) - 18,
-                    color: scoreColor(n.recovery),
+                    color: scoreColor(n.recovery, theme),
                   },
                 ]}
               >
@@ -182,7 +182,7 @@ export const SleepTimingChart: React.FC<Props> = ({ anchorDate }) => {
                 key={h}
                 p1={vec(Y_AXIS_WIDTH, toY(h))}
                 p2={vec(chartAreaWidth, toY(h))}
-                color={GRID_COLOR}
+                color={theme.colors.overlay.faint}
                 strokeWidth={1}
               />
             ))}
@@ -201,7 +201,7 @@ export const SleepTimingChart: React.FC<Props> = ({ anchorDate }) => {
                   width={barWidth}
                   height={Math.max(4, y2 - y1)}
                   r={BAR_RADIUS}
-                  color={BAR_COLOR}
+                  color={theme.colors.sleep}
                   opacity={isFocused || focusedIndex === null ? 1 : 0.4}
                 />
               );
@@ -216,7 +216,7 @@ export const SleepTimingChart: React.FC<Props> = ({ anchorDate }) => {
               style={{
                 position: 'absolute',
                 left: Y_AXIS_WIDTH + barCenterX(i) - 22,
-                width: 44,
+                width: theme.layout.chartLabelWidth,
                 alignItems: 'center',
               }}
             >
@@ -230,71 +230,73 @@ export const SleepTimingChart: React.FC<Props> = ({ anchorDate }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  title: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
-  },
-  chartArea: {
-    position: 'relative',
-  },
-  yLabel: {
-    position: 'absolute',
-    left: 0,
-    width: Y_AXIS_WIDTH - 2,
-    fontSize: 9,
-    color: theme.colors.text.muted,
-    zIndex: 1,
-    textAlign: 'right',
-  },
-  recoveryLabel: {
-    position: 'absolute',
-    fontSize: 10,
-    fontWeight: theme.typography.weights.semibold,
-    width: 32,
-    textAlign: 'center',
-    zIndex: 1,
-  },
-  xAxisRow: {
-    height: PADDING_BOTTOM,
-    position: 'relative',
-  },
-  axisWeekday: {
-    color: theme.colors.text.muted,
-    fontSize: 9,
-    lineHeight: 12,
-  },
-  axisDay: {
-    color: theme.colors.text.tertiary,
-    fontSize: 9,
-    lineHeight: 12,
-  },
-  tooltip: {
-    position: 'absolute',
-    top: 28,
-    zIndex: 10,
-    backgroundColor: 'rgba(30,15,50,0.92)',
-    borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 4,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    minWidth: 88,
-  },
-  tooltipLabel: {
-    fontSize: 9,
-    color: theme.colors.text.muted,
-  },
-  tooltipValue: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.bold,
-  },
-  tooltipRange: {
-    fontSize: 9,
-    color: theme.colors.text.muted,
-    marginTop: 1,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    title: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+      marginBottom: theme.spacing.sm,
+    },
+    chartArea: {
+      position: 'relative',
+    },
+    yLabel: {
+      position: 'absolute',
+      left: 0,
+      width: Y_AXIS_WIDTH - 2,
+      fontSize: 9,
+      color: theme.colors.text.muted,
+      zIndex: 1,
+      textAlign: 'right',
+    },
+    recoveryLabel: {
+      position: 'absolute',
+      fontSize: 10,
+      fontWeight: theme.typography.weights.semibold,
+      width: theme.layout.iconSize.sm,
+      textAlign: 'center',
+      zIndex: 1,
+    },
+    xAxisRow: {
+      height: PADDING_BOTTOM,
+      position: 'relative',
+    },
+    axisWeekday: {
+      color: theme.colors.text.muted,
+      fontSize: 9,
+      lineHeight: 12,
+    },
+    axisDay: {
+      color: theme.colors.text.tertiary,
+      fontSize: 9,
+      lineHeight: 12,
+    },
+    tooltip: {
+      position: 'absolute',
+      top: 28,
+      zIndex: 10,
+      backgroundColor: theme.colors.surface.tooltipDeep,
+      borderRadius: theme.borderRadius.sm,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border.subtle,
+      minWidth: 88,
+    },
+    tooltipLabel: {
+      fontSize: 9,
+      color: theme.colors.text.muted,
+    },
+    tooltipValue: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.bold,
+    },
+    tooltipRange: {
+      fontSize: 9,
+      color: theme.colors.text.muted,
+      marginTop: 1,
+    },
+  });
+}

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Modal, View, TouchableOpacity, Pressable, FlatList, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 import { SPORT_LABELS } from '../../../types/ActivityType';
 
 interface SportPickerProps {
@@ -21,6 +21,8 @@ export const SportPicker: React.FC<SportPickerProps> = ({
   onSelect,
   onClose,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
 
   type Section = { type: 'header'; title: string } | { type: 'item'; label: string };
@@ -89,58 +91,60 @@ export const SportPicker: React.FC<SportPickerProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  sheet: {
-    backgroundColor: theme.colors.surface.sheet,
-    borderTopLeftRadius: theme.borderRadius.xl,
-    borderTopRightRadius: theme.borderRadius.xl,
-    paddingTop: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    maxHeight: '80%',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.md,
-  },
-  title: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-  closeBtn: {
-    padding: theme.spacing.xs,
-  },
-  sectionHeader: {
-    paddingVertical: theme.spacing.sm,
-    paddingTop: theme.spacing.md,
-  },
-  sectionTitle: {
-    fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  sportRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.overlay.light,
-  },
-  sportRowSelected: {
-    // no extra background, icon + color is enough
-  },
-  sportLabel: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.primary,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: theme.colors.scrim.medium,
+    },
+    sheet: {
+      backgroundColor: theme.colors.surface.sheet,
+      borderTopLeftRadius: theme.borderRadius.xl,
+      borderTopRightRadius: theme.borderRadius.xl,
+      paddingTop: theme.spacing.md,
+      paddingHorizontal: theme.spacing.lg,
+      maxHeight: '80%',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.md,
+    },
+    title: {
+      fontSize: theme.typography.sizes.lg,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    closeBtn: {
+      padding: theme.spacing.xs,
+    },
+    sectionHeader: {
+      paddingVertical: theme.spacing.sm,
+      paddingTop: theme.spacing.md,
+    },
+    sectionTitle: {
+      fontSize: theme.typography.sizes.xs,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    sportRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: theme.spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.overlay.light,
+    },
+    sportRowSelected: {
+      // no extra background, icon + color is enough
+    },
+    sportLabel: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.primary,
+    },
+  });
+}

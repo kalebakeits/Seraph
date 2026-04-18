@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTheme } from '../theme';
 import { HomeScreen } from '../features/home/HomeScreen';
 import { Sleep } from '../features/sleep/Sleep';
 import { Recovery } from '../features/recovery/Recovery';
@@ -69,68 +70,52 @@ export interface HomeStackParamList {
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 
 export const HomeStackNavigator: React.FC = () => {
+  const { theme } = useTheme();
   const { t } = useTranslation();
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
-        contentStyle: { backgroundColor: 'transparent' },
-        headerStyle: { backgroundColor: 'transparent' },
-        headerTransparent: true,
-        headerTintColor: '#ffffff',
-        headerTitle: '',
-        animation: 'fade',
-        animationDuration: 200,
+        headerStyle: { backgroundColor: theme.colors.surface.card },
+        headerTintColor: theme.colors.text.primary,
+        headerTitleStyle: { color: theme.colors.text.primary, fontWeight: '600' },
+        headerTitleAlign: 'center',
+        headerBackTitle: '',
+        headerShadowVisible: true,
+        animation: 'default',
+        contentStyle: { backgroundColor: theme.colors.background },
       }}
     >
       <Stack.Screen name="HomeMain" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="Sleep"
         component={Sleep}
-        options={{
-          presentation: 'modal',
-          headerTitle: t('nav.sleep'),
-        }}
+        options={{ presentation: 'modal', headerTitle: t('nav.sleep') }}
       />
       <Stack.Screen
         name="Recovery"
         component={Recovery}
-        options={{
-          presentation: 'modal',
-          headerTitle: t('nav.recovery'),
-        }}
+        options={{ presentation: 'modal', headerTitle: t('nav.recovery') }}
       />
       <Stack.Screen
         name="Strain"
         component={Strain}
-        options={{
-          presentation: 'modal',
-          headerTitle: t('nav.strain'),
-        }}
+        options={{ presentation: 'modal', headerTitle: t('nav.strain') }}
       />
       <Stack.Screen
         name="DeviceManagement"
         component={DeviceManagementScreen}
-        options={{
-          presentation: 'modal',
-          headerTitle: t('nav.deviceManagement'),
-        }}
+        options={{ presentation: 'modal', headerTitle: t('nav.deviceManagement') }}
       />
       <Stack.Screen
         name="WakeUp"
         component={WakeUpScreen}
-        options={{
-          presentation: 'modal',
-          headerTitle: t('nav.wakeUpTime'),
-        }}
+        options={{ presentation: 'modal', headerTitle: t('nav.wakeUpTime') }}
       />
       <Stack.Screen
         name="Profile"
         component={SettingsScreen}
-        options={{
-          presentation: 'modal',
-          headerTitle: t('nav.settings'),
-        }}
+        options={{ presentation: 'modal', headerTitle: t('nav.settings') }}
       />
       <Stack.Screen
         name="ProfileSettings"

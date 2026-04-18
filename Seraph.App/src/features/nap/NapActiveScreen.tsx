@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -16,12 +16,14 @@ import { sleepEventsRepository } from '../../services/database/drizzle/repositor
 import { nativeCancelNap, seraphEmitter } from '../../services/ble/nativeModule';
 import { syncAlarmToDevice } from '../../services/alarm/syncAlarmToDevice';
 import { formatDuration } from '../../utils/dateUtils';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import type { HomeStackParamList } from '../../navigation/HomeStackNavigator';
 
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, 'NapActive'>;
 
 export const NapActiveScreen: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
   const queryClient = useQueryClient();
@@ -172,63 +174,65 @@ export const NapActiveScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  header: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    alignItems: 'flex-start',
-  },
-  modePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(81,181,239,0.3)',
-    backgroundColor: 'rgba(81,181,239,0.08)',
-  },
-  modeLabel: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.sleep,
-  },
-  body: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.xl,
-  },
-  timerSection: { alignItems: 'center', gap: 4 },
-  timer: {
-    fontSize: 52,
-    fontWeight: '700',
-    color: theme.colors.text.primary,
-    letterSpacing: -1,
-  },
-  timerLabel: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  controls: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-  },
-  endBtn: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(81,181,239,0.4)',
-    backgroundColor: 'rgba(81,181,239,0.08)',
-  },
-  endText: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.sleep,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    safe: { flex: 1 },
+    header: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      alignItems: 'flex-start',
+    },
+    modePill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.smx,
+      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.sm,
+      borderRadius: theme.borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border.sleep.light,
+      backgroundColor: theme.colors.overlay.faint,
+    },
+    modeLabel: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.sleep,
+    },
+    body: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: theme.spacing.xl,
+    },
+    timerSection: { alignItems: 'center', gap: theme.spacing.xs },
+    timer: {
+      fontSize: 52,
+      fontWeight: '700',
+      color: theme.colors.text.primary,
+      letterSpacing: -1,
+    },
+    timerLabel: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    controls: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.md,
+    },
+    endBtn: {
+      alignItems: 'center',
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border.sleep.medium,
+      backgroundColor: theme.colors.overlay.faint,
+    },
+    endText: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.sleep,
+    },
+  });
+}

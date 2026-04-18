@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, ScrollView, ActivityIndicator } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { Section } from '../../../components/common/Section';
-import { theme } from '../../../theme';
+import { useTheme } from '../../../theme';
 import { TrendRangeControl } from '../components/TrendRangeControl';
 import { TrendSummaryRow } from '../components/TrendSummaryRow';
 import { TrendChart } from '../TrendChart';
@@ -14,7 +13,7 @@ import { SleepConsistencyCard } from '../../sleep/consistency/SleepConsistencyCa
 import { SleepTimingChart } from '../../sleep/consistency/SleepTimingChart';
 import { SkiaDualAxisChart } from '../../../components/common/SkiaDualAxisChart';
 import { useStrainSleepTrend } from '../shared/useStrainSleepTrend';
-import { trendSharedStyles as s } from '../shared/TrendSharedStyles';
+import { buildTrendSharedStyles } from '../shared/TrendSharedStyles';
 import { HelperText } from '../../../components/common/HelperText';
 import { formatDuration } from '../../../utils/dateUtils';
 import type { TrendRange } from '../useTrendData';
@@ -23,12 +22,12 @@ import type { HomeStackParamList } from '../../../navigation/HomeStackNavigator'
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'TrendSleep'>;
 
-const COLOR = theme.colors.sleep;
-
 export const SleepTrendScreen: React.FC<Props> = ({ route }) => {
+  const { theme } = useTheme();
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
+  const s = buildTrendSharedStyles(theme);
   const { anchorDate } = route.params ?? {};
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const [range, setRange] = useState<TrendRange>('1W');
   const { data, isLoading } = useSleepDurationTrend(range, anchorDate);
   const { data: dualData } = useStrainSleepTrend(anchorDate);
@@ -37,11 +36,12 @@ export const SleepTrendScreen: React.FC<Props> = ({ route }) => {
   const summary = data?.summary ?? null;
 
   return (
-    <View style={[s.container, { paddingTop: insets.top + 48 }]}>
+    <View style={s.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
         <TrendRangeControl
           range={range}
-          color={COLOR}
+          color={theme.colors.sleep}
+          tint={theme.colors.iconTint.sleep}
           anchorDate={anchorDate}
           onRangeChange={setRange}
         />
@@ -50,19 +50,19 @@ export const SleepTrendScreen: React.FC<Props> = ({ route }) => {
           {summary && (
             <TrendSummaryRow
               summary={summary}
-              color={COLOR}
+              color={theme.colors.sleep}
               unit=""
               fmt={v => formatDuration(Math.round(v) * 60_000)}
             />
           )}
           {isLoading ? (
             <View style={s.loading}>
-              <ActivityIndicator color={COLOR} />
+              <ActivityIndicator color={theme.colors.sleep} />
             </View>
           ) : (
             <TrendChart
               points={points}
-              color={COLOR}
+              color={theme.colors.sleep}
               unit=""
               range={range}
               format={v => formatDuration(Math.round(v) * 60_000)}

@@ -1,76 +1,14 @@
-// Central theme configuration - your "values.yaml" for the app
+// Theme factory — builds a full theme from a colour palette.
+// All non-colour tokens (spacing, typography, layout, etc.) are shared across themes.
 
-export const colors = {
-  // Background
-  background: '#150029',
+import type { ColorPalette } from './palettes';
+import { midnightPurple } from './palettes';
 
-  // Gradients
-  gradients: {
-    card: ['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.05)'],
-  },
-
-  // Primary colors
-  primary: '#f45b5b',
-  secondary: '#c94444',
-
-  // Status colors
-  success: '#2ecc71',
-  warning: '#f39c12',
-  error: '#f5576c',
-  info: '#4facfe',
-
-  // Metrics colors
-  strain: '#f45b5bff',
-  recovery: '#67ffb0ff',
-  sleep: '#51b5efff',
-
-  // Sleep stage colors
-  sleepStages: {
-    rem: '#7c6bff',
-    deep: '#4a9fff',
-    light: '#a8d4ffff',
-  },
-
-  // HR zone colors (Z1–Z5)
-  zones: ['#4facfe', '#2ecc71', '#f9ca24', '#f0932b', '#f5576c'] as const,
-
-  // Gauge colors
-  gaugeColors: {
-    vo2Max: ['#f5576c', '#feca57', '#71b280', '#4facfe'] as const, // poor → moderate → good → excellent
-    trainingLoad: ['#feca57', '#71b280', '#71b280', '#f5576c'] as const, // underload → optimal → optimal → overload
-    recovery: ['#f5576c', '#feca57', '#71b280'] as const, // poor → moderate → good
-    hrv: ['#f5576c', '#feca57', '#71b280'] as const, // low → moderate → good
-  },
-
-  // Activity colors
-  steps: '#f4bfefff',
-  calories: '#f4bfefff',
-  active: '#f4bfefff',
-  skinTemp: '#FF8C42',
-
-  // Text colors
-  text: {
-    primary: '#ffffff',
-    secondary: 'rgba(255, 255, 255, 0.8)',
-    tertiary: 'rgba(255, 255, 255, 0.6)',
-    muted: 'rgba(255, 255, 255, 0.4)',
-  },
-
-  // Background overlays
-  overlay: {
-    light: 'rgba(255, 255, 255, 0.1)',
-    medium: 'rgba(255, 255, 255, 0.15)',
-    dark: 'rgba(0, 0, 0, 0.3)',
-  },
-
-  // Surface colors
-  surface: {
-    sheet: '#1a0033',
-  },
-};
-
+// ─── Spacing ──────────────────────────────────────────────────────────────────
 export const spacing = {
+  xxs: 2,
   xs: 4,
+  smx: 6,
   sm: 8,
   md: 16,
   lg: 24,
@@ -78,7 +16,9 @@ export const spacing = {
   xxl: 48,
 };
 
+// ─── Border radius ────────────────────────────────────────────────────────────
 export const borderRadius = {
+  xs: 2,
   sm: 8,
   md: 12,
   lg: 16,
@@ -86,8 +26,20 @@ export const borderRadius = {
   full: 9999,
 };
 
+// ─── Border widths ────────────────────────────────────────────────────────────
+export const borderWidth = {
+  hairline: 0.5,
+  thin: 1,
+  medium: 1.5,
+  thick: 4,
+};
+
+// ─── Typography ───────────────────────────────────────────────────────────────
 export const typography = {
   sizes: {
+    tick: 9,
+    chartLabel: 10,
+    tabLabel: 11,
     xs: 12,
     sm: 14,
     md: 16,
@@ -95,7 +47,12 @@ export const typography = {
     xl: 22,
     xxl: 28,
     xxxl: 36,
+    // Card-level hero numbers (HRV, sleep hours, strain, recovery score)
     hero: 32,
+    // Full-screen display numbers (nap timer, live HR, wake-up time)
+    display: 52,
+    displayLg: 72,
+    displayXl: 80,
   },
   weights: {
     regular: '400' as const,
@@ -103,18 +60,35 @@ export const typography = {
     semibold: '600' as const,
     bold: '700' as const,
   },
+  letterSpacing: {
+    tight: 0.5,
+    normal: 0.6,
+    wide: 0.8,
+    caps: 1,
+    xCaps: 2,
+  },
 };
 
+// ─── Layout ───────────────────────────────────────────────────────────────────
 export const layout = {
   screenPadding: spacing.md,
   cardPadding: spacing.md,
   sectionSpacing: spacing.lg,
-  // Floating tab bar geometry — used to compute bottom padding on scrollable screens.
-  // Tab pill height (52) + vertical padding (8+8). Bar sits 12pt above the safe area bottom.
   floatingTabBarHeight: 68,
   floatingTabBarBottomOffset: 12,
+  headerClearance: 80,
+  headerClearanceTall: 100,
+  iconSize: {
+    sm: 32,
+    md: 36,
+    lg: 48,
+  },
+  legendDot: 6,
+  legendDotLg: 8,
+  chartLabelWidth: 44,
 };
 
+// ─── Animations ───────────────────────────────────────────────────────────────
 export const animations = {
   duration: {
     fast: 200,
@@ -123,82 +97,113 @@ export const animations = {
   },
 };
 
-// Helper to create consistent card styles
-export const cardStyles = {
-  default: {
-    backgroundColor: 'transparent',
-    borderRadius: borderRadius.md,
-    padding: layout.cardPadding,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.32)',
-  },
-  elevated: {
-    backgroundColor: 'transparent',
-    borderRadius: borderRadius.lg,
-    padding: layout.cardPadding,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.32)',
-  },
-};
-
-// Shared tab styles
-export const tabStyles = {
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent' as const,
-  },
-  content: {
-    padding: layout.screenPadding,
-    paddingBottom: layout.floatingTabBarHeight + layout.floatingTabBarBottomOffset + 34,
-  },
-  title: {
-    fontSize: typography.sizes.xxxl,
-    fontWeight: typography.weights.bold,
-    color: colors.text.primary,
-    marginBottom: spacing.lg,
-  },
-};
-
-// Liquid glass button styles
-export const liquidGlassButton = {
-  base: {
-    backgroundColor: colors.overlay.medium,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.md,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
+// ─── Theme factory ────────────────────────────────────────────────────────────
+// Builds derived style objects that depend on colours, then assembles the full theme.
+export function buildTheme(colors: ColorPalette) {
+  const shadows = {
+    sm: {
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  text: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.semibold,
-    color: colors.text.primary,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-};
+    md: {
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 8,
+      elevation: 20,
+    },
+    lg: {
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.35,
+      shadowRadius: 20,
+      elevation: 12,
+    },
+  };
 
-export const theme = {
-  colors,
-  spacing,
-  borderRadius,
-  typography,
-  layout,
-  animations,
-  cardStyles,
-  tabStyles,
-  liquidGlassButton,
-};
+  const cardStyles = {
+    default: {
+      backgroundColor: colors.surface.card,
+      borderRadius: borderRadius.md,
+      padding: layout.cardPadding,
+      ...shadows.sm,
+    },
+    elevated: {
+      backgroundColor: colors.surface.card,
+      borderRadius: borderRadius.lg,
+      padding: layout.cardPadding,
+      ...shadows.md,
+    },
+  };
 
-export type Theme = typeof theme;
+  const tabStyles = {
+    container: {
+      flex: 1,
+      backgroundColor: 'transparent' as const,
+    },
+    content: {
+      padding: layout.screenPadding,
+      paddingBottom: layout.floatingTabBarHeight + layout.floatingTabBarBottomOffset + 34,
+    },
+    title: {
+      fontSize: typography.sizes.xxxl,
+      fontWeight: typography.weights.bold,
+      color: colors.text.primary,
+      marginBottom: spacing.lg,
+    },
+  };
+
+  const liquidGlassButton = {
+    base: {
+      backgroundColor: colors.overlay.medium,
+      borderWidth: borderWidth.thin,
+      borderColor: colors.border.default,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      borderRadius: borderRadius.md,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      ...shadows.sm,
+    },
+    text: {
+      fontSize: typography.sizes.md,
+      fontWeight: typography.weights.semibold,
+      color: colors.text.primary,
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+  };
+
+  return {
+    colors,
+    spacing,
+    borderRadius,
+    borderWidth,
+    typography,
+    shadows,
+    layout,
+    animations,
+    cardStyles,
+    tabStyles,
+    liquidGlassButton,
+  };
+}
+
+// ─── Default static theme (Midnight Purple) ───────────────────────────────────
+// Used only for static style files (SectionStyles, TrendSharedStyles, etc.)
+// that can't call hooks. All components should use useTheme() instead.
+export const theme = buildTheme(midnightPurple);
+
+export type Theme = ReturnType<typeof buildTheme>;
+
+// Re-export palette types for consumers
+export type { ColorPalette, ThemeName } from './palettes';
+export { palettes } from './palettes';
+
+// Re-export ThemeContext so consumers can import from '../theme'
+export { useTheme, ThemeProvider } from './ThemeContext';
+export type { ThemeContextValue } from './ThemeContext';

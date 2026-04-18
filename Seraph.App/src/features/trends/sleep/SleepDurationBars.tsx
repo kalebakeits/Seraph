@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -6,7 +6,7 @@ import { Canvas, RoundedRect, Rect, Line, vec } from '@shopify/react-native-skia
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-worklets';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 import { formatDuration } from '../../../utils/dateUtils';
 import { useSleepWeekData } from './useSleepWeekData';
 
@@ -16,15 +16,14 @@ const PADDING_BOTTOM = 32;
 const BAR_RADIUS = 3;
 const MAX_HOURS = 12;
 const MAX_MINUTES = MAX_HOURS * 60;
-const GRID_COLOR = 'rgba(255,255,255,0.08)';
-const SLEEP_COLOR = theme.colors.sleep;
-const AWAKE_COLOR = 'rgba(255,255,255,0.18)';
 
 interface Props {
   anchorDate?: string;
 }
 
 export const SleepDurationBars: React.FC<Props> = ({ anchorDate }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const { data: days = [] } = useSleepWeekData(anchorDate);
   const [chartAreaWidth, setChartAreaWidth] = useState(0);
@@ -97,7 +96,7 @@ export const SleepDurationBars: React.FC<Props> = ({ anchorDate }) => {
           <SafeText style={styles.tooltipDate}>
             {focused.weekday} {focused.day}
           </SafeText>
-          <SafeText style={[styles.tooltipValue, { color: SLEEP_COLOR }]}>
+          <SafeText style={[styles.tooltipValue, { color: theme.colors.sleep }]}>
             {formatDuration(focused.sleepMinutes * 60_000)}
           </SafeText>
           {focused.awakeMinutes > 0 && (
@@ -117,7 +116,7 @@ export const SleepDurationBars: React.FC<Props> = ({ anchorDate }) => {
                   key={h}
                   p1={vec(0, toY(h * 60))}
                   p2={vec(chartAreaWidth, toY(h * 60))}
-                  color={GRID_COLOR}
+                  color={theme.colors.overlay.faint}
                   strokeWidth={1}
                 />
               ))}
@@ -139,7 +138,7 @@ export const SleepDurationBars: React.FC<Props> = ({ anchorDate }) => {
                       width={barWidth}
                       height={sleepH}
                       r={BAR_RADIUS}
-                      color={SLEEP_COLOR}
+                      color={theme.colors.sleep}
                       opacity={opacity}
                     />
                     {awakeH > 0 && (
@@ -148,7 +147,7 @@ export const SleepDurationBars: React.FC<Props> = ({ anchorDate }) => {
                         y={totalY}
                         width={barWidth}
                         height={awakeH}
-                        color={AWAKE_COLOR}
+                        color={theme.colors.overlay.warm}
                         opacity={opacity}
                       />
                     )}
@@ -166,7 +165,7 @@ export const SleepDurationBars: React.FC<Props> = ({ anchorDate }) => {
               style={{
                 position: 'absolute',
                 left: barCenterX(i) - 22,
-                width: 44,
+                width: theme.layout.chartLabelWidth,
                 alignItems: 'center',
               }}
             >
@@ -180,49 +179,51 @@ export const SleepDurationBars: React.FC<Props> = ({ anchorDate }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  chartArea: {
-    position: 'relative',
-  },
-  xAxisRow: {
-    height: PADDING_BOTTOM,
-    position: 'relative',
-  },
-  axisWeekday: {
-    color: theme.colors.text.muted,
-    fontSize: 9,
-    lineHeight: 12,
-  },
-  axisDay: {
-    color: theme.colors.text.tertiary,
-    fontSize: 9,
-    lineHeight: 12,
-  },
-  tooltip: {
-    position: 'absolute',
-    top: 28,
-    zIndex: 10,
-    backgroundColor: 'rgba(20,10,40,0.94)',
-    borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 6,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    minWidth: 104,
-  },
-  tooltipDate: {
-    fontSize: 9,
-    color: theme.colors.text.muted,
-    marginBottom: 2,
-  },
-  tooltipValue: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    marginBottom: 2,
-  },
-  tooltipAwake: {
-    fontSize: 9,
-    color: theme.colors.text.secondary,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    chartArea: {
+      position: 'relative',
+    },
+    xAxisRow: {
+      height: PADDING_BOTTOM,
+      position: 'relative',
+    },
+    axisWeekday: {
+      color: theme.colors.text.muted,
+      fontSize: 9,
+      lineHeight: 12,
+    },
+    axisDay: {
+      color: theme.colors.text.tertiary,
+      fontSize: 9,
+      lineHeight: 12,
+    },
+    tooltip: {
+      position: 'absolute',
+      top: 28,
+      zIndex: 10,
+      backgroundColor: theme.colors.surface.tooltipDark,
+      borderRadius: theme.borderRadius.sm,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.smx,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border.subtle,
+      minWidth: 104,
+    },
+    tooltipDate: {
+      fontSize: 9,
+      color: theme.colors.text.muted,
+      marginBottom: theme.spacing.xxs,
+    },
+    tooltipValue: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+      marginBottom: theme.spacing.xxs,
+    },
+    tooltipAwake: {
+      fontSize: 9,
+      color: theme.colors.text.secondary,
+    },
+  });
+}

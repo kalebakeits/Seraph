@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useTranslation } from 'react-i18next';
@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { GradientBackground } from '../../components/common/GradientBackground';
 import { ScreenLayout } from '../../components/common/ScreenLayout';
 import { TimePicker } from '../../components/TimePicker';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import { appParametersRepository } from '../../services/database/drizzle';
 import { useBaselines } from '../../hooks/useBaselines';
 import type { AppParameter } from '../../services/database/drizzle/repositories/appParametersRepository';
@@ -20,6 +20,8 @@ import type { SettingsState, SensitivityPreset } from './ProfileSettingsTypes';
 import { SENSITIVITY_PRESETS, LANGUAGES, trimpToPreset, dobToAge } from './ProfileSettingsTypes';
 
 export const ProfileSettingsScreen: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { i18n } = useTranslation();
   const queryClient = useQueryClient();
   const { data: baselines } = useBaselines();
@@ -255,16 +257,18 @@ export const ProfileSettingsScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-    gap: theme.spacing.xs,
-  },
-  calOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    content: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.xxl,
+      gap: theme.spacing.xs,
+    },
+    calOverlay: {
+      flex: 1,
+      backgroundColor: theme.colors.scrim.dark,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.lg,
+    },
+  });
+}

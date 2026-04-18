@@ -1,6 +1,7 @@
 import React from 'react';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import { useAppState } from '@react-native-community/hooks';
+import { useTheme } from '../../../theme';
 import { ARC_ZONES, ratioToSkiaDeg } from '../utils/trainingLoadUtils';
 
 const SIZE = 100;
@@ -32,10 +33,12 @@ interface Props {
 
 export const SemiGauge: React.FC<Props> = ({ ratio }) => {
   useAppState();
+  const { theme } = useTheme();
+  const arcZones = ARC_ZONES(theme);
 
   return (
     <Canvas style={{ width: SIZE, height: SIZE / 2 + 8 }}>
-      {ARC_ZONES.map(([s, e, color]) => (
+      {arcZones.map(([s, e, color]) => (
         <Path
           key={color}
           path={makeArc(s, e)}
@@ -47,7 +50,7 @@ export const SemiGauge: React.FC<Props> = ({ ratio }) => {
       ))}
       <Path
         path={makeNeedle(ratio)}
-        color="white"
+        color={theme.colors.text.primary}
         style="stroke"
         strokeWidth={2}
         strokeCap="round"

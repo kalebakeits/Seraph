@@ -15,7 +15,8 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-worklets';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
+import { formatTime } from '../../../utils/dateUtils';
 import type { HRChartPoint } from '../../../components/common/SkiaHRChart';
 
 interface AwakeRun {
@@ -36,14 +37,9 @@ const X_AXIS_HEIGHT = 20;
 const CHART_HEIGHT = 180;
 const NUM_Y_SECTIONS = 4;
 
-function formatTime(ts: number): string {
-  const d = new Date(ts);
-  const h = d.getHours();
-  const m = d.getMinutes().toString().padStart(2, '0');
-  return `${String(h % 12 || 12)}:${m} ${h >= 12 ? 'PM' : 'AM'}`;
-}
-
 export const SleepHRCard: React.FC<Props> = ({ hrPoints, awakeRuns, avgHr }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const [containerWidth, setContainerWidth] = useState(0);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -217,7 +213,7 @@ export const SleepHRCard: React.FC<Props> = ({ hrPoints, awakeRuns, avgHr }) => 
                 key={`g${String(i)}`}
                 p1={vec(Y_AXIS_WIDTH, toY(tick))}
                 p2={vec(containerWidth - PADDING_RIGHT, toY(tick))}
-                color="rgba(255,255,255,0.05)"
+                color={theme.colors.overlay.dim}
                 strokeWidth={1}
               />
             ))}
@@ -234,7 +230,7 @@ export const SleepHRCard: React.FC<Props> = ({ hrPoints, awakeRuns, avgHr }) => 
                   y={PADDING_TOP}
                   width={w}
                   height={chartHeight}
-                  color="rgba(255,255,255,0.07)"
+                  color={theme.colors.overlay.soft}
                 />
               );
             })}
@@ -253,7 +249,12 @@ export const SleepHRCard: React.FC<Props> = ({ hrPoints, awakeRuns, avgHr }) => 
             )}
 
             {avgPath && (
-              <Path path={avgPath} color="rgba(255,255,255,0.3)" style="stroke" strokeWidth={1}>
+              <Path
+                path={avgPath}
+                color={theme.colors.overlay.stroke}
+                style="stroke"
+                strokeWidth={1}
+              >
                 <DashPathEffect intervals={[4, 4]} />
               </Path>
             )}
@@ -263,7 +264,7 @@ export const SleepHRCard: React.FC<Props> = ({ hrPoints, awakeRuns, avgHr }) => 
                 <Line
                   p1={vec(focusX, PADDING_TOP)}
                   p2={vec(focusX, PADDING_TOP + chartHeight)}
-                  color="rgba(255,255,255,0.15)"
+                  color={theme.colors.overlay.medium}
                   strokeWidth={1}
                 />
                 <Circle cx={focusX} cy={focusY} r={5} color={theme.colors.sleep} />
@@ -311,69 +312,71 @@ export const SleepHRCard: React.FC<Props> = ({ hrPoints, awakeRuns, avgHr }) => 
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    ...theme.cardStyles.default,
-    gap: theme.spacing.sm,
-  },
-  heading: {
-    fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  yLabel: {
-    position: 'absolute',
-    left: 0,
-    width: Y_AXIS_WIDTH - 4,
-    alignItems: 'flex-end',
-    zIndex: 1,
-  },
-  axisText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 10,
-  },
-  xAxisRow: {
-    height: X_AXIS_HEIGHT,
-    position: 'relative',
-  },
-  tooltip: {
-    position: 'absolute',
-    top: 24,
-    zIndex: 10,
-    backgroundColor: 'rgba(30,15,50,0.98)',
-    borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 4,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
-  tooltipValue: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.sleep,
-  },
-  tooltipTime: {
-    fontSize: 9,
-    color: 'rgba(255,255,255,0.7)',
-  },
-  legend: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendSwatch: {
-    width: 12,
-    height: 12,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  legendLabel: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    card: {
+      ...theme.cardStyles.default,
+      gap: theme.spacing.sm,
+    },
+    heading: {
+      fontSize: theme.typography.sizes.xs,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    yLabel: {
+      position: 'absolute',
+      left: 0,
+      width: Y_AXIS_WIDTH - 4,
+      alignItems: 'flex-end',
+      zIndex: 1,
+    },
+    axisText: {
+      color: theme.colors.overlay.label,
+      fontSize: 10,
+    },
+    xAxisRow: {
+      height: X_AXIS_HEIGHT,
+      position: 'relative',
+    },
+    tooltip: {
+      position: 'absolute',
+      top: 24,
+      zIndex: 10,
+      backgroundColor: theme.colors.surface.tooltipDeepHigh,
+      borderRadius: theme.borderRadius.sm,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border.subtle,
+    },
+    tooltipValue: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.sleep,
+    },
+    tooltipTime: {
+      fontSize: 9,
+      color: theme.colors.overlay.label,
+    },
+    legend: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.smx,
+    },
+    legendSwatch: {
+      width: 12,
+      height: 12,
+      borderRadius: 2,
+      backgroundColor: theme.colors.overlay.soft,
+      borderWidth: 1,
+      borderColor: theme.colors.border.default,
+    },
+    legendLabel: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+    },
+  });
+}

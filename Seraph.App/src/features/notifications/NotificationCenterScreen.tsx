@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,7 @@ import { useNotifications } from '../../hooks/useNotifications';
 import { notificationsRepository } from '../../services/database/drizzle';
 import type { Notification } from '../../services/database/drizzle';
 import { navigationRef } from '../../navigation/navigationRef';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import {
   parsePayload,
   formatNotificationTitle,
@@ -48,7 +48,9 @@ function NotificationRow({
   eventLabel,
   onPress,
 }: NotificationRowProps) {
-  const icon = iconForNotification(item.type, parsePayload(item.payload ?? null).sport);
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const icon = iconForNotification(item.type, parsePayload(item.payload ?? null).sport, theme);
   return (
     <Pressable
       style={styles.row}
@@ -57,7 +59,7 @@ function NotificationRow({
       }}
     >
       <View style={styles.rowContent}>
-        <View style={styles.iconWrap}>
+        <View style={[styles.iconWrap, { backgroundColor: icon.tint, borderColor: icon.color }]}>
           <Ionicons name={icon.name} size={20} color={icon.color} />
         </View>
         <View style={styles.textWrap}>
@@ -83,6 +85,8 @@ function NotificationRow({
 }
 
 export function NotificationCenterScreen() {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const notifications = useNotifications();
@@ -166,77 +170,80 @@ export function NotificationCenterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  listContent: { paddingTop: 80, paddingBottom: theme.tabStyles.content.paddingBottom },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 80,
-  },
-  emptyText: {
-    color: theme.colors.text.tertiary,
-    fontSize: theme.typography.sizes.md,
-  },
-  row: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.07)',
-  },
-  rowContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    gap: theme.spacing.sm + 4,
-  },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 1,
-  },
-  textWrap: { flex: 1 },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  heroTitle: {
-    flex: 1,
-    color: theme.colors.text.primary,
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-    marginRight: theme.spacing.sm,
-  },
-  metaWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  unreadDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: theme.colors.primary,
-  },
-  timeAgo: {
-    color: theme.colors.text.muted,
-    fontSize: theme.typography.sizes.xs,
-  },
-  detail: {
-    color: theme.colors.text.secondary,
-    fontSize: theme.typography.sizes.xs,
-    marginTop: 2,
-  },
-  eventLabel: {
-    color: theme.colors.text.muted,
-    fontSize: theme.typography.sizes.xs,
-    marginTop: 2,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: { flex: 1 },
+    listContent: {
+      paddingTop: theme.layout.screenPadding,
+      paddingBottom: theme.tabStyles.content.paddingBottom,
+    },
+    emptyContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: theme.layout.screenPadding,
+    },
+    emptyText: {
+      color: theme.colors.text.tertiary,
+      fontSize: theme.typography.sizes.md,
+    },
+    row: {
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.overlay.soft,
+    },
+    rowContent: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
+      gap: theme.spacing.sm + 4,
+    },
+    iconWrap: {
+      width: theme.layout.iconSize.md,
+      height: theme.layout.iconSize.md,
+      borderRadius: theme.borderRadius.full,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 1,
+    },
+    textWrap: { flex: 1 },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    heroTitle: {
+      flex: 1,
+      color: theme.colors.text.primary,
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.semibold,
+      marginRight: theme.spacing.sm,
+    },
+    metaWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+    },
+    unreadDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+      backgroundColor: theme.colors.primary,
+    },
+    timeAgo: {
+      color: theme.colors.text.muted,
+      fontSize: theme.typography.sizes.xs,
+    },
+    detail: {
+      color: theme.colors.text.secondary,
+      fontSize: theme.typography.sizes.xs,
+      marginTop: theme.spacing.xxs,
+    },
+    eventLabel: {
+      color: theme.colors.text.muted,
+      fontSize: theme.typography.sizes.xs,
+      marginTop: theme.spacing.xxs,
+    },
+  });
+}

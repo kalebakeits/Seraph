@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 
 interface Props {
   visible: boolean;
@@ -18,6 +18,8 @@ export const CalendarModal: React.FC<Props> = ({
   onSelect,
   onClose,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
@@ -55,11 +57,13 @@ export const CalendarModal: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: theme.colors.scrim.dark,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.lg,
+    },
+  });
+}

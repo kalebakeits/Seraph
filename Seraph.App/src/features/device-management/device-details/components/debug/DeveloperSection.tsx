@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { SafeText } from '../../../../../components/common/SafeText';
 import { ActionRow } from '../ActionRow';
-import { theme } from '../../../../../theme';
+import { useTheme, type Theme } from '../../../../../theme';
 import { getDbPath } from '../../../../../services/database/drizzle/db';
 import { appParametersRepository } from '../../../../../services/database/drizzle';
 import {
@@ -14,6 +14,8 @@ import {
 import { errorMessage } from '../../../../../utils/errorUtils';
 
 export const DeveloperSection: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const handleExportDb = async () => {
     try {
       const path = await nativeExportDb();
@@ -82,7 +84,10 @@ export const DeveloperSection: React.FC = () => {
           label="Reset Onboarding"
           sublabel="Shows onboarding on next app launch"
           onPress={() => {
-            void appParametersRepository.delete('onboarding_complete').then(() => {
+            void Promise.all([
+              appParametersRepository.delete('onboarding_complete'),
+              appParametersRepository.delete('onboarding_page'),
+            ]).then(() => {
               Alert.alert('Done', 'Restart the app to see onboarding.');
             });
           }}
@@ -92,25 +97,27 @@ export const DeveloperSection: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  sectionTitle: {
-    fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.muted,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginTop: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    marginLeft: theme.spacing.xs,
-  },
-  card: {
-    ...theme.cardStyles.default,
-    padding: 0,
-    overflow: 'hidden',
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: theme.colors.overlay.light,
-    marginLeft: 52,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    sectionTitle: {
+      fontSize: theme.typography.sizes.xs,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.muted,
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+      marginTop: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
+      marginLeft: theme.spacing.xs,
+    },
+    card: {
+      ...theme.cardStyles.default,
+      padding: 0,
+      overflow: 'hidden',
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: theme.colors.overlay.light,
+      marginLeft: 52,
+    },
+  });
+}

@@ -1,10 +1,10 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, Switch, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
-import { theme } from '../../../theme';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
+import { useTheme, type Theme } from '../../../theme';
 
 export interface NotificationPreferences {
   globalEnabled: boolean;
@@ -54,6 +54,9 @@ const ExpandableSection: React.FC<ExpandableSectionProps> = ({ expanded, count, 
 };
 
 export const NotificationsSection: React.FC<Props> = ({ preferences, onChange }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
   const [expandedDevice, setExpandedDevice] = useState(false);
   const [expandedActivity, setExpandedActivity] = useState(false);
@@ -105,9 +108,9 @@ export const NotificationsSection: React.FC<Props> = ({ preferences, onChange })
             onValueChange={() => {
               onChange({ ...preferences, globalEnabled: !preferences.globalEnabled });
             }}
-            trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
-            thumbColor="#ffffff"
-            ios_backgroundColor="rgba(255,255,255,0.1)"
+            trackColor={{ false: theme.colors.overlay.light, true: theme.colors.strain }}
+            thumbColor={theme.colors.thumb}
+            ios_backgroundColor={theme.colors.overlay.light}
           />
         </View>
 
@@ -145,9 +148,9 @@ export const NotificationsSection: React.FC<Props> = ({ preferences, onChange })
               onValueChange={() => {
                 onChange({ ...preferences, deviceLowBattery: !preferences.deviceLowBattery });
               }}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
-              thumbColor="#ffffff"
-              ios_backgroundColor="rgba(255,255,255,0.1)"
+              trackColor={{ false: theme.colors.overlay.light, true: theme.colors.strain }}
+              thumbColor={theme.colors.thumb}
+              ios_backgroundColor={theme.colors.overlay.light}
             />
           </View>
           <View style={styles.subRow}>
@@ -159,9 +162,9 @@ export const NotificationsSection: React.FC<Props> = ({ preferences, onChange })
               onValueChange={() => {
                 onChange({ ...preferences, deviceAlarmNotSet: !preferences.deviceAlarmNotSet });
               }}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
-              thumbColor="#ffffff"
-              ios_backgroundColor="rgba(255,255,255,0.1)"
+              trackColor={{ false: theme.colors.overlay.light, true: theme.colors.strain }}
+              thumbColor={theme.colors.thumb}
+              ios_backgroundColor={theme.colors.overlay.light}
             />
           </View>
         </ExpandableSection>
@@ -200,9 +203,9 @@ export const NotificationsSection: React.FC<Props> = ({ preferences, onChange })
               onValueChange={() => {
                 onChange({ ...preferences, activitySleep: !preferences.activitySleep });
               }}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
-              thumbColor="#ffffff"
-              ios_backgroundColor="rgba(255,255,255,0.1)"
+              trackColor={{ false: theme.colors.overlay.light, true: theme.colors.strain }}
+              thumbColor={theme.colors.thumb}
+              ios_backgroundColor={theme.colors.overlay.light}
             />
           </View>
           <View style={styles.subRow}>
@@ -214,9 +217,9 @@ export const NotificationsSection: React.FC<Props> = ({ preferences, onChange })
               onValueChange={() => {
                 onChange({ ...preferences, activityWorkout: !preferences.activityWorkout });
               }}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: theme.colors.strain }}
-              thumbColor="#ffffff"
-              ios_backgroundColor="rgba(255,255,255,0.1)"
+              trackColor={{ false: theme.colors.overlay.light, true: theme.colors.strain }}
+              thumbColor={theme.colors.thumb}
+              ios_backgroundColor={theme.colors.overlay.light}
             />
           </View>
         </ExpandableSection>
@@ -227,57 +230,59 @@ export const NotificationsSection: React.FC<Props> = ({ preferences, onChange })
   );
 };
 
-const styles = StyleSheet.create({
-  sectionGap: {
-    marginTop: theme.spacing.lg,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.sm + 2,
-    minHeight: 44,
-  },
-  rowLeft: {
-    flex: 1,
-    gap: 2,
-    marginRight: theme.spacing.md,
-  },
-  rowLabel: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.secondary,
-  },
-  rowDesc: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    lineHeight: 18,
-  },
-  dimmed: {
-    color: theme.colors.text.muted,
-    opacity: 0.5,
-  },
-  subRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: SUB_ROW_HEIGHT,
-    paddingLeft: theme.spacing.lg,
-  },
-  subRowLabel: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.secondary,
-    flex: 1,
-    marginRight: theme.spacing.md,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-  note: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    lineHeight: 18,
-    marginTop: theme.spacing.sm,
-    marginHorizontal: theme.spacing.lg,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    sectionGap: {
+      marginTop: theme.spacing.lg,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: theme.spacing.sm + 2,
+      minHeight: 44,
+    },
+    rowLeft: {
+      flex: 1,
+      gap: theme.spacing.xxs,
+      marginRight: theme.spacing.md,
+    },
+    rowLabel: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.secondary,
+    },
+    rowDesc: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      lineHeight: 18,
+    },
+    dimmed: {
+      color: theme.colors.text.muted,
+      opacity: 0.5,
+    },
+    subRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      height: SUB_ROW_HEIGHT,
+      paddingLeft: theme.spacing.lg,
+    },
+    subRowLabel: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.secondary,
+      flex: 1,
+      marginRight: theme.spacing.md,
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: theme.colors.overlay.faint,
+    },
+    note: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      lineHeight: 18,
+      marginTop: theme.spacing.sm,
+      marginHorizontal: theme.spacing.lg,
+    },
+  });
+}

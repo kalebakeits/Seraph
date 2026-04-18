@@ -5,8 +5,8 @@ import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../../components/common/SafeText';
 import { Section } from '../../../../components/common/Section';
-import { theme } from '../../../../theme';
-import { sectionStyles } from '../../../../theme/shared/SectionStyles';
+import { useTheme, type Theme } from '../../../../theme';
+import { buildSectionStyles } from '../../../../theme/shared/SectionStyles';
 import { useDayStress, type HRVWindow, type StressOverlay } from '../../hooks/useDayStress';
 
 const Y_AXIS_WIDTH = 28;
@@ -17,21 +17,12 @@ const X_AXIS_HEIGHT = 16;
 // Stress index 0-100 → colour
 // 0-25: blue, 25-50: green, 50-70: yellow, 70-85: orange, 85-100: red
 // activity window: grey
-const STRESS_COLORS = {
-  activity: '#4a4a5a',
-  low: '#4facfe', // blue
-  normal: '#2ecc71', // green
-  mild: '#f1c40f', // yellow
-  moderate: '#e67e22', // orange
-  high: '#e74c3c', // red
-};
-
-function stressColor(index: number): string {
-  if (index < 25) return STRESS_COLORS.low;
-  if (index < 50) return STRESS_COLORS.normal;
-  if (index < 70) return STRESS_COLORS.mild;
-  if (index < 85) return STRESS_COLORS.moderate;
-  return STRESS_COLORS.high;
+function stressColor(index: number, theme: Theme): string {
+  if (index < 25) return theme.colors.stress.calm;
+  if (index < 50) return theme.colors.stress.low;
+  if (index < 70) return theme.colors.stress.mild;
+  if (index < 85) return theme.colors.stress.moderate;
+  return theme.colors.stress.high;
 }
 
 function stressIndex(rmssd: number, baseline: number): number {
@@ -48,6 +39,9 @@ interface Props {
 }
 
 export const StressTimelineCard: React.FC<Props> = ({ selectedDate }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
   const { data } = useDayStress(selectedDate);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -102,7 +96,9 @@ export const StressTimelineCard: React.FC<Props> = ({ selectedDate }) => {
       }
 
       const inActivity = isInOverlay(i, overlays);
-      const color = inActivity ? STRESS_COLORS.activity : stressColor(stressIndex(w.v, baseline));
+      const color = inActivity
+        ? theme.colors.stress.activity
+        : stressColor(stressIndex(w.v, baseline), theme);
 
       const pt = { x: toX(i), y: toY(w.v) };
 
@@ -128,7 +124,7 @@ export const StressTimelineCard: React.FC<Props> = ({ selectedDate }) => {
         return { path, color: seg.color };
       })
       .filter((s): s is { path: ReturnType<typeof Skia.Path.Make>; color: string } => s !== null);
-  }, [windows, overlays, baseline, chartW, chartH]);
+  }, [windows, overlays, baseline, chartW, chartH, theme]);
 
   if (windows.length === 0) return null;
 
@@ -138,7 +134,7 @@ export const StressTimelineCard: React.FC<Props> = ({ selectedDate }) => {
         <View style={styles.headerRow}>
           <SafeText style={styles.label}>{t('stress.dailyStress')}</SafeText>
           {dailyStress !== null && (
-            <SafeText style={[styles.score, { color: stressColor(dailyStress) }]}>
+            <SafeText style={[styles.score, { color: stressColor(dailyStress, theme) }]}>
               {dailyStress}
             </SafeText>
           )}
@@ -175,16 +171,22 @@ export const StressTimelineCard: React.FC<Props> = ({ selectedDate }) => {
 
         {/* Legend */}
         <View style={styles.legend}>
-          {Object.entries(STRESS_COLORS)
-            .filter(([k]) => k !== 'activity')
-            .map(([key, color]) => (
-              <View key={key} style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: color }]} />
-                <SafeText style={styles.legendLabel}>{t(`stress.level.${key}`)}</SafeText>
-              </View>
-            ))}
+          {(
+            [
+              ['calm', theme.colors.stress.calm],
+              ['low', theme.colors.stress.low],
+              ['mild', theme.colors.stress.mild],
+              ['moderate', theme.colors.stress.moderate],
+              ['high', theme.colors.stress.high],
+            ] as [string, string][]
+          ).map(([key, color]) => (
+            <View key={key} style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: color }]} />
+              <SafeText style={styles.legendLabel}>{t(`stress.level.${key}`)}</SafeText>
+            </View>
+          ))}
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: STRESS_COLORS.activity }]} />
+            <View style={[styles.legendDot, { backgroundColor: theme.colors.stress.activity }]} />
             <SafeText style={styles.legendLabel}>{t('stress.level.activity')}</SafeText>
           </View>
         </View>
@@ -193,50 +195,52 @@ export const StressTimelineCard: React.FC<Props> = ({ selectedDate }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  label: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-  },
-  score: {
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.bold,
-  },
-  xAxis: {
-    height: X_AXIS_HEIGHT,
-    position: 'relative',
-  },
-  xLabel: {
-    fontSize: 9,
-    color: theme.colors.text.muted,
-    width: 32,
-    textAlign: 'center',
-  },
-  legend: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.xs,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  legendDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  legendLabel: {
-    fontSize: 9,
-    color: theme.colors.text.muted,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.sm,
+    },
+    label: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+    },
+    score: {
+      fontSize: theme.typography.sizes.xl,
+      fontWeight: theme.typography.weights.bold,
+    },
+    xAxis: {
+      height: X_AXIS_HEIGHT,
+      position: 'relative',
+    },
+    xLabel: {
+      fontSize: theme.typography.sizes.tick,
+      color: theme.colors.text.muted,
+      width: theme.layout.iconSize.sm,
+      textAlign: 'center',
+    },
+    legend: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+      marginTop: theme.spacing.xs,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    legendDot: {
+      width: theme.layout.legendDot,
+      height: theme.layout.legendDot,
+      borderRadius: 3,
+    },
+    legendLabel: {
+      fontSize: theme.typography.sizes.tick,
+      color: theme.colors.text.muted,
+    },
+  });
+}

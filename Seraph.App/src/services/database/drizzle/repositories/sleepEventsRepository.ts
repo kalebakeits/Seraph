@@ -73,9 +73,15 @@ class SleepEventsRepository {
   }
 
   async markFinalized(id: number): Promise<void> {
+    const rows = await getDb().select().from(sleepEvents).where(eq(sleepEvents.id, id)).limit(1);
+    const event = rows[0];
+    const durationMinutes =
+      event && event.start_ts > 0 && event.end_ts > event.start_ts
+        ? Math.max(0, Math.round((event.end_ts - event.start_ts) / 60000) - (event.awake_minutes ?? 0))
+        : undefined;
     await getDb()
       .update(sleepEvents)
-      .set({ finalized: 1 })
+      .set({ finalized: 1, ...(durationMinutes !== undefined ? { duration_minutes: durationMinutes } : {}) })
       .where(eq(sleepEvents.id, id));
   }
 

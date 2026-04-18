@@ -19,7 +19,7 @@ private val log = Logger.withTag("RecordingManager")
 // 10-byte record: 8-byte timestamp (ms) + 2-byte HR (unsigned)
 private const val RECORD_BYTES = 10
 
-enum class RecordingState { IDLE, RECORDING, PAUSED }
+enum class RecordingState { IDLE, RECORDING, PAUSED, AUTO_PAUSED }
 
 /**
  * Owns real-time workout recording lifecycle.
@@ -47,12 +47,9 @@ class RecordingManager(
     // Pause tracking — list of (pauseStartMs, pauseEndMs); last entry may have endMs = 0 if still paused
     private val pauseSegments = mutableListOf<LongArray>()
 
-    // Auto-pause: track how long HR has been in Z1
     private var z1StartMs: Long = 0L
     private var currentHr: Int = 0
     private var lastHrTs: Long = 0L
-
-    private val autoPauseZ1Ms = 90_000L
 
     // ── Public API ────────────────────────────────────────────────────────────
 
@@ -80,12 +77,13 @@ class RecordingManager(
         if (_state.value == RecordingState.IDLE) return
 
         val now = Clock.System.now().toEpochMilliseconds()
+        val prevHrTs = lastHrTs
         currentHr = hr
         lastHrTs = now
 
         // Write to file: 0 HR during pause so we can skip on read
         val isRecording = _state.value == RecordingState.RECORDING
-        val hrToWrite = if (isRecording) hr else 0
+        val hrToWrite = if (isRecording) hr else 0  // paused/auto-paused samples written as 0, skipped on stop()
 
         try {
             val buf = ByteBuffer.allocate(RECORD_BYTES).order(ByteOrder.LITTLE_ENDIAN)
@@ -96,42 +94,56 @@ class RecordingManager(
             log.e(e) { "Failed to write HR sample" }
         }
 
-        // Auto-pause logic: if Z1 for >90s, pause
-        if (isRecording) {
-            val profile = loadProfile()
-            val fthr = profile.thresholdHr ?: ((220.0 - (profile.age ?: 30)) * 0.85)
+        // Auto-pause: only when enabled and FTHR is explicitly set by the user
+        val autoPauseEnabled = db.seraphDbQueries
+            .getAppParameter("recording_auto_pause_enabled")
+            .executeAsOneOrNull() == "1"
+        val fthr = db.seraphDbQueries
+            .getAppParameter("profile_threshold_hr")
+            .executeAsOneOrNull()?.toDoubleOrNull()
+
+        if (autoPauseEnabled && fthr != null) {
             val z1Threshold = fthr * 0.72
-            if (hr in 1..220 && hr < z1Threshold) {
-                if (z1StartMs == 0L) {
-                    z1StartMs = now
-                } else if (now - z1StartMs > autoPauseZ1Ms) {
-                    log.i { "Auto-pause: HR in Z1 for ${(now - z1StartMs) / 1000}s" }
-                    pause(auto = true)
+            val z1DurationMs = (db.seraphDbQueries
+                .getAppParameter("recording_auto_pause_z1_seconds")
+                .executeAsOneOrNull()?.toLongOrNull() ?: 90L) * 1000L
+
+            if (isRecording) {
+                if (hr in 1..220 && hr < z1Threshold) {
+                    if (z1StartMs == 0L) z1StartMs = now
+                    else if (now - z1StartMs > z1DurationMs) {
+                        log.i { "Auto-pause: HR in Z1 for ${(now - z1StartMs) / 1000}s" }
+                        autoPause()
+                    }
+                } else {
+                    z1StartMs = 0L
                 }
-            } else {
-                z1StartMs = 0L
-            }
-        } else if (_state.value == RecordingState.PAUSED) {
-            // Auto-resume: HR rose above Z1
-            val profile = loadProfile()
-            val fthr = profile.thresholdHr ?: ((220.0 - (profile.age ?: 30)) * 0.85)
-            val z1Threshold = fthr * 0.72
-            if (hr in 1..220 && hr >= z1Threshold) {
-                log.i { "Auto-resume: HR back above Z1" }
-                resume()
+            } else if (_state.value == RecordingState.AUTO_PAUSED) {
+                if (hr in 1..220 && hr >= z1Threshold) {
+                    log.i { "Auto-resume: HR back above Z1" }
+                    resume()
+                }
             }
         }
     }
 
-    fun pause(auto: Boolean = false) {
+    fun pause() {
         if (_state.value != RecordingState.RECORDING) return
         pauseSegments.add(longArrayOf(Clock.System.now().toEpochMilliseconds(), 0L))
         _state.value = RecordingState.PAUSED
-        log.i { "Recording paused (auto=$auto)" }
+        log.i { "Recording paused" }
+    }
+
+    private fun autoPause() {
+        if (_state.value != RecordingState.RECORDING) return
+        pauseSegments.add(longArrayOf(Clock.System.now().toEpochMilliseconds(), 0L))
+        z1StartMs = 0L
+        _state.value = RecordingState.AUTO_PAUSED
+        log.i { "Recording auto-paused" }
     }
 
     fun resume() {
-        if (_state.value != RecordingState.PAUSED) return
+        if (_state.value != RecordingState.PAUSED && _state.value != RecordingState.AUTO_PAUSED) return
         val last = pauseSegments.lastOrNull()
         if (last != null && last[1] == 0L) last[1] = Clock.System.now().toEpochMilliseconds()
         z1StartMs = 0L
@@ -147,7 +159,6 @@ class RecordingManager(
         val prevState = _state.value
         if (prevState == RecordingState.IDLE) return null
 
-        // Close any open pause
         val last = pauseSegments.lastOrNull()
         if (last != null && last[1] == 0L) last[1] = Clock.System.now().toEpochMilliseconds()
 

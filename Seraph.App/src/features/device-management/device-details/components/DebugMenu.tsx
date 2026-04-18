@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../../components/common/SafeText';
-import { theme } from '../../../../theme';
+import { useTheme, type Theme } from '../../../../theme';
 import { DeviceInfoSection } from './debug/DeviceInfoSection';
 import { TrimSection } from './debug/TrimSection';
 import { CommandsSection } from './debug/CommandsSection';
@@ -31,6 +31,8 @@ export const DebugMenu: React.FC<DebugMenuProps> = ({
   firmwareVersion,
   hardwareVersion,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
 
   return (
@@ -70,28 +72,30 @@ export const DebugMenu: React.FC<DebugMenuProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    paddingTop: theme.spacing.lg,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.md,
-    paddingBottom: theme.spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.overlay.light,
-  },
-  title: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-  content: {
-    padding: theme.spacing.md,
-    gap: theme.spacing.xs,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingTop: theme.spacing.lg,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: theme.spacing.md,
+      paddingBottom: theme.spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.overlay.light,
+    },
+    title: {
+      fontSize: theme.typography.sizes.lg,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    content: {
+      padding: theme.spacing.md,
+      gap: theme.spacing.xs,
+    },
+  });
+}

@@ -240,6 +240,7 @@ setNapOnset:
 UPDATE sleep_events
 SET start_ts = :start_ts,
     end_ts = :end_ts,
+    duration_minutes = 0,
     hr_sum = hr_sum + :hr_sum,
     hr_count = hr_count + :hr_count,
     avg_hr = CASE WHEN hr_count + :hr_count > 0 THEN (hr_sum + :hr_sum) / (hr_count + :hr_count) ELSE NULL END,
@@ -254,6 +255,7 @@ UPDATE sleep_events
 SET end_ts = :end_ts,
     awake_minutes = awake_minutes + (pending_awake_ms / 60000),
     pending_awake_ms = 0,
+    duration_minutes = (:end_ts - start_ts) / 60000 - awake_minutes - (pending_awake_ms / 60000),
     hr_sum = hr_sum + :hr_sum,
     hr_count = hr_count + :hr_count,
     avg_hr = CASE WHEN hr_count + :hr_count > 0 THEN (hr_sum + :hr_sum) / (hr_count + :hr_count) ELSE NULL END,

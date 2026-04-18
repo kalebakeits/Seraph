@@ -1,9 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import type { ViewStyle } from 'react-native';
 import { View, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DeviceState } from '../types/DeviceState';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 
 interface DeviceStatusIndicatorProps {
   state?: DeviceState;
@@ -11,6 +11,8 @@ interface DeviceStatusIndicatorProps {
 }
 
 export const DeviceStatusIndicator: React.FC<DeviceStatusIndicatorProps> = ({ state, style }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const isBusy =
@@ -69,10 +71,12 @@ export const DeviceStatusIndicator: React.FC<DeviceStatusIndicatorProps> = ({ st
   return <View style={[styles.container, style]}>{icon}</View>;
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+  });
+}

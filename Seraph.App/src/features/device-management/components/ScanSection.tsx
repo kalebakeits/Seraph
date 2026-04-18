@@ -1,63 +1,55 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { SafeText } from '../../../components/common/SafeText';
 import type { ScannedDevice } from '../../../services/ble/nativeModule';
-import type { CachedDevice } from '../../../services/ble/DeviceCache';
 import { DeviceList } from './DeviceList';
-import { LiquidGlassButton } from '../../../components/common/LiquidGlassButton';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 
 interface ScanSectionProps {
-  cachedDevice: CachedDevice | null | undefined;
   scannedDevices: ScannedDevice[];
   isScanning: boolean;
   isConnecting: boolean;
   onScan: () => void;
-  onConnectCached: () => void;
   onSelectDevice: (device: { id: string; name: string | null }) => void;
+  showTitle?: boolean;
 }
 
 export const ScanSection: React.FC<ScanSectionProps> = ({
-  cachedDevice,
   scannedDevices,
   isScanning,
   isConnecting,
   onScan,
-  onConnectCached,
   onSelectDevice,
+  showTitle = true,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const { t } = useTranslation();
   const isDisabled = isScanning || isConnecting;
-  let scanButtonTitle = 'Scan for Devices ';
-  if (isScanning) scanButtonTitle = 'Scanning... ';
-  else if (isConnecting) scanButtonTitle = 'Connecting... ';
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{'Device Connection '}</Text>
+      {showTitle && <SafeText style={styles.sectionTitle}>{t('device.connection.title')}</SafeText>}
 
-      {cachedDevice && (
-        <TouchableOpacity
-          style={[styles.cachedButton, isConnecting && styles.scanButtonDisabled]}
-          onPress={onConnectCached}
-          disabled={isConnecting}
-        >
-          <Text style={styles.cachedButtonTitle}>{`${cachedDevice.name} `}</Text>
-          <Text style={styles.cachedButtonSubtitle}>{'Last connected • Tap to reconnect '}</Text>
-        </TouchableOpacity>
-      )}
-
-      <LiquidGlassButton
+      <TouchableOpacity
+        style={[styles.scanButton, { backgroundColor: theme.colors.bluetooth }, isDisabled && styles.disabled]}
         onPress={onScan}
-        title={scanButtonTitle}
         disabled={isDisabled}
-        loading={isScanning || isConnecting}
-        style={styles.scanButton}
-      />
+        activeOpacity={0.8}
+      >
+        {isScanning || isConnecting ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <SafeText style={styles.scanButtonText}>{t('device.connection.scan')}</SafeText>
+        )}
+      </TouchableOpacity>
 
       {scannedDevices.length > 0 && (
         <View style={styles.devicesContainer}>
-          <Text style={styles.devicesTitle}>{`Found ${String(
-            scannedDevices.length,
-          )} device(s) `}</Text>
+          <SafeText style={styles.devicesTitle}>
+            {t('device.connection.found', { count: scannedDevices.length })}
+          </SafeText>
           <DeviceList devices={scannedDevices} onSelectDevice={onSelectDevice} />
         </View>
       )}
@@ -65,45 +57,41 @@ export const ScanSection: React.FC<ScanSectionProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  section: {
-    marginBottom: theme.spacing.xl,
-  },
-  sectionTitle: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
-  },
-  cachedButton: {
-    ...theme.liquidGlassButton.base,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  cachedButtonTitle: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: 4,
-  },
-  cachedButtonSubtitle: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.secondary,
-  },
-  scanButton: {
-    marginBottom: theme.spacing.md,
-  },
-  scanButtonDisabled: {
-    opacity: 0.5,
-  },
-  devicesContainer: {
-    marginTop: theme.spacing.md,
-  },
-  devicesTitle: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.sm,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    section: {
+      marginBottom: theme.spacing.xl,
+    },
+    sectionTitle: {
+      fontSize: theme.typography.sizes.lg,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+      marginBottom: theme.spacing.md,
+    },
+    scanButton: {
+      borderRadius: theme.borderRadius.full,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: theme.spacing.md,
+    },
+    scanButtonText: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.semibold,
+      color: '#ffffff',
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+    devicesContainer: {
+      marginTop: theme.spacing.md,
+    },
+    devicesTitle: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.secondary,
+      marginBottom: theme.spacing.sm,
+    },
+  });
+}

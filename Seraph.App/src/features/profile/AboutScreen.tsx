@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,8 +9,8 @@ import { GradientBackground } from '../../components/common/GradientBackground';
 import { ScreenLayout } from '../../components/common/ScreenLayout';
 import { SafeText } from '../../components/common/SafeText';
 import { BugReportSheet } from './components/BugReportSheet';
-import { theme } from '../../theme';
-import { sectionStyles } from '../../theme/shared/SectionStyles';
+import { useTheme, type Theme } from '../../theme';
+import { buildSectionStyles } from '../../theme/shared/SectionStyles';
 import type { SettingsStackParamList } from '../../navigation/SettingsStackNavigator';
 
 type NavigationProp = NativeStackNavigationProp<SettingsStackParamList>;
@@ -18,6 +18,9 @@ type NavigationProp = NativeStackNavigationProp<SettingsStackParamList>;
 const DEBUG_TAP_COUNT = 7;
 
 export const AboutScreen: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
   const tapCount = useRef(0);
@@ -88,49 +91,51 @@ export const AboutScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.xs,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.sm + 2,
-    minHeight: 44,
-  },
-  rowLabel: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.secondary,
-  },
-  rowValue: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.primary,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.md,
-    minHeight: 56,
-    gap: theme.spacing.md,
-  },
-  rowIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionLabel: {
-    flex: 1,
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    content: {
+      paddingHorizontal: theme.spacing.lg,
+      gap: theme.spacing.xs,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: theme.spacing.sm + 2,
+      minHeight: 44,
+    },
+    rowLabel: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.secondary,
+    },
+    rowValue: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.primary,
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: theme.colors.overlay.faint,
+    },
+    actionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: theme.spacing.md,
+      minHeight: 56,
+      gap: theme.spacing.md,
+    },
+    rowIcon: {
+      width: theme.layout.iconSize.md,
+      height: theme.layout.iconSize.md,
+      borderRadius: theme.borderRadius.sm,
+      backgroundColor: theme.colors.overlay.muted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    actionLabel: {
+      flex: 1,
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+    },
+  });
+}

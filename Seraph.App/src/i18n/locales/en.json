@@ -118,6 +118,15 @@
       "invalidTrim": "Enter a valid integer trim value",
       "syncError": "Sync request failed",
       "reaggError": "Re-aggregation failed"
+    },
+    "connection": {
+      "title": "Device Connection",
+      "lastConnected": "Last connected — tap to reconnect",
+      "scan": "Scan for Devices",
+      "scanning": "Scanning...",
+      "connecting": "Connecting...",
+      "found": "{{count}} device found",
+      "found_other": "{{count}} devices found"
     }
   },
   "home": {
@@ -343,7 +352,12 @@
     "paused": "PAUSED",
     "liveStrain": "Live Strain",
     "preliminary": "preliminary",
-    "autoPaused": "Auto-paused",
+    "autoPaused": "AUTO-PAUSED",
+    "autoPauseToggle": "Auto-pause",
+    "autoPauseHelper": "Pauses automatically if your heart rate stays below {{threshold}} bpm.",
+    "autoPauseHelperNoThreshold": "Set a threshold heart rate in your profile to use auto-pause.",
+    "autoPauseDelay": "Pause after",
+    "autoPauseDelayUnit": "seconds",
     "finishedTitle": "Workout Finished",
     "finishedMessage": "Save your workout or discard it.",
     "saveWorkout": "Save Workout",
@@ -363,36 +377,26 @@
   "onboarding": {
     "welcome": {
       "title": "Welcome to Seraph",
-      "body": "Your strap's data, your way. Reads directly from your strap via Bluetooth. No subscription, no account, no cloud."
+      "body": "Open fitness tracking."
     },
-    "rings": {
-      "title": "Your Rings",
-      "subtitle": "Three numbers, updated every time your strap syncs.",
-      "strain": "Strain",
-      "strainDesc": "How much cardiovascular load you've accumulated today. Builds up with any activity that raises your heart rate.",
-      "recovery": "Recovery",
-      "recoveryDesc": "How ready your body is for effort today, based on your overnight HRV, resting heart rate, and sleep.",
-      "sleep": "Sleep",
-      "sleepDesc": "How much of your sleep goal you hit last night. Tap to see your full sleep breakdown."
-    },
-    "tour": {
-      "title": "Finding Your Way",
-      "subtitle": "A quick look at how the app is laid out.",
-      "settings": "Settings, your profile, and preferences",
-      "dateNav": "Today's date. Tap the arrows or the date itself to jump to any past day.",
-      "device": "Your strap's connection status and last sync time. Tap to manage your device.",
-      "rings": "Your rings for the selected day. Tap any ring to go deeper.",
-      "activitiesDesc": "Workouts and sleep sessions appear here as your strap detects them, or when you log them manually.",
-      "swipeHint": "Swipe left or right anywhere on the overview to move between days."
+    "theme": {
+      "title": "Choose a theme",
+      "subtitle": "You can change this any time in Settings."
     },
     "connect": {
       "title": "Connect Your Strap",
-      "body": "Go to the device tab after this and connect your strap. Your first sync will pull up to 14 days of history.",
+      "subtitle": "Your first sync will pull up to 14 days of history.",
+      "scan": "Scan for Devices",
+      "scanning": "Scanning...",
+      "connecting": "Connecting...",
+      "found": "{{count}} device found",
+      "found_other": "{{count}} devices found",
       "tip": "Keep Bluetooth on and the app running in the background so it can sync automatically."
     },
     "profile": {
       "title": "About You",
       "subtitle": "Optional — helps calibrate your recovery and sleep calculations.",
+      "privacy": "This information never leaves your device.",
       "name": "NAME",
       "namePlaceholder": "Your name",
       "dob": "DATE OF BIRTH",
@@ -429,7 +433,7 @@
     },
     "done": {
       "title": "You're all set",
-      "body": "Head to the device tab and connect your strap to get started.",
+      "body": "Everything you set up here can be changed in Settings.",
       "tip": "Keep Bluetooth on and the app running in the background so it can sync automatically."
     },
     "next": "Next",
@@ -495,6 +499,17 @@
     "dataAndStorageDesc": "Granularity, sharding, purge",
     "about": "About",
     "aboutDesc": "Version, build info",
+    "appearance": "Appearance",
+    "appearanceDesc": "Theme and display",
+    "theme": "Theme",
+    "themeMidnightPurple": "Midnight Purple",
+    "themeDark": "Dark",
+    "themeLight": "Light",
+    "themeSystem": "Use System",
+    "themeMonokai": "Monokai",
+    "themeTomorrowNightBlue": "Tomorrow Night Blue",
+    "themeSierraSunset": "Sierra Sunset",
+    "themeKimbieDark": "Kimbie Dark",
     "notifications": "Notifications",
     "notificationsGlobalToggle": "All Notifications",
     "notificationsGlobalToggleDesc": "Master switch for all system notifications",

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Modal,
   View,
@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { SafeText } from '../../components/common/SafeText';
 import { habitDefinitionsRepository } from '../../services/database/drizzle';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import type { HabitType } from '../../services/database/drizzle/schema';
 
 interface AddCustomHabitSheetProps {
@@ -29,6 +29,8 @@ const TYPES: { key: HabitType; labelKey: string }[] = [
 ];
 
 export const AddCustomHabitSheet: React.FC<AddCustomHabitSheetProps> = ({ onClose }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
@@ -166,107 +168,109 @@ export const AddCustomHabitSheet: React.FC<AddCustomHabitSheetProps> = ({ onClos
   );
 };
 
-const styles = StyleSheet.create({
-  keyboardAvoid: {
-    flex: 1,
-  },
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  sheet: {
-    backgroundColor: theme.colors.surface.sheet,
-    borderTopLeftRadius: theme.borderRadius.xl,
-    borderTopRightRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-    maxHeight: '85%',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-  },
-  title: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-  closeBtn: {
-    padding: theme.spacing.xs,
-  },
-  fieldLabel: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: theme.spacing.xs,
-    marginTop: theme.spacing.md,
-  },
-  textInput: {
-    backgroundColor: theme.colors.overlay.light,
-    borderRadius: theme.borderRadius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.primary,
-  },
-  typeRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  typeBtn: {
-    flex: 1,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.overlay.medium,
-    alignItems: 'center',
-  },
-  typeBtnActive: {
-    backgroundColor: theme.colors.recovery,
-    borderColor: theme.colors.recovery,
-  },
-  typeBtnText: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.secondary,
-    fontWeight: theme.typography.weights.semibold,
-  },
-  typeBtnTextActive: {
-    color: '#000',
-  },
-  buttons: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginTop: theme.spacing.lg,
-  },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.overlay.light,
-    alignItems: 'center',
-  },
-  cancelText: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.secondary,
-  },
-  saveBtn: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.colors.recovery,
-    alignItems: 'center',
-  },
-  saveText: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    color: '#000',
-  },
-  disabled: {
-    opacity: 0.4,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    keyboardAvoid: {
+      flex: 1,
+    },
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: theme.colors.scrim.medium,
+    },
+    sheet: {
+      backgroundColor: theme.colors.surface.sheet,
+      borderTopLeftRadius: theme.borderRadius.xl,
+      borderTopRightRadius: theme.borderRadius.xl,
+      padding: theme.spacing.lg,
+      paddingBottom: theme.spacing.xxl,
+      maxHeight: '85%',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.lg,
+    },
+    title: {
+      fontSize: theme.typography.sizes.lg,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    closeBtn: {
+      padding: theme.spacing.xs,
+    },
+    fieldLabel: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: theme.spacing.xs,
+      marginTop: theme.spacing.md,
+    },
+    textInput: {
+      backgroundColor: theme.colors.overlay.light,
+      borderRadius: theme.borderRadius.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.primary,
+    },
+    typeRow: {
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+    },
+    typeBtn: {
+      flex: 1,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.overlay.medium,
+      alignItems: 'center',
+    },
+    typeBtnActive: {
+      backgroundColor: theme.colors.recovery,
+      borderColor: theme.colors.recovery,
+    },
+    typeBtnText: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.secondary,
+      fontWeight: theme.typography.weights.semibold,
+    },
+    typeBtnTextActive: {
+      color: theme.colors.icon.onLight,
+    },
+    buttons: {
+      flexDirection: 'row',
+      gap: theme.spacing.md,
+      marginTop: theme.spacing.lg,
+    },
+    cancelBtn: {
+      flex: 1,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.overlay.light,
+      alignItems: 'center',
+    },
+    cancelText: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.secondary,
+    },
+    saveBtn: {
+      flex: 1,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: theme.colors.recovery,
+      alignItems: 'center',
+    },
+    saveText: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.icon.onLight,
+    },
+    disabled: {
+      opacity: 0.4,
+    },
+  });
+}

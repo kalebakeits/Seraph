@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, ScrollView, ActivityIndicator } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { Section } from '../../../components/common/Section';
-import { theme } from '../../../theme';
+import { useTheme } from '../../../theme';
 import { TrendRangeControl } from '../components/TrendRangeControl';
 import { TrendSummaryRow } from '../components/TrendSummaryRow';
 import { TrendChart } from '../TrendChart';
@@ -14,7 +13,7 @@ import { SkiaDualAxisChart } from '../../../components/common/SkiaDualAxisChart'
 import { useStrainRecoveryTrend } from '../shared/useStrainRecoveryTrend';
 import { useStrainRhrTrend } from '../shared/useStrainRhrTrend';
 import { useStrainSleepTrend } from '../shared/useStrainSleepTrend';
-import { trendSharedStyles as s } from '../shared/TrendSharedStyles';
+import { buildTrendSharedStyles } from '../shared/TrendSharedStyles';
 import { HelperText } from '../../../components/common/HelperText';
 import { fmtDecimal1, fmtInteger } from '../shared/trendFormatUtils';
 import { formatDuration } from '../../../utils/dateUtils';
@@ -24,12 +23,12 @@ import type { HomeStackParamList } from '../../../navigation/HomeStackNavigator'
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'TrendStrain'>;
 
-const COLOR = theme.colors.strain;
-
 export const StrainTrendScreen: React.FC<Props> = ({ route }) => {
+  const { theme } = useTheme();
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
+  const s = buildTrendSharedStyles(theme);
   const { anchorDate } = route.params ?? {};
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const [range, setRange] = useState<TrendRange>('1W');
   const { data, isLoading } = useTrendData('strain', range, anchorDate);
   const { data: recoveryDual } = useStrainRecoveryTrend(anchorDate);
@@ -40,25 +39,33 @@ export const StrainTrendScreen: React.FC<Props> = ({ route }) => {
   const summary = data?.summary ?? null;
 
   return (
-    <View style={[s.container, { paddingTop: insets.top + 48 }]}>
+    <View style={s.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
         <TrendRangeControl
           range={range}
-          color={COLOR}
+          color={theme.colors.strain}
+          tint={theme.colors.iconTint.strain}
           anchorDate={anchorDate}
           onRangeChange={setRange}
         />
         <HelperText translationKey="trends.helper_strain" />
         <View style={sectionStyles.container}>
-          {summary && <TrendSummaryRow summary={summary} color={COLOR} unit="" fmt={fmtDecimal1} />}
+          {summary && (
+            <TrendSummaryRow
+              summary={summary}
+              color={theme.colors.strain}
+              unit=""
+              fmt={fmtDecimal1}
+            />
+          )}
           {isLoading ? (
             <View style={s.loading}>
-              <ActivityIndicator color={COLOR} />
+              <ActivityIndicator color={theme.colors.strain} />
             </View>
           ) : (
             <TrendChart
               points={points}
-              color={COLOR}
+              color={theme.colors.strain}
               unit=""
               range={range}
               format={fmtDecimal1}
@@ -75,7 +82,7 @@ export const StrainTrendScreen: React.FC<Props> = ({ route }) => {
             <SkiaDualAxisChart
               a={{
                 values: recoveryDual.left.map(p => p.value),
-                color: COLOR,
+                color: theme.colors.strain,
                 name: t('home.strain'),
                 formatValue: v => String(Math.round(v * 10) / 10),
               }}
@@ -94,7 +101,7 @@ export const StrainTrendScreen: React.FC<Props> = ({ route }) => {
             <SkiaDualAxisChart
               a={{
                 values: sleepDual.left.map(p => p.value),
-                color: COLOR,
+                color: theme.colors.strain,
                 name: t('home.strain'),
                 formatValue: v => String(Math.round(v * 10) / 10),
               }}
@@ -113,7 +120,7 @@ export const StrainTrendScreen: React.FC<Props> = ({ route }) => {
             <SkiaDualAxisChart
               a={{
                 values: rhrDual.left.map(p => p.value),
-                color: COLOR,
+                color: theme.colors.strain,
                 name: t('home.strain'),
                 formatValue: v => String(Math.round(v * 10) / 10),
               }}

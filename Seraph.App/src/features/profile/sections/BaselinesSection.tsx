@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
 import { BaselineStat } from '../components/BaselineStat';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
-import { theme } from '../../../theme';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
+import { useTheme, type Theme } from '../../../theme';
 
 interface Baselines {
   baseline_hrv: number | null;
@@ -17,6 +17,9 @@ interface Props {
 }
 
 export const BaselinesSection: React.FC<Props> = ({ baselines }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t, i18n } = useTranslation();
 
   return (
@@ -63,25 +66,27 @@ export const BaselinesSection: React.FC<Props> = ({ baselines }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  sectionGap: {
-    marginTop: theme.spacing.lg,
-  },
-  baselineRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-  },
-  baselineDate: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    textAlign: 'center',
-    marginBottom: theme.spacing.xs,
-  },
-  noData: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.muted,
-    paddingVertical: theme.spacing.md,
-    textAlign: 'center',
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    sectionGap: {
+      marginTop: theme.spacing.lg,
+    },
+    baselineRow: {
+      flexDirection: 'row',
+      gap: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+    },
+    baselineDate: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      textAlign: 'center',
+      marginBottom: theme.spacing.xs,
+    },
+    noData: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.muted,
+      paddingVertical: theme.spacing.md,
+      textAlign: 'center',
+    },
+  });
+}

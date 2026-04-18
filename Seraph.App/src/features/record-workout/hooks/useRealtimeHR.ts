@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { nativeToggleRealtimeHR, seraphEmitter } from '../../../services/ble/nativeModule';
+import { nativeToggleRealtimeHR, nativeGetRecordingState, seraphEmitter } from '../../../services/ble/nativeModule';
 import { theme } from '../../../theme';
 
 const HR_STALE_MS = 10_000;
@@ -28,7 +28,13 @@ export function useRealtimeHR(fthr: number | null): RealtimeHRState {
   useEffect(() => {
     void nativeToggleRealtimeHR(true);
     return () => {
-      void nativeToggleRealtimeHR(false);
+      // Don't disable realtime HR if a recording is still in progress —
+      // the native side needs it to keep writing to the file while backgrounded.
+      void nativeGetRecordingState().then(s => {
+        if (s.state === 'idle') void nativeToggleRealtimeHR(false);
+      }).catch(() => {
+        void nativeToggleRealtimeHR(false);
+      });
     };
   }, []);
 

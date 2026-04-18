@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
 import { useHabitConsistency } from '../hooks/useHabitConsistency';
 import { navigationRef } from '../../../navigation/navigationRef';
 import { todayISO } from '../../../utils/dateUtils';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 
 const DOT_SIZE = 32;
 const DAYS = 7;
@@ -15,6 +15,8 @@ interface HabitConsistencyStripProps {
 }
 
 export const HabitConsistencyStrip: React.FC<HabitConsistencyStripProps> = ({ selectedDate }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t, i18n } = useTranslation();
   const { data: days = [] } = useHabitConsistency(DAYS, selectedDate);
   const today = todayISO();
@@ -72,68 +74,70 @@ export const HabitConsistencyStrip: React.FC<HabitConsistencyStripProps> = ({ se
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  label: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  strip: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  dayCol: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  dot: {
-    width: DOT_SIZE,
-    height: DOT_SIZE,
-    borderRadius: DOT_SIZE / 2,
-    borderWidth: 1.5,
-    borderColor: theme.colors.overlay.medium,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dotComplete: {
-    backgroundColor: theme.colors.recovery,
-    borderColor: theme.colors.recovery,
-  },
-  dotPartial: {
-    borderColor: theme.colors.recovery,
-  },
-  dotToday: {
-    borderColor: theme.colors.text.primary,
-  },
-  dotFuture: {
-    opacity: 0.25,
-  },
-  partialFill: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: theme.colors.recovery,
-    opacity: 0.35,
-  },
-  checkMark: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#000',
-  },
-  dayLabel: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-  },
-  dayLabelToday: {
-    color: theme.colors.text.primary,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      gap: theme.spacing.sm,
+    },
+    label: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.6,
+    },
+    strip: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    dayCol: {
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    dot: {
+      width: DOT_SIZE,
+      height: DOT_SIZE,
+      borderRadius: DOT_SIZE / 2,
+      borderWidth: theme.borderWidth.medium,
+      borderColor: theme.colors.overlay.medium,
+      overflow: 'hidden',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dotComplete: {
+      backgroundColor: theme.colors.recovery,
+      borderColor: theme.colors.recovery,
+    },
+    dotPartial: {
+      borderColor: theme.colors.recovery,
+    },
+    dotToday: {
+      borderColor: theme.colors.text.primary,
+    },
+    dotFuture: {
+      opacity: 0.25,
+    },
+    partialFill: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: theme.colors.recovery,
+      opacity: 0.35,
+    },
+    checkMark: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: theme.colors.icon.onLight,
+    },
+    dayLabel: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+    },
+    dayLabelToday: {
+      color: theme.colors.text.primary,
+    },
+  });
+}

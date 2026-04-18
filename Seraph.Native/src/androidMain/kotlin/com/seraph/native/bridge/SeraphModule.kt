@@ -171,6 +171,16 @@ class SeraphModule(
                     }.launchIn(scope),
             )
             svc.napRunner.onSleepOnset = { startTs -> emitters.emitNapSleepOnset(startTs) }
+            svc.recordingManager?.let { rm ->
+                orchestratorJobs.add(
+                    rm.state
+                        .onEach { state ->
+                            if (state == RecordingState.AUTO_PAUSED) {
+                                emitters.emit("onRecordingAutoPaused", Arguments.createMap())
+                            }
+                        }.launchIn(scope),
+                )
+            }
             svc.syncLoopRunner.start()
             svc.syncLoopRunner.triggerImmediately()
         }
@@ -785,6 +795,7 @@ class SeraphModule(
                         RecordingState.IDLE -> "idle"
                         RecordingState.RECORDING -> "recording"
                         RecordingState.PAUSED -> "paused"
+                        RecordingState.AUTO_PAUSED -> "auto_paused"
                     }
                 promise.resolve(
                     Arguments.createMap().apply {

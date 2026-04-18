@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 
 interface StepperHabitInputProps {
   value: number | null;
@@ -11,6 +11,8 @@ interface StepperHabitInputProps {
 }
 
 export const StepperHabitInput: React.FC<StepperHabitInputProps> = ({ value, step, onChange }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const [editing, setEditing] = useState(false);
   const [inputText, setInputText] = useState('');
   const displayed = value ?? 0;
@@ -78,36 +80,38 @@ export const StepperHabitInput: React.FC<StepperHabitInputProps> = ({ value, ste
   );
 };
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  iconBtn: {
-    padding: 2,
-  },
-  valueBtn: {
-    width: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  value: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-    textAlign: 'center',
-  },
-  valueMuted: {
-    color: theme.colors.text.muted,
-    fontWeight: theme.typography.weights.regular,
-  },
-  input: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-    width: 48,
-    textAlign: 'center',
-    padding: 0,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    iconBtn: {
+      padding: theme.spacing.xxs,
+    },
+    valueBtn: {
+      width: theme.layout.iconSize.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    value: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+      textAlign: 'center',
+    },
+    valueMuted: {
+      color: theme.colors.text.muted,
+      fontWeight: theme.typography.weights.regular,
+    },
+    input: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+      width: theme.layout.iconSize.lg,
+      textAlign: 'center',
+      padding: 0,
+    },
+  });
+}

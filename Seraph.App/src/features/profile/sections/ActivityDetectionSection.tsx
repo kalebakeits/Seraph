@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
-import { theme } from '../../../theme';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
+import { useTheme, type Theme } from '../../../theme';
 import { SENSITIVITY_PRESETS } from '../ProfileSettingsTypes';
 import type { SensitivityPreset } from '../ProfileSettingsTypes';
 
@@ -14,6 +14,9 @@ interface Props {
 }
 
 export const ActivityDetectionSection: React.FC<Props> = ({ selected, onSelect }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
 
   return (
@@ -62,32 +65,34 @@ export const ActivityDetectionSection: React.FC<Props> = ({ selected, onSelect }
   );
 };
 
-const styles = StyleSheet.create({
-  sectionGap: {
-    marginTop: theme.spacing.lg,
-  },
-  sensitivityHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  sensitivityRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.sm + 2,
-  },
-  sensitivityLeft: {
-    flex: 1,
-    gap: 2,
-  },
-  sensitivityLabel: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.secondary,
-  },
-  sensitivityDesc: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    lineHeight: 18,
-    paddingHorizontal: 2,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    sectionGap: {
+      marginTop: theme.spacing.lg,
+    },
+    sensitivityHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    sensitivityRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      paddingVertical: theme.spacing.sm + 2,
+    },
+    sensitivityLeft: {
+      flex: 1,
+      gap: theme.spacing.xxs,
+    },
+    sensitivityLabel: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.secondary,
+    },
+    sensitivityDesc: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      lineHeight: 18,
+      paddingHorizontal: theme.spacing.xxs,
+    },
+  });
+}

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { ActivityRing } from '../../../../components/common/ActivityRing';
-import { theme } from '../../../../theme';
+import { useTheme, type Theme } from '../../../../theme';
 
 interface CompactRingsBarProps {
   strain: { value: number | null; goal: number };
@@ -20,6 +20,8 @@ export const CompactRingsBar: React.FC<CompactRingsBarProps> = ({
   onRecoveryPress,
   onSleepPress,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   return (
     <View style={styles.bar}>
       <ActivityRing
@@ -56,19 +58,21 @@ export const CompactRingsBar: React.FC<CompactRingsBarProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  bar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.lg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.overlay.light,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    bar: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      backgroundColor: 'transparent',
+      paddingVertical: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.lg,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.overlay.light,
+    },
+  });
+}

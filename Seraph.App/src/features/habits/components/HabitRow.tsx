@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
 import { BooleanHabitInput } from './BooleanHabitInput';
 import { StepperHabitInput } from './StepperHabitInput';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 import type { HabitDefinition } from '../../../services/database/drizzle/schema';
 
 interface HabitRowProps {
@@ -14,6 +14,8 @@ interface HabitRowProps {
 }
 
 export const HabitRow: React.FC<HabitRowProps> = ({ habit, value, onChange }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
 
   const label = habit.is_manual === 1 ? (habit.name_custom ?? '') : t(habit.name_key ?? '');
@@ -45,26 +47,28 @@ export const HabitRow: React.FC<HabitRowProps> = ({ habit, value, onChange }) =>
   );
 };
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.overlay.light,
-  },
-  labelWrap: {
-    flex: 1,
-    marginRight: theme.spacing.md,
-    gap: 2,
-  },
-  label: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.primary,
-  },
-  unit: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: theme.spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.overlay.light,
+    },
+    labelWrap: {
+      flex: 1,
+      marginRight: theme.spacing.md,
+      gap: theme.spacing.xxs,
+    },
+    label: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.primary,
+    },
+    unit: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+    },
+  });
+}

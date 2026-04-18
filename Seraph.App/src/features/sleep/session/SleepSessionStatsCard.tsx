@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
 import { StatItem } from '../../../components/common/StatItem';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 import type { SleepEvent } from '../../../services/database/drizzle/schema';
 import { formatTime, formatDuration } from '../../../utils/dateUtils';
 
@@ -14,6 +14,8 @@ interface Props {
 }
 
 export const SleepSessionStatsCard: React.FC<Props> = ({ session, onPress }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   return (
     <TouchableOpacity activeOpacity={onPress ? 0.7 : 1} onPress={onPress} disabled={!onPress}>
@@ -68,40 +70,42 @@ export const SleepSessionStatsCard: React.FC<Props> = ({ session, onPress }) => 
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    ...theme.cardStyles.default,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  titleText: {
-    marginLeft: theme.spacing.xs,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-  title: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-  },
-  heroRow: {
-    marginBottom: theme.spacing.md,
-  },
-  heroValue: {
-    fontSize: theme.typography.sizes.hero,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-  statGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    columnGap: theme.spacing.md,
-    rowGap: theme.spacing.md,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      ...theme.cardStyles.default,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.md,
+    },
+    titleText: {
+      marginLeft: theme.spacing.xs,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    title: {
+      fontSize: theme.typography.sizes.lg,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+    },
+    heroRow: {
+      marginBottom: theme.spacing.md,
+    },
+    heroValue: {
+      fontSize: theme.typography.sizes.hero,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    statGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      columnGap: theme.spacing.md,
+      rowGap: theme.spacing.md,
+    },
+  });
+}

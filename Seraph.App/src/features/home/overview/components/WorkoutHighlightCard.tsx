@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../../components/common/SafeText';
 import { StatItem } from '../../../../components/common/StatItem';
-import { theme } from '../../../../theme';
+import { useTheme, type Theme } from '../../../../theme';
 import type { ActivityItem } from '../../hooks/useActivities';
-import { sectionStyles } from '../../../../theme/shared/SectionStyles';
+import { buildSectionStyles } from '../../../../theme/shared/SectionStyles';
 
 interface Props {
   item: ActivityItem;
@@ -14,6 +14,9 @@ interface Props {
 }
 
 export const WorkoutHighlightCard: React.FC<Props> = ({ item, onPress }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
 
   return (
@@ -65,22 +68,24 @@ export const WorkoutHighlightCard: React.FC<Props> = ({ item, onPress }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  titleBlock: {
-    flex: 1,
-    marginLeft: theme.spacing.xs,
-  },
-  subtitle: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    marginTop: 2,
-  },
-  statGrid: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.md,
-  },
-  statCol: {
-    flex: 1,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    titleBlock: {
+      flex: 1,
+      marginLeft: theme.spacing.xs,
+    },
+    subtitle: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      marginTop: theme.spacing.xxs,
+    },
+    statGrid: {
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+      marginTop: theme.spacing.md,
+    },
+    statCol: {
+      flex: 1,
+    },
+  });
+}

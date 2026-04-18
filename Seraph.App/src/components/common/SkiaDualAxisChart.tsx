@@ -6,7 +6,7 @@ import { Canvas, Path, Skia, Line, vec, Circle } from '@shopify/react-native-ski
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import { SafeText } from './SafeText';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 
 export interface DualAxisPoint {
   date: string;
@@ -36,7 +36,6 @@ const PADDING_BOTTOM = 28;
 const PADDING_H = 16;
 const DOT_R = 3;
 const DOT_R_FOCUSED = 4;
-const GRID_COLOR = 'rgba(255,255,255,0.06)';
 const NO_OF_SECTIONS = 4;
 // Distance from dot centre to nearest edge of the label
 const LABEL_GAP = 3;
@@ -63,6 +62,8 @@ export const SkiaDualAxisChart: React.FC<SkiaDualAxisChartProps> = ({
   xLabels,
   height = 220,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const [containerWidth, setContainerWidth] = useState(0);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
@@ -215,7 +216,7 @@ export const SkiaDualAxisChart: React.FC<SkiaDualAxisChartProps> = ({
                               ? toY(normA) - DOT_R - LABEL_GAP - LABEL_HEIGHT
                               : toY(normA) + DOT_R + LABEL_GAP,
                             left: cx - 24,
-                            width: 48,
+                            width: theme.layout.iconSize.lg,
                           },
                         ]}
                       >
@@ -233,7 +234,7 @@ export const SkiaDualAxisChart: React.FC<SkiaDualAxisChartProps> = ({
                               ? toY(normB) + DOT_R + LABEL_GAP
                               : toY(normB) - DOT_R - LABEL_GAP - LABEL_HEIGHT,
                             left: cx - 24,
-                            width: 48,
+                            width: theme.layout.iconSize.lg,
                           },
                         ]}
                       >
@@ -252,7 +253,7 @@ export const SkiaDualAxisChart: React.FC<SkiaDualAxisChartProps> = ({
                   key={y}
                   p1={vec(PADDING_H, y)}
                   p2={vec(containerWidth - PADDING_H, y)}
-                  color={GRID_COLOR}
+                  color={theme.colors.overlay.muted}
                   strokeWidth={1}
                 />
               ))}
@@ -326,7 +327,7 @@ export const SkiaDualAxisChart: React.FC<SkiaDualAxisChartProps> = ({
                 <Line
                   p1={vec(focusX, EFFECTIVE_PADDING_TOP)}
                   p2={vec(focusX, EFFECTIVE_PADDING_TOP + chartHeight)}
-                  color="rgba(255,255,255,0.18)"
+                  color={theme.colors.overlay.warm}
                   strokeWidth={1}
                 />
               )}
@@ -367,55 +368,57 @@ export const SkiaDualAxisChart: React.FC<SkiaDualAxisChartProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    paddingTop: theme.spacing.xs,
-  },
-  legend: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendLabel: {
-    fontSize: 10,
-    color: theme.colors.text.muted,
-  },
-  empty: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.muted,
-  },
-  labelOverlay: {
-    position: 'absolute',
-    zIndex: 1,
-    pointerEvents: 'none',
-  },
-  pointLabel: {
-    position: 'absolute',
-    fontSize: 9,
-    fontWeight: theme.typography.weights.semibold,
-    textAlign: 'center',
-  },
-  xAxisRow: {
-    height: PADDING_BOTTOM,
-    position: 'relative',
-  },
-  xLabel: {
-    fontSize: 10,
-    color: theme.colors.text.muted,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      width: '100%',
+      paddingTop: theme.spacing.xs,
+    },
+    legend: {
+      flexDirection: 'row',
+      gap: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    legendDot: {
+      width: theme.layout.legendDotLg,
+      height: theme.layout.legendDotLg,
+      borderRadius: 4,
+    },
+    legendLabel: {
+      fontSize: 10,
+      color: theme.colors.text.muted,
+    },
+    empty: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emptyText: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.muted,
+    },
+    labelOverlay: {
+      position: 'absolute',
+      zIndex: 1,
+      pointerEvents: 'none',
+    },
+    pointLabel: {
+      position: 'absolute',
+      fontSize: 9,
+      fontWeight: theme.typography.weights.semibold,
+      textAlign: 'center',
+    },
+    xAxisRow: {
+      height: PADDING_BOTTOM,
+      position: 'relative',
+    },
+    xLabel: {
+      fontSize: 10,
+      color: theme.colors.text.muted,
+    },
+  });
+}

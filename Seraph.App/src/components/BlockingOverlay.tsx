@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Modal, View, ActivityIndicator, StyleSheet } from 'react-native';
-import { theme } from '../theme';
+import { useTheme, type Theme } from '../theme';
 
 interface BlockingOverlayProps {
   visible: boolean;
 }
 
 export const BlockingOverlay: React.FC<BlockingOverlayProps> = ({ visible }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   if (!visible) return null;
   return (
     <Modal visible transparent animationType="none">
@@ -17,11 +19,13 @@ export const BlockingOverlay: React.FC<BlockingOverlayProps> = ({ visible }) => 
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: theme.colors.scrim.dark,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  });
+}

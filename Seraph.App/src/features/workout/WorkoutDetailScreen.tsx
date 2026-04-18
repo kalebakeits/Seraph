@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
@@ -6,12 +6,12 @@ import { useTranslation } from 'react-i18next';
 import { SkiaHRChart } from '../../components/common/SkiaHRChart';
 import { Section } from '../../components/common/Section';
 import { SafeText } from '../../components/common/SafeText';
-import { sectionStyles } from '../../theme/shared/SectionStyles';
+import { buildSectionStyles } from '../../theme/shared/SectionStyles';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ScreenLayout } from '../../components/common/ScreenLayout';
 import { BlockingOverlay } from '../../components/BlockingOverlay';
 import { TimePicker } from '../../components/TimePicker';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import { activityEventsRepository } from '../../services/database/drizzle/repositories/activityEventsRepository';
 import { nativeRecalcActivity, nativeRefreshDailyLoad } from '../../services/ble/nativeModule';
 import type { HomeStackParamList } from '../../navigation/HomeStackNavigator';
@@ -37,6 +37,9 @@ function formatDateTime(_iso: string, ts: number): string {
 }
 
 export const WorkoutDetailScreen: React.FC<Props> = ({ route }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { activityId } = route.params;
   const navigation = useNavigation();
   const queryClient = useQueryClient();
@@ -214,25 +217,27 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { gap: theme.spacing.md },
-  statRows: {
-    marginTop: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.secondary,
-  },
-  statValue: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    content: { gap: theme.spacing.md },
+    statRows: {
+      marginTop: theme.spacing.md,
+      gap: theme.spacing.sm,
+    },
+    statRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    statLabel: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.secondary,
+    },
+    statValue: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+  });
+}

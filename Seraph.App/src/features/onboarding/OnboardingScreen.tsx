@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import type { ViewToken } from 'react-native';
 import {
   View,
@@ -13,17 +13,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../components/common/SafeText';
 import { GradientBackground } from '../../components/common/GradientBackground';
-import { theme } from '../../theme';
+import { useTheme } from '../../theme';
 import { appParametersRepository } from '../../services/database/drizzle';
 import { WelcomePage } from './WelcomePage';
-import { RingsPage } from './RingsPage';
-import { OverviewTourPage } from './OverviewTourPage';
+import { ThemePickerPage } from './ThemePickerPage';
 import { ProfilePage } from './ProfilePage';
 import { SensitivityPage } from './SensitivityPage';
 import { DonePage } from './DonePage';
 import { StoragePage } from './StoragePage';
 import { ConnectPage } from './ConnectPage';
-import { styles } from './OnboardingStyles';
+import { buildStyles } from './OnboardingStyles';
 import {
   SENSITIVITY_PRESETS,
   type PageKey,
@@ -36,12 +35,30 @@ interface Props {
   onComplete: () => void;
 }
 
+const PAGES: PageKey[] = [
+  'welcome',
+  'theme',
+  'profile',
+  'sensitivity',
+  'storage',
+  'connect',
+  'done',
+];
+
+const CONNECT_INDEX = PAGES.indexOf('connect');
+const DONE_INDEX = PAGES.indexOf('done');
+
 export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const listRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [resumeIndex, setResumeIndex] = useState<number | null>(null);
+  // Max page reached — never decrements on back. Persisted to DB.
+  const [maxIndex, setMaxIndex] = useState(0);
   const [draft, setDraft] = useState<ProfileDraft>({
     name: '',
     dob: '',
@@ -54,23 +71,36 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
   const [sensitivity, setSensitivity] = useState<SensitivityPreset>('moderate');
   const [granularity, setGranularity] = useState<GranularitySeconds>(1);
 
-  const PAGES: PageKey[] = [
-    'welcome',
-    'rings',
-    'tour',
-    'profile',
-    'sensitivity',
-    'storage',
-    'connect',
-    'done',
-  ];
-  const isLast = currentIndex === PAGES.length - 1;
+  // Restore max progress — start directly on saved page, no animation
+  useEffect(() => {
+    void appParametersRepository.get('onboarding_page').then(saved => {
+      if (saved) {
+        const idx = parseInt(saved, 10);
+        if (!isNaN(idx) && idx > 0 && idx < PAGES.length) {
+          setMaxIndex(idx);
+          setResumeIndex(idx);
+          setCurrentIndex(idx);
+        }
+      }
+    });
+  }, []);
+
+  const advanceTo = useCallback(
+    (index: number) => {
+      listRef.current?.scrollToIndex({ index, animated: true });
+      if (index > maxIndex) {
+        setMaxIndex(index);
+        void appParametersRepository.set('onboarding_page', index);
+      }
+    },
+    [maxIndex],
+  );
 
   const handleNext = async () => {
-    if (isLast) {
+    if (currentIndex === DONE_INDEX) {
       await saveAndComplete();
     } else {
-      listRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
+      advanceTo(currentIndex + 1);
     }
   };
 
@@ -79,6 +109,10 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
       listRef.current?.scrollToIndex({ index: currentIndex - 1, animated: true });
     }
   };
+
+  const handleConnected = useCallback(() => {
+    advanceTo(DONE_INDEX);
+  }, [advanceTo]);
 
   const saveAndComplete = async () => {
     const preset = SENSITIVITY_PRESETS.find(p => p.key === sensitivity) ?? SENSITIVITY_PRESETS[2];
@@ -104,7 +138,6 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
       ['activity_min_trimp', String(preset.minTrimp)],
       ['activity_min_ms', String(preset.minMs)],
       ['r24_granularity_seconds', String(granularity)],
-      ['onboarding_complete', '1'],
     ];
 
     if (age !== null) entries.push(['profile_age', String(age)]);
@@ -116,17 +149,18 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
   };
 
   const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems[0]?.index !== null) setCurrentIndex(viewableItems[0].index);
+    if (viewableItems[0]?.index != null) setCurrentIndex(viewableItems[0].index);
   }).current;
+
+  const isConnect = currentIndex === CONNECT_INDEX;
+  const isDone = currentIndex === DONE_INDEX;
 
   const renderPage = ({ item }: { item: PageKey }) => {
     switch (item) {
       case 'welcome':
         return <WelcomePage width={width} />;
-      case 'rings':
-        return <RingsPage width={width} />;
-      case 'tour':
-        return <OverviewTourPage width={width} />;
+      case 'theme':
+        return <ThemePickerPage width={width} />;
       case 'profile':
         return <ProfilePage width={width} draft={draft} setDraft={setDraft} />;
       case 'sensitivity':
@@ -142,7 +176,7 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
           <StoragePage width={width} granularity={granularity} setGranularity={setGranularity} />
         );
       case 'connect':
-        return <ConnectPage width={width} />;
+        return <ConnectPage width={width} onConnected={handleConnected} />;
       case 'done':
         return <DonePage width={width} />;
     }
@@ -172,6 +206,8 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
             scrollEnabled={false}
             onViewableItemsChanged={onViewableItemsChanged}
             viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
+            initialScrollIndex={resumeIndex ?? 0}
+            getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
             style={{ flex: 1 }}
           />
 
@@ -185,18 +221,23 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
               <View style={styles.backBtn} />
             )}
 
-            <TouchableOpacity
-              style={styles.nextBtn}
-              onPress={() => {
-                void handleNext();
-              }}
-              activeOpacity={0.8}
-            >
-              <SafeText style={styles.nextText}>
-                {isLast ? t('onboarding.getStarted') : t('onboarding.next')}
-              </SafeText>
-              {!isLast && <Ionicons name="chevron-forward" size={18} color="#000" />}
-            </TouchableOpacity>
+            {!isConnect && (
+              <TouchableOpacity
+                style={[
+                  styles.nextBtn,
+                  isDone && { backgroundColor: theme.colors.recovery },
+                ]}
+                onPress={() => { void handleNext(); }}
+                activeOpacity={0.8}
+              >
+                <SafeText style={styles.nextText}>
+                  {isDone ? t('onboarding.getStarted') : t('onboarding.next')}
+                </SafeText>
+                {!isDone && (
+                  <Ionicons name="chevron-forward" size={18} color={theme.colors.icon.onLight} />
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </KeyboardAvoidingView>
