@@ -29,6 +29,7 @@ class SleepAggregator(
         val manualOpener = ManualSessionOpener(db)
         val autoStrategy = AutoSessionStrategy(db, closer)
         val manualStrategy = ManualSessionStrategy(db, closer)
+        val napStrategy = NapSessionStrategy(db, closer)
 
         // Load all open sessions from DB into memory. Stays in memory — no per-row DB queries.
         val activeSessions: MutableList<ActiveSession> =
@@ -37,6 +38,13 @@ class SleepAggregator(
                 .executeAsList()
                 .map { ActiveSession(it, manualStrategy) }
                 .toMutableList()
+
+        // Nap sessions (is_manual = 2 simple, is_manual = 3 smart) both use NapSessionStrategy.
+        // Loaded separately from edited (is_manual = 1) and auto (is_manual = 0) sessions.
+        db.seraphDbQueries
+            .getOpenNapSleep(date)
+            .executeAsList()
+            .forEach { activeSessions.add(ActiveSession(it, napStrategy)) }
 
         db.seraphDbQueries.getOpenSleep(date).executeAsOneOrNull()?.let {
             activeSessions.add(ActiveSession(it, autoStrategy))

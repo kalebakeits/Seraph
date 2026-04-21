@@ -9,8 +9,8 @@ import com.seraph.native.parsers.events.StrapCondition
 import com.seraph.native.parsers.events.StrapConditionReportHandler
 import com.seraph.native.protocol.EventNumber
 import com.seraph.native.sync.ConnectionState
+import com.seraph.native.sync.DeviceEvent
 import com.seraph.native.sync.SyncState
-import com.seraph.native.sync.WorkOrchestrator
 
 private val log = Logger.withTag("BridgeEmitters")
 
@@ -78,7 +78,7 @@ internal class BridgeEmitters(
         )
     }
 
-    fun emitDeviceEvent(event: WorkOrchestrator.DeviceEvent) {
+    fun emitDeviceEvent(event: DeviceEvent) {
         val params = Arguments.createMap()
         when (event.eventNum) {
             EventNumber.WRIST_ON -> emit("onWristOn", params)
@@ -116,6 +116,15 @@ internal class BridgeEmitters(
             }
             else -> log.d { "Unhandled device event: 0x${event.eventNum.toString(16)}" }
         }
+    }
+
+    fun emitNapSleepOnset(startTs: Long) {
+        emit(
+            "onNapSleepOnset",
+            Arguments.createMap().apply {
+                putDouble("startTs", startTs.toDouble())
+            },
+        )
     }
 
     fun emitInAppNotification(

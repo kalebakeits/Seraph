@@ -11,7 +11,6 @@ interface DeviceStatusIndicatorProps {
 }
 
 export const DeviceStatusIndicator: React.FC<DeviceStatusIndicatorProps> = ({ state, style }) => {
-  const bounceAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const isBusy =
@@ -19,25 +18,8 @@ export const DeviceStatusIndicator: React.FC<DeviceStatusIndicatorProps> = ({ st
     state === DeviceState.Aggregating ||
     state === DeviceState.Connecting;
 
-  const isSyncing = state === DeviceState.Syncing;
-  const isPulsing = state === DeviceState.Aggregating || state === DeviceState.Connecting;
-
   useEffect(() => {
-    if (isSyncing) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(bounceAnim, { toValue: 6, duration: 400, useNativeDriver: true }),
-          Animated.timing(bounceAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
-        ]),
-      ).start();
-    } else {
-      bounceAnim.stopAnimation();
-      bounceAnim.setValue(0);
-    }
-  }, [isSyncing, bounceAnim]);
-
-  useEffect(() => {
-    if (isPulsing) {
+    if (isBusy) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, { toValue: 0.3, duration: 600, useNativeDriver: true }),
@@ -48,7 +30,7 @@ export const DeviceStatusIndicator: React.FC<DeviceStatusIndicatorProps> = ({ st
       pulseAnim.stopAnimation();
       pulseAnim.setValue(1);
     }
-  }, [isPulsing, pulseAnim]);
+  }, [isBusy, pulseAnim]);
 
   const getStatusColor = () => {
     switch (state) {
@@ -71,16 +53,18 @@ export const DeviceStatusIndicator: React.FC<DeviceStatusIndicatorProps> = ({ st
 
   const color = getStatusColor();
 
-  const icon =
-    state === DeviceState.Syncing ? (
-      <Animated.Text style={[styles.arrow, { transform: [{ translateY: bounceAnim }], color }]}>
-        ↓
-      </Animated.Text>
-    ) : (
-      <Animated.View style={{ opacity: isBusy ? pulseAnim : 1 }}>
-        <Ionicons name="watch-outline" size={16} color={color} />
-      </Animated.View>
-    );
+  const getIconName = () => {
+    if (state === DeviceState.Syncing) {
+      return 'cloud-download-outline';
+    }
+    return 'watch-outline';
+  };
+
+  const icon = (
+    <Animated.View style={{ opacity: isBusy ? pulseAnim : 1 }}>
+      <Ionicons name={getIconName()} size={16} color={color} />
+    </Animated.View>
+  );
 
   return <View style={[styles.container, style]}>{icon}</View>;
 };
@@ -90,11 +74,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
-  },
-  arrow: {
-    fontSize: 14,
-    lineHeight: 16,
-    width: 16,
-    textAlign: 'center',
   },
 });

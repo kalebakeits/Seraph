@@ -56,6 +56,22 @@ class SleepEventsRepository {
       .orderBy(asc(sleepEvents.date));
   }
 
+  async getActiveNap(): Promise<SleepEvent | null> {
+    const today = new Date().toISOString().slice(0, 10);
+    const rows = await getDb()
+      .select()
+      .from(sleepEvents)
+      .where(
+        and(
+          eq(sleepEvents.date, today),
+          eq(sleepEvents.finalized, 0),
+          or(eq(sleepEvents.is_manual, 2), eq(sleepEvents.is_manual, 3)),
+        ),
+      )
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
   async markFinalized(id: number): Promise<void> {
     await getDb()
       .update(sleepEvents)

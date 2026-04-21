@@ -70,8 +70,8 @@ object NotificationResources {
                 lctx.getString(R.string.notifications_types_update_available) to body
             }
             "announcement" -> {
-                val message = p?.optString("message", null)
-                lctx.getString(R.string.notifications_types_announcement) to message
+                lctx.getString(R.string.notifications_types_announcement) to
+                    lctx.getString(R.string.notifications_announcement_body)
             }
             else -> type to null
         }

@@ -18,9 +18,14 @@ import com.seraph.native.notifications.AndroidNotificationChannel
 import com.seraph.native.notifications.NotificationWriter
 import com.seraph.native.parsers.PacketRouter
 import com.seraph.native.recording.RecordingManager
+import com.seraph.native.recording.RecordingRunner
+import com.seraph.native.sync.AggregationCoordinator
 import com.seraph.native.sync.AlarmChecker
 import com.seraph.native.sync.ConnectionState
 import com.seraph.native.sync.Device
+import com.seraph.native.sync.NapRunner
+import com.seraph.native.sync.SyncLoopRunner
+import com.seraph.native.sync.SyncRunner
 import com.seraph.native.sync.SyncState
 import com.seraph.native.sync.WorkOrchestrator
 import kotlinx.coroutines.CoroutineScope
@@ -42,10 +47,6 @@ class ForegroundService : Service() {
         const val CHANNEL_ID_ALERT = "seraph_alert"
         const val NOTIFICATION_ID = 1
 
-        /**
-         * Injected by the app module (which owns R) before the service starts.
-         * Falls back to a no-op so the service can start safely without it.
-         */
         var systemNotificationFormatter: ((lang: String, type: String, payload: String?) -> Pair<String, String?>) =
             { _, type, _ -> type to null }
 
@@ -54,7 +55,6 @@ class ForegroundService : Service() {
         fun openDb(context: android.content.Context): SeraphDb {
             val file = File(dbPath(context))
             file.parentFile?.mkdirs()
-
             val driver =
                 AndroidSqliteDriver(
                     androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory().create(
@@ -72,20 +72,14 @@ class ForegroundService : Service() {
                                         oldVersion: Int,
                                         newVersion: Int,
                                     ) {
-                                        SeraphDb.Schema.migrate(
-                                            AndroidSqliteDriver(db),
-                                            oldVersion.toLong(),
-                                            newVersion.toLong(),
-                                        )
+                                        SeraphDb.Schema.migrate(AndroidSqliteDriver(db), oldVersion.toLong(), newVersion.toLong())
                                     }
 
                                     override fun onDowngrade(
                                         db: androidx.sqlite.db.SupportSQLiteDatabase,
                                         oldVersion: Int,
                                         newVersion: Int,
-                                    ) {
-                                        // Ignore downgrade — keep existing data when installing an older build
-                                    }
+                                    ) {}
 
                                     override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                                         db.query("PRAGMA journal_mode=WAL").close()
@@ -93,8 +87,6 @@ class ForegroundService : Service() {
                                     }
 
                                     override fun onCorruption(db: androidx.sqlite.db.SupportSQLiteDatabase) {
-                                        // Default implementation deletes the DB — never do that.
-                                        // Log and leave the file intact so data can be recovered manually.
                                         android.util.Log.e(
                                             "SeraphDb",
                                             "Database corruption detected — preserving file, skipping delete",
@@ -113,30 +105,50 @@ class ForegroundService : Service() {
     private lateinit var notifications: ServiceNotificationManager
     private lateinit var notificationChannel: AndroidNotificationChannel
     private lateinit var notificationWriter: NotificationWriter
+
     lateinit var connectionManager: ConnectionManager
         private set
 
     private var db: SeraphDb? = null
     private var aggregationRunner: AggregationRunner? = null
-    var orchestrator: WorkOrchestrator? = null
+
+    val orchestrator = WorkOrchestrator()
+
+    lateinit var syncRunner: SyncRunner
         private set
-    private var blobWriter: BlobWriter? = null
-    val isBlobUploadAvailable: Boolean get() = blobWriter?.isAvailable ?: false
+    lateinit var syncLoopRunner: SyncLoopRunner
+        private set
+    lateinit var napRunner: NapRunner
+        private set
+    lateinit var aggregationCoordinator: AggregationCoordinator
+        private set
+    var recordingRunner: RecordingRunner? = null
+        private set
     var recordingManager: RecordingManager? = null
         private set
+
+    private var blobWriter: BlobWriter? = null
+    val isBlobUploadAvailable: Boolean get() = blobWriter?.isAvailable ?: false
 
     var uiOpen: Boolean = false
         set(value) {
             field = value
             notifications.onUiForeground(value)
             if (::notificationChannel.isInitialized) notificationChannel.isForegrounded = value
-            if (value) cancelPendingShutdown()
+            if (value) {
+                cancelPendingShutdown()
+                stopForeground(STOP_FOREGROUND_REMOVE)
+            } else {
+                if (orchestrator.busy.value) {
+                    startForeground(NOTIFICATION_ID, notifications.buildInitialNotification())
+                }
+            }
         }
 
     private var idleShutdownJob: Job? = null
     private var headlessTimeoutJob: Job? = null
+    private var syncStateJob: Job? = null
 
-    /** Set by SeraphModule after binding to forward in-app notifications to the bridge. */
     var onInAppNotification: ((type: String, payload: String?) -> Unit)? = null
 
     inner class LocalBinder : Binder() {
@@ -145,8 +157,6 @@ class ForegroundService : Service() {
 
     private val binder = LocalBinder()
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
-
     override fun onCreate() {
         super.onCreate()
         notifications = ServiceNotificationManager(this)
@@ -154,55 +164,85 @@ class ForegroundService : Service() {
 
         val opened = DbHolder.db
         db = opened
-        aggregationRunner = AggregationRunner.build(opened)
-        recordingManager = RecordingManager(cacheDir, opened)
+        val aggRunner = AggregationRunner.build(opened)
+        aggregationRunner = aggRunner
+        val rm = RecordingManager(cacheDir, opened)
+        recordingManager = rm
 
         notificationChannel =
             AndroidNotificationChannel(
                 serviceNotifications = notifications,
                 db = opened,
                 formatSystemNotification = systemNotificationFormatter,
-                onInAppNotification = { type, payload ->
-                    onInAppNotification?.invoke(type, payload)
-                },
+                onInAppNotification = { type, payload -> onInAppNotification?.invoke(type, payload) },
             )
         notificationWriter = NotificationWriter(opened, notificationChannel)
 
         val shardManager = ShardManager(this, opened)
-        val orc =
-            WorkOrchestrator.build(
+
+        syncRunner =
+            SyncRunner(
+                orchestrator = orchestrator,
                 r24Dao = R24Dao(opened),
                 db = opened,
-                aggregationRunner = aggregationRunner!!,
+                aggregationRunner = aggRunner,
                 scope = scope,
                 onMonthRollover = { shardManager.shardEligibleMonths() },
+            )
+
+        syncLoopRunner =
+            SyncLoopRunner(
+                scope = scope,
+                isBusy = { syncRunner.state.value.let { it is SyncState.Syncing || it is SyncState.Aggregating } },
+                sync = { syncRunner.requestSync() },
+            )
+
+        napRunner =
+            NapRunner(
+                orchestrator = orchestrator,
+                db = opened,
+                syncLoopRunner = syncLoopRunner,
+            )
+
+        aggregationCoordinator =
+            AggregationCoordinator(
+                orchestrator = orchestrator,
+                aggregationRunner = aggRunner,
+                db = opened,
                 notificationWriter = notificationWriter,
             )
-        orchestrator = orc
+
+        recordingRunner =
+            RecordingRunner(
+                orchestrator = orchestrator,
+                recordingManager = rm,
+                aggregationRunner = aggRunner,
+                db = opened,
+                notificationWriter = notificationWriter,
+            )
 
         connectionManager =
             ConnectionManager(
                 context = this,
                 scope = scope,
-                buildOrchestrator = { device, channel ->
-                    val rm = recordingManager
-                    orc.attachBle(
+                onBleReady = { device, channel ->
+                    syncRunner.attachBle(
                         device = device,
                         channel = channel,
                         router = PacketRouter.build(),
                         onRawPacket = { _, raw -> blobWriter?.write("mixed", raw) },
-                        onRealtimeHR = { hr -> rm?.onHrSample(hr) },
+                        onRealtimeHR = { hr -> rm.onHrSample(hr) },
                     )
-                    orc
+                    napRunner.onAttachBle(device)
                 },
-                onConnected = { _, _, orchestrator -> onConnected(orchestrator) },
+                onConnected = { _, _ -> onConnected() },
                 onDisconnected = { notifications.onConnectionState(ConnectionState.Disconnected) },
+                onNotification = { raw -> syncRunner.onNotification(raw) },
             )
 
         connectionManager.connectionState
-            .onEach { state ->
-                notifications.onConnectionState(state)
-            }.launchIn(scope)
+            .onEach { state -> notifications.onConnectionState(state) }
+            .launchIn(scope)
     }
 
     override fun onStartCommand(
@@ -224,7 +264,6 @@ class ForegroundService : Service() {
             connectionManager.start(deviceId)
         }
 
-        // Headless: if we don't connect within 90s, give up — but if work is in progress let it finish
         if (!uiOpen && headlessTimeoutJob == null) {
             headlessTimeoutJob =
                 scope.launch {
@@ -243,16 +282,16 @@ class ForegroundService : Service() {
 
     fun shutdownWhenIdle() {
         if (uiOpen) return
-        val orc = orchestrator
-        if (orc == null || !orc.busy.value) {
+        if (!orchestrator.busy.value) {
             log.i { "No work in progress — stopping service" }
             shutdown()
         } else {
-            log.i { "Work in progress — will stop when idle" }
+            log.i { "Work in progress — promoting to foreground and waiting for idle" }
+            startForeground(NOTIFICATION_ID, notifications.buildInitialNotification())
             idleShutdownJob?.cancel()
             idleShutdownJob =
                 scope.launch {
-                    orc.busy.collect { busy ->
+                    orchestrator.busy.collect { busy ->
                         if (!busy) {
                             shutdown()
                             cancel()
@@ -270,30 +309,32 @@ class ForegroundService : Service() {
     }
 
     override fun onDestroy() {
+        syncStateJob?.cancel()
+        syncStateJob = null
         scope.cancel()
         super.onDestroy()
     }
 
-    // ── Internal ──────────────────────────────────────────────────────────────
-
-    private fun onConnected(orchestrator: WorkOrchestrator) {
-        // Cancel stale idle-shutdown from a prior connection cycle, and the connection timeout
+    private fun onConnected() {
         idleShutdownJob?.cancel()
         idleShutdownJob = null
         headlessTimeoutJob?.cancel()
         headlessTimeoutJob = null
 
-        orchestrator.state
-            .onEach { state ->
-                notifications.onSyncState(state)
-                if (state is SyncState.Complete) doPostSyncWork(state)
-            }.launchIn(scope)
+        if (syncStateJob?.isActive == true) return
+
+        syncStateJob =
+            syncRunner.state
+                .onEach { state ->
+                    notifications.onSyncState(state)
+                    if (state is SyncState.Complete) doPostSyncWork(state)
+                }.launchIn(scope)
 
         scope.launch {
-            orchestrator.fetchDeviceState()
-            val device = connectionManager.device
-            if (device != null) checkAlarm(device)
-            orchestrator.requestSync()
+            syncRunner.onConnectReady {
+                val device = connectionManager.device
+                if (device != null) checkAlarm(device)
+            }
         }
     }
 
@@ -319,13 +360,8 @@ class ForegroundService : Service() {
             return
         }
         cancelPendingShutdown()
-        scope.launch {
-            orchestrator?.stopSyncLoop()
-            connectionManager.disconnect()
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            notifications.cancelAll()
-            stopSelf()
-        }
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        notifications.cancelAll()
     }
 
     private suspend fun checkAlarm(device: Device) {
@@ -342,7 +378,6 @@ class ForegroundService : Service() {
             } else {
                 null
             }
-
         val sleepGoalSec =
             currentDb.seraphDbQueries
                 .getAppParameter("profile_sleep_goal_minutes")

@@ -1,5 +1,13 @@
 import { NativeModules, NativeEventEmitter, type NativeModule } from 'react-native';
 
+export interface NapState {
+  active: boolean;
+  targetMs: number | null;
+  hardCutoffSec: number | null;
+  mode: 'manual' | 'auto' | null;
+  sleepStartTs: number | null; // ms; 0 = onset not yet detected
+}
+
 interface SeraphModuleInterface extends NativeModule {
   scan(): Promise<ScannedDevice[]>;
   stopScan(): Promise<void>;
@@ -24,6 +32,9 @@ interface SeraphModuleInterface extends NativeModule {
   recalcActivity(activityId: number): Promise<void>;
   recalcSleep(sleepId: number): Promise<void>;
   refreshDailyLoad(date: string): Promise<void>;
+  startNap(): Promise<void>;
+  cancelNap(): Promise<void>;
+  getNapState(): Promise<NapState>;
   startWorkoutRecording(sportLabel: string): Promise<void>;
   pauseWorkoutRecording(): Promise<void>;
   resumeWorkoutRecording(): Promise<void>;
@@ -176,6 +187,20 @@ export function nativeRecalcSleep(sleepId: number): Promise<void> {
 
 export function nativeRefreshDailyLoad(date: string): Promise<void> {
   return call(m => m.refreshDailyLoad(date));
+}
+
+// ── Nap ───────────────────────────────────────────────────────────────────────
+
+export function nativeStartNap(): Promise<void> {
+  return call(m => m.startNap());
+}
+
+export function nativeCancelNap(): Promise<void> {
+  return call(m => m.cancelNap());
+}
+
+export function nativeGetNapState(): Promise<NapState> {
+  return call(m => m.getNapState());
 }
 
 // ── Workout Recording ─────────────────────────────────────────────────────────

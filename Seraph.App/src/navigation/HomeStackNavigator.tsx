@@ -27,6 +27,7 @@ import { SleepAwakeTrendScreen } from '../features/trends/sleep/SleepAwakeTrendS
 import { RecordWorkoutScreen } from '../features/record-workout/RecordWorkoutScreen';
 import { NotificationCenterScreen } from '../features/notifications/NotificationCenterScreen';
 import { SystemNotificationDetailScreen } from '../features/notifications/SystemNotificationDetailScreen';
+import { NapActiveScreen } from '../features/nap/NapActiveScreen';
 
 export interface HomeStackParamList {
   [key: string]: object | undefined;
@@ -56,6 +57,7 @@ export interface HomeStackParamList {
   RecordWorkout: undefined;
   NotificationCenter: undefined;
   SystemNotificationDetail: { contentId: string | undefined; title: string; type: string };
+  NapActive: undefined;
 }
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -226,6 +228,14 @@ export const HomeStackNavigator: React.FC = () => {
         name="SystemNotificationDetail"
         component={SystemNotificationDetailScreen}
         options={{ headerTitle: '', headerBackTitle: '' }}
+      />
+      <Stack.Screen
+        name="NapActive"
+        component={NapActiveScreen}
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+        }}
       />
     </Stack.Navigator>
   );

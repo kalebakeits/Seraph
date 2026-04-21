@@ -26,7 +26,9 @@ export const ActivityDetectionSection: React.FC<Props> = ({ selected, onSelect }
       <View style={sectionStyles.container}>
         {SENSITIVITY_PRESETS.map(preset => {
           const isSelected = selected === preset.key;
-          const labelKey = `settings.sensitivity${preset.key.charAt(0).toUpperCase()}${preset.key.slice(1)}`;
+          const labelKey = `settings.sensitivity${preset.key
+            .charAt(0)
+            .toUpperCase()}${preset.key.slice(1)}`;
           const descKey = `${labelKey}Desc`;
 
           return (

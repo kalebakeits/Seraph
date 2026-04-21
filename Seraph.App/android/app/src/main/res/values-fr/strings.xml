@@ -8,6 +8,7 @@
   <string name="notifications_types_workout_logged">Séance enregistrée</string>
   <string name="notifications_types_update_available">Mise à jour disponible</string>
   <string name="notifications_types_announcement">Annonce</string>
+  <string name="notifications_announcement_body">Appuyez pour voir.</string>
 
   <!-- Notification body fragments (mirrors notifications.* in i18n) -->
   <string name="notifications_update_body">La version %s est prête à installer.</string>

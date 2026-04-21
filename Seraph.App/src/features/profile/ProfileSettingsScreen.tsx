@@ -131,7 +131,10 @@ export const ProfileSettingsScreen: React.FC = () => {
       })
     : '—';
   const sleepGoalDate = minutesToDate(state.sleep_goal_minutes);
-  const sleepDisplay = `${String(Math.floor(state.sleep_goal_minutes / 60)).padStart(2, '0')}:${String(state.sleep_goal_minutes % 60).padStart(2, '0')}`;
+  const sleepDisplay = `${String(Math.floor(state.sleep_goal_minutes / 60)).padStart(
+    2,
+    '0',
+  )}:${String(state.sleep_goal_minutes % 60).padStart(2, '0')}`;
   const currentLangLabel = LANGUAGES.find(l => l.code === state.language)?.label ?? state.language;
 
   return (
