@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -80,6 +80,24 @@ export const LogHabitsScreen: React.FC = () => {
       void flushPending(pendingRef.current, date);
     }, 800);
   };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveRef.current) {
+        clearTimeout(saveRef.current);
+      }
+    };
+  }, []);
+
+  // Cancel pending saves when date changes
+  useEffect(() => {
+    return () => {
+      if (saveRef.current) {
+        clearTimeout(saveRef.current);
+      }
+    };
+  }, [date]);
 
   const dateLabel =
     date === today

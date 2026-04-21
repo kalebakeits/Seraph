@@ -33,6 +33,10 @@ class NapModule(
             try {
                 val svc = awaitService()
                     ?: run { promise.reject("SERVICE_NOT_READY", "Service not started"); return@launch }
+                if (!svc.syncRunner::device.isInitialized) {
+                    promise.reject("BLE_NOT_READY", "Device not connected")
+                    return@launch
+                }
                 svc.napRunner.start(svc.syncRunner.device)
                 promise.resolve(null)
             } catch (e: Exception) {

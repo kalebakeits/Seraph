@@ -98,7 +98,12 @@ export default Sentry.wrap(function App() {
         if (!savedLang) {
           await appParametersRepository.set('language', i18n.language.slice(0, 2));
         }
-        await seedHabitsIfNeeded();
+        try {
+          await seedHabitsIfNeeded();
+        } catch (seedError) {
+          console.error('[App] Failed to seed habits:', seedError);
+          // Continue anyway - habits feature may not work but app should load
+        }
         const onboarded = await appParametersRepository.get('onboarding_complete');
         setAppState(onboarded === '1' ? 'ready' : 'onboarding');
       } catch (e) {
@@ -124,11 +129,7 @@ export default Sentry.wrap(function App() {
             {appState === 'onboarding' ? (
               <OnboardingScreen
                 onComplete={() => {
-                  initDb()
-                    .finally(() => {
-                      setAppState('ready');
-                    })
-                    .catch(console.error);
+                  setAppState('ready');
                 }}
               />
             ) : (
