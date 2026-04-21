@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -14,11 +14,10 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useDeviceStore } from '../store/deviceStore';
-import { useCachedDevice } from '../hooks/useCachedDevice';
 import { DeviceInfoCard } from './components/DeviceInfoCard';
 import { ActionRow } from './components/ActionRow';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 import { nativeReboot, nativeEraseAllData } from '../../../services/ble/nativeModule';
 import type { HomeStackParamList } from '../../../navigation/HomeStackNavigator';
 
@@ -29,10 +28,11 @@ interface ConnectedDeviceViewProps {
 }
 
 export const ConnectedDeviceView: React.FC<ConnectedDeviceViewProps> = ({ onForget }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
-  const { battery, charging, onWrist } = useDeviceStore();
-  const { data: cachedDevice } = useCachedDevice();
+  const { battery, charging, onWrist, cachedDevice } = useDeviceStore();
   const queryClient = useQueryClient();
 
   const deviceName = cachedDevice?.name ?? t('device.unknownDevice');
@@ -142,56 +142,58 @@ export const ConnectedDeviceView: React.FC<ConnectedDeviceViewProps> = ({ onForg
   );
 };
 
-const styles = StyleSheet.create({
-  scrollContainer: { flex: 1 },
-  contentContainer: {
-    padding: theme.spacing.md,
-    paddingTop: theme.spacing.xl,
-    paddingBottom: theme.tabStyles.content.paddingBottom,
-  },
-  firmwareCard: {
-    ...theme.cardStyles.default,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  firmwareIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: theme.colors.overlay.light,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  firmwareText: { flex: 1 },
-  firmwareLabel: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    marginBottom: 2,
-  },
-  firmwareValue: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.secondary,
-    fontFamily: 'monospace',
-  },
-  sectionTitle: {
-    fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.muted,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginBottom: theme.spacing.sm,
-    marginLeft: theme.spacing.xs,
-  },
-  actionCard: {
-    ...theme.cardStyles.default,
-    padding: 0,
-    overflow: 'hidden',
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: theme.colors.overlay.light,
-    marginLeft: 52,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    scrollContainer: { flex: 1 },
+    contentContainer: {
+      padding: theme.spacing.md,
+      paddingTop: theme.spacing.xl,
+      paddingBottom: theme.tabStyles.content.paddingBottom,
+    },
+    firmwareCard: {
+      ...theme.cardStyles.default,
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.md,
+      gap: theme.spacing.sm,
+    },
+    firmwareIconWrap: {
+      width: theme.layout.iconSize.sm,
+      height: theme.layout.iconSize.sm,
+      borderRadius: theme.borderRadius.sm,
+      backgroundColor: theme.colors.overlay.light,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    firmwareText: { flex: 1 },
+    firmwareLabel: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      marginBottom: theme.spacing.xxs,
+    },
+    firmwareValue: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.secondary,
+      fontFamily: 'monospace',
+    },
+    sectionTitle: {
+      fontSize: theme.typography.sizes.xs,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.muted,
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+      marginBottom: theme.spacing.sm,
+      marginLeft: theme.spacing.xs,
+    },
+    actionCard: {
+      ...theme.cardStyles.default,
+      padding: 0,
+      overflow: 'hidden',
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: theme.colors.overlay.light,
+      marginLeft: 52,
+    },
+  });
+}

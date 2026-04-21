@@ -3,14 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { GradientBackground } from '../components/common/GradientBackground';
-import { NativeModules } from 'react-native';
+import { nativeGetInitialDeepLink, seraphEmitter } from '../services/ble/nativeModule';
 import { FloatingTabBar } from './FloatingTabBar';
 import { HomeStackNavigator } from './HomeStackNavigator';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
 import { useDeviceInit } from '../hooks/useDeviceInit';
-import { CoachScreen } from '../features/coach/CoachScreen';
+import { InsightsScreen } from '../features/coach/InsightsScreen';
 import { navigationRef } from './navigationRef';
-import { seraphEmitter } from '../services/ble/nativeModule';
 
 const Tab = createBottomTabNavigator();
 
@@ -43,11 +42,7 @@ const linking = {
   },
   async getInitialURL() {
     try {
-      const module = NativeModules.SeraphModule as
-        | { getInitialDeepLink?: () => Promise<string | null> }
-        | undefined;
-      const url: string | null = (await module?.getInitialDeepLink?.()) ?? null;
-      return url;
+      return await nativeGetInitialDeepLink();
     } catch {
       return null;
     }
@@ -82,10 +77,10 @@ export const RootNavigator: React.FC = () => {
             }}
           />
           <Tab.Screen
-            name="Coach"
-            component={CoachScreen}
+            name="Insights"
+            component={InsightsScreen}
             options={{
-              tabBarLabel: t('nav.coach'),
+              tabBarLabel: t('nav.insights'),
             }}
           />
           <Tab.Screen

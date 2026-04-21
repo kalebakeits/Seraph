@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useActivityStats } from '../../hooks/useActivityStats';
 import { Section } from '../../../../components/common/Section';
 import { MetricCard } from './MetricCard';
-import { theme } from '../../../../theme';
+import { useTheme, type Theme } from '../../../../theme';
 
 interface DailyStatsProps {
   selectedDate?: string;
 }
 
 export const DailyStats: React.FC<DailyStatsProps> = ({ selectedDate }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const { data } = useActivityStats(selectedDate);
   const today = data?.today ?? {
@@ -36,64 +38,70 @@ export const DailyStats: React.FC<DailyStatsProps> = ({ selectedDate }) => {
         <MetricCard
           iconName="footsteps-outline"
           iconColor={theme.colors.steps}
+          iconTint={theme.colors.iconTint.steps}
           label={t('home.steps')}
           current={today.steps}
           previous={sevenDayAvg.steps !== null ? Math.round(sevenDayAvg.steps) : null}
           unit=""
-          trendRoute="TrendSteps"
+          trendKey="steps"
           anchorDate={selectedDate}
         />
         <MetricCard
           iconName="walk-outline"
           iconColor={theme.colors.active}
+          iconTint={theme.colors.iconTint.active}
           label={t('home.activeTime')}
           current={today.activeMinutes}
           previous={
             sevenDayAvg.activeMinutes !== null ? Math.round(sevenDayAvg.activeMinutes) : null
           }
           unit=" min"
-          trendRoute="TrendActiveTime"
+          trendKey="activeTime"
           anchorDate={selectedDate}
         />
         <MetricCard
           iconName="pulse-outline"
           iconColor={theme.colors.recovery}
+          iconTint={theme.colors.iconTint.recovery}
           label={t('home.hrv')}
           current={today.hrv}
           previous={sevenDayAvg.hrv !== null ? Math.round(sevenDayAvg.hrv) : null}
           unit=" ms"
-          trendRoute="TrendHrv"
+          trendKey="hrv"
           anchorDate={selectedDate}
         />
         <MetricCard
           iconName="heart-outline"
           iconColor={theme.colors.strain}
+          iconTint={theme.colors.iconTint.strain}
           label={t('home.rhr')}
           current={today.rhr}
           previous={sevenDayAvg.rhr !== null ? Math.round(sevenDayAvg.rhr) : null}
           unit=" bpm"
-          trendRoute="TrendHr"
+          trendKey="rhr"
           anchorDate={selectedDate}
         />
         <MetricCard
           iconName="thermometer-outline"
           iconColor={theme.colors.skinTemp}
+          iconTint={theme.colors.iconTint.skinTemp}
           label={t('home.skinTemp')}
           current={today.skinTemp}
           previous={sevenDayAvg.skinTemp}
           unit="°C"
           format={v => v.toFixed(1)}
-          trendRoute="TrendSkinTemp"
+          trendKey="skinTemp"
           anchorDate={selectedDate}
         />
         <MetricCard
           iconName="body-outline"
           iconColor={theme.colors.recovery}
+          iconTint={theme.colors.iconTint.recovery}
           label={t('home.dailyStress')}
           current={today.dailyStress ?? 0}
           previous={sevenDayAvg.dailyStress !== null ? Math.round(sevenDayAvg.dailyStress) : null}
           unit=""
-          trendRoute="TrendDailyStress"
+          trendKey="dailyStress"
           anchorDate={selectedDate}
         />
       </View>
@@ -101,11 +109,13 @@ export const DailyStats: React.FC<DailyStatsProps> = ({ selectedDate }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.xs,
-    justifyContent: 'center',
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.xs,
+      justifyContent: 'center',
+    },
+  });
+}

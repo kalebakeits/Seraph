@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { SafeText } from '../../components/common/SafeText';
-import { theme } from '../../theme';
-import { styles } from './OnboardingStyles';
+import { useTheme } from '../../theme';
+import { buildStyles } from './OnboardingStyles';
 
 interface Props<T extends string> {
   options: { label: string; value: T }[];
@@ -12,6 +12,8 @@ interface Props<T extends string> {
 }
 
 export function SegmentPicker<T extends string>({ options, value, onChange, color }: Props<T>) {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const activeColor = color ?? theme.colors.primary;
   return (
     <View style={styles.segmented}>

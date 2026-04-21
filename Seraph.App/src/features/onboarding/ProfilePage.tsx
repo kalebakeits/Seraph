@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, TextInput, TouchableOpacity, Modal } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { TimePicker } from '../../components/TimePicker';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../components/common/SafeText';
-import { theme } from '../../theme';
+import { useTheme } from '../../theme';
 import { PageContainer } from './PageContainer';
 import { SegmentPicker } from './SegmentPicker';
-import { styles, calStyles } from './OnboardingStyles';
+import { buildStyles, buildCalStyles } from './OnboardingStyles';
 import type { ProfileDraft, Sex } from './OnboardingTypes';
 
 interface Props {
@@ -18,6 +18,9 @@ interface Props {
 }
 
 export const ProfilePage: React.FC<Props> = ({ width, draft, setDraft }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const calStyles = useMemo(() => buildCalStyles(theme), [theme]);
   const { t, i18n } = useTranslation();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showSleepPicker, setShowSleepPicker] = useState(false);
@@ -42,12 +45,16 @@ export const ProfilePage: React.FC<Props> = ({ width, draft, setDraft }) => {
         timeZone: 'UTC',
       })
     : '';
-  const sleepDisplay = `${String(Math.floor(draft.sleep_goal_minutes / 60)).padStart(2, '0')}:${String(draft.sleep_goal_minutes % 60).padStart(2, '0')}`;
+  const sleepDisplay = `${String(Math.floor(draft.sleep_goal_minutes / 60)).padStart(
+    2,
+    '0',
+  )}:${String(draft.sleep_goal_minutes % 60).padStart(2, '0')}`;
 
   return (
     <PageContainer width={width} scrollable>
       <SafeText style={styles.pageTitle}>{t('onboarding.profile.title')}</SafeText>
       <SafeText style={styles.pageSubtitle}>{t('onboarding.profile.subtitle')}</SafeText>
+      <SafeText style={styles.privacyNote}>{t('onboarding.profile.privacy')}</SafeText>
 
       <View style={styles.fieldGroup}>
         <SafeText style={styles.fieldLabel}>{t('onboarding.profile.name')}</SafeText>

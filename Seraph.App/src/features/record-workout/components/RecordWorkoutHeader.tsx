@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 
 interface Props {
   sport: string;
@@ -19,6 +19,8 @@ export const RecordWorkoutHeader: React.FC<Props> = ({
   onClose,
   closeDisabled,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   return (
     <View style={styles.header}>
       <TouchableOpacity
@@ -46,29 +48,31 @@ export const RecordWorkoutHeader: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-  },
-  sportBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(245,87,108,0.3)',
-    backgroundColor: 'rgba(245,87,108,0.08)',
-  },
-  sportLabel: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.strain,
-  },
-  closeBtn: { padding: theme.spacing.xs },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+    },
+    sportBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.smx,
+      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.sm,
+      borderRadius: theme.borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border.error,
+      backgroundColor: theme.colors.overlay.faint,
+    },
+    sportLabel: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.strain,
+    },
+    closeBtn: { padding: theme.spacing.xs },
+  });
+}

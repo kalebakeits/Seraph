@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
-import { theme } from '../../../theme';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
+import { useTheme, type Theme } from '../../../theme';
 import { GRANULARITY_OPTIONS, type GranularitySeconds } from '../utils/storageUtils';
 
 interface Props {
@@ -13,6 +13,9 @@ interface Props {
 }
 
 export const GranularityPicker: React.FC<Props> = ({ value, onChange }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
   const index = GRANULARITY_OPTIONS.indexOf(value);
 
@@ -42,7 +45,7 @@ export const GranularityPicker: React.FC<Props> = ({ value, onChange }) => {
           value={index}
           onSlidingComplete={handleSlidingComplete}
           minimumTrackTintColor={theme.colors.primary}
-          maximumTrackTintColor="rgba(255,255,255,0.15)"
+          maximumTrackTintColor={theme.colors.overlay.medium}
           thumbTintColor={theme.colors.primary}
         />
         <View style={styles.endpoints}>
@@ -54,32 +57,34 @@ export const GranularityPicker: React.FC<Props> = ({ value, onChange }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  hint: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    lineHeight: 18,
-    marginBottom: theme.spacing.md,
-  },
-  currentValue: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.weights.semibold,
-    textAlign: 'center',
-    paddingTop: theme.spacing.sm,
-  },
-  slider: {
-    width: '100%',
-    height: 40,
-  },
-  endpoints: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.sm,
-    paddingBottom: theme.spacing.sm,
-  },
-  endLabel: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    hint: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      lineHeight: 18,
+      marginBottom: theme.spacing.md,
+    },
+    currentValue: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.primary,
+      fontWeight: theme.typography.weights.semibold,
+      textAlign: 'center',
+      paddingTop: theme.spacing.sm,
+    },
+    slider: {
+      width: '100%',
+      height: 40,
+    },
+    endpoints: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: theme.spacing.sm,
+      paddingBottom: theme.spacing.sm,
+    },
+    endLabel: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+    },
+  });
+}

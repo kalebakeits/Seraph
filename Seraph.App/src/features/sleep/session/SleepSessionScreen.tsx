@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, ActivityIndicator, View, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
@@ -6,7 +6,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ScreenLayout } from '../../../components/common/ScreenLayout';
 import { BlockingOverlay } from '../../../components/BlockingOverlay';
 import { TimePicker } from '../../../components/TimePicker';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 import { sleepEventsRepository } from '../../../services/database/drizzle/repositories/sleepEventsRepository';
 import { nativeRecalcSleep } from '../../../services/ble/nativeModule';
 import { dailyAggregationsRepository } from '../../../services/database/drizzle/repositories/dailyAggregationsRepository';
@@ -25,6 +25,8 @@ import { useMarkNotificationRead } from '../../../hooks/useMarkNotificationRead'
 type Props = NativeStackScreenProps<HomeStackParamList, 'SleepSessionDetail'>;
 
 export const SleepSessionScreen: React.FC<Props> = ({ route }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { sleepId } = route.params;
   const navigation = useNavigation();
   const queryClient = useQueryClient();
@@ -201,6 +203,7 @@ export const SleepSessionScreen: React.FC<Props> = ({ route }) => {
         onCancel={() => {
           setStartPickerOpen(false);
         }}
+        mode="datetime"
       />
 
       <TimePicker
@@ -211,6 +214,7 @@ export const SleepSessionScreen: React.FC<Props> = ({ route }) => {
         onCancel={() => {
           setEndPickerOpen(false);
         }}
+        mode="datetime"
       />
 
       <BlockingOverlay visible={saving} />
@@ -218,7 +222,9 @@ export const SleepSessionScreen: React.FC<Props> = ({ route }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { gap: theme.spacing.md },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    content: { gap: theme.spacing.md },
+  });
+}

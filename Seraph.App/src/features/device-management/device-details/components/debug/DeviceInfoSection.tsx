@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
 import { SafeText } from '../../../../../components/common/SafeText';
-import { theme } from '../../../../../theme';
+import { useTheme, type Theme } from '../../../../../theme';
 
 interface Props {
   clock: Date | null;
@@ -20,6 +20,8 @@ export const DeviceInfoSection: React.FC<Props> = ({
   firmwareVersion,
   hardwareVersion,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t, i18n } = useTranslation();
 
   let onWristLabel = '--';
@@ -67,40 +69,42 @@ export const DeviceInfoSection: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  sectionTitle: {
-    fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.muted,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginTop: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    marginLeft: theme.spacing.xs,
-  },
-  card: {
-    ...theme.cardStyles.default,
-    padding: 0,
-    overflow: 'hidden',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.overlay.light,
-  },
-  label: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.secondary,
-  },
-  value: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.medium,
-    color: theme.colors.text.primary,
-    maxWidth: '55%',
-    textAlign: 'right',
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    sectionTitle: {
+      fontSize: theme.typography.sizes.xs,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.muted,
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+      marginTop: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
+      marginLeft: theme.spacing.xs,
+    },
+    card: {
+      ...theme.cardStyles.default,
+      padding: 0,
+      overflow: 'hidden',
+    },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: 10,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.overlay.light,
+    },
+    label: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.secondary,
+    },
+    value: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.medium,
+      color: theme.colors.text.primary,
+      maxWidth: '55%',
+      textAlign: 'right',
+    },
+  });
+}

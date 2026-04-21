@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { ViewStyle, ScrollViewProps } from 'react-native';
 import { ScrollView, StyleSheet } from 'react-native';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 
 interface ScreenLayoutProps extends ScrollViewProps {
   children?: React.ReactNode;
@@ -17,6 +17,8 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   style,
   ...rest
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   return (
     <ScrollView
       style={[styles.container, style]}
@@ -28,14 +30,15 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  content: {
-    padding: theme.layout.screenPadding,
-    paddingTop: 80,
-    paddingBottom: theme.tabStyles.content.paddingBottom,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: 'transparent',
+    },
+    content: {
+      padding: theme.layout.screenPadding,
+      paddingBottom: theme.tabStyles.content.paddingBottom,
+    },
+  });
+}

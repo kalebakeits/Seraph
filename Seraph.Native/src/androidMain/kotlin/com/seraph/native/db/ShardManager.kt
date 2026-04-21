@@ -6,6 +6,7 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import co.touchlab.kermit.Logger
+import com.seraph.native.db.r24.R24Db
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -15,37 +16,16 @@ import java.util.zip.GZIPOutputStream
 
 private val log = Logger.withTag("ShardManager")
 
-/**
- * Shards eligible months of R24 data out of the main DB into per-month SQLite files.
- *
- * Shard filename format: seraph_r24_YYYY-MM_seq_<seqMin>_<seqMax>.db.gz
- * - Date range is derivable from the YYYY-MM prefix alone.
- * - seqMin/seqMax allow locating a shard by sequence number without opening it.
- *
- * Eligibility: a month is shardable when it ended at least 2 full months ago
- * (i.e. today >= first day of (month + 3)).
- *
- * Shard schema: full current SeraphDb schema, only r24 table populated.
- * Other tables left empty — this preserves schema version for future migrations.
- */
 class ShardManager(
     private val context: Context,
-    private val mainDb: SeraphDb,
+    private val r24Db: R24Db,
 ) {
-    private val shardDir: File get() {
-        // Same directory as the main DB
-        val dbPath = context.filesDir.resolve("SQLite")
-        dbPath.mkdirs()
-        return dbPath
-    }
+    private val shardDir: File
+        get() = context.getDatabasePath("seraph.db").parentFile!!.also { it.mkdirs() }
 
-    /** Called after sync completes on the first of the month. Shards all eligible months. */
     fun shardEligibleMonths() {
         val eligible = findEligibleMonths()
-        if (eligible.isEmpty()) {
-            log.i { "No months eligible for sharding" }
-            return
-        }
+        if (eligible.isEmpty()) return
         for (month in eligible) {
             try {
                 shardMonth(month)
@@ -57,62 +37,38 @@ class ShardManager(
 
     private fun findEligibleMonths(): List<YearMonth> {
         val today = LocalDate.now()
-        // A month is eligible when today >= first of (month + 3)
         val cutoff = YearMonth.from(today).minusMonths(2)
-
         val alreadySharded =
-            shardDir
-                .listFiles()
-                ?.mapNotNull { parseMonthFromFilename(it.name) }
-                ?.toSet() ?: emptySet()
-
-        // Find distinct months present in main DB r24 table
-        val rows = mainDb.seraphDbQueries.getDistinctR24Months().executeAsList()
+            shardDir.listFiles()?.mapNotNull { parseMonthFromFilename(it.name) }?.toSet() ?: emptySet()
+        val rows = r24Db.r24DbQueries.getDistinctR24Months().executeAsList()
         return rows
-            .mapNotNull { monthStr ->
-                try {
-                    YearMonth.parse(monthStr)
-                } catch (_: Exception) {
-                    null
-                }
-            }.filter { it < cutoff && it !in alreadySharded }
+            .mapNotNull { monthStr -> try { YearMonth.parse(monthStr) } catch (_: Exception) { null } }
+            .filter { it < cutoff && it !in alreadySharded }
             .sorted()
     }
 
     private fun shardMonth(month: YearMonth) {
         log.i { "Sharding $month" }
-
         val startMs = month.atDay(1).toEpochMs()
-        val endMs = month.atEndOfMonth().toEpochMs() + 86_399_999L // end of last day
+        val endMs = month.atEndOfMonth().toEpochMs() + 86_399_999L
 
-        // Get seq range for filename
-        val seqRange = mainDb.seraphDbQueries.getR24SeqRangeForMonth(startMs, endMs).executeAsOneOrNull()
+        val seqRange = r24Db.r24DbQueries.getR24SeqRangeForMonth(startMs, endMs).executeAsOneOrNull()
         if (seqRange == null || seqRange.MIN == null || seqRange.MAX == null) {
             log.w { "No R24 data found for $month — skipping" }
             return
         }
-        val seqMin = seqRange.MIN
-        val seqMax = seqRange.MAX
 
-        val dbFile = shardDir.resolve("seraph_r24_${month}_seq_${seqMin}_$seqMax.db")
-        val gzFile = shardDir.resolve("seraph_r24_${month}_seq_${seqMin}_$seqMax.db.gz")
+        val dbFile = shardDir.resolve("seraph_r24_${month}_seq_${seqRange.MIN}_${seqRange.MAX}.db")
+        val gzFile = shardDir.resolve("seraph_r24_${month}_seq_${seqRange.MIN}_${seqRange.MAX}.db.gz")
+        if (gzFile.exists()) return
 
-        if (gzFile.exists()) {
-            log.i { "Shard already exists for $month — skipping" }
-            return
-        }
-
-        // Open a fresh DB with the full current schema
         val shardDb = openShardDb(dbFile)
-
         try {
-            // Bulk insert R24 rows for this month
-            val rows = mainDb.seraphDbQueries.queryR24ByDateRange(startMs, endMs).executeAsList()
+            val rows = r24Db.r24DbQueries.queryR24ByDateRange(startMs, endMs).executeAsList()
             log.i { "Inserting ${rows.size} rows into shard for $month" }
-
-            shardDb.seraphDbQueries.transaction {
+            shardDb.r24DbQueries.transaction {
                 for (row in rows) {
-                    shardDb.seraphDbQueries.insertR24(
+                    shardDb.r24DbQueries.insertR24(
                         sequence = row.sequence,
                         timestamp = row.timestamp,
                         subseconds = row.subseconds,
@@ -122,26 +78,21 @@ class ShardManager(
                         step_count = row.step_count,
                         b2 = row.b2,
                         b80 = row.b80,
-                        device_id = row.device_id,
                         created_at = row.created_at,
                     )
                 }
             }
         } finally {
-            // Close the shard DB driver before zipping
-            shardDb.seraphDbQueries.also { /* force flush */ }
+            // close shard before zipping
         }
 
-        // Zip the shard DB
         gzip(dbFile, gzFile)
         dbFile.delete()
-
-        // Delete the sharded rows from main DB
-        mainDb.seraphDbQueries.deleteR24InRange(startMs, endMs)
+        r24Db.r24DbQueries.deleteR24InRange(startMs, endMs)
         log.i { "Shard complete: ${gzFile.name} (${gzFile.length() / 1024}KB)" }
     }
 
-    private fun openShardDb(file: File): SeraphDb {
+    private fun openShardDb(file: File): R24Db {
         val driver =
             AndroidSqliteDriver(
                 FrameworkSQLiteOpenHelperFactory().create(
@@ -149,39 +100,24 @@ class ShardManager(
                         .builder(context.applicationContext)
                         .name(file.absolutePath)
                         .callback(
-                            object : SupportSQLiteOpenHelper.Callback(SeraphDb.Schema.version.toInt()) {
+                            object : SupportSQLiteOpenHelper.Callback(R24Db.Schema.version.toInt()) {
                                 override fun onCreate(db: SupportSQLiteDatabase) {
-                                    SeraphDb.Schema.create(AndroidSqliteDriver(db))
+                                    R24Db.Schema.create(AndroidSqliteDriver(db))
                                 }
 
-                                override fun onUpgrade(
-                                    db: SupportSQLiteDatabase,
-                                    oldVersion: Int,
-                                    newVersion: Int,
-                                ) {
-                                    SeraphDb.Schema.migrate(
-                                        AndroidSqliteDriver(db),
-                                        oldVersion.toLong(),
-                                        newVersion.toLong(),
-                                    )
+                                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                                    R24Db.Schema.migrate(AndroidSqliteDriver(db), oldVersion.toLong(), newVersion.toLong())
                                 }
 
-                                override fun onDowngrade(
-                                    db: SupportSQLiteDatabase,
-                                    oldVersion: Int,
-                                    newVersion: Int,
-                                ) {}
+                                override fun onDowngrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
                             },
                         ).build(),
                 ),
             )
-        return SeraphDb(driver)
+        return R24Db(driver)
     }
 
-    private fun gzip(
-        source: File,
-        dest: File,
-    ) {
+    private fun gzip(source: File, dest: File) {
         FileInputStream(source).use { fis ->
             GZIPOutputStream(FileOutputStream(dest)).use { gos ->
                 fis.copyTo(gos)
@@ -189,15 +125,9 @@ class ShardManager(
         }
     }
 
-    // ── Shard filename parsing ────────────────────────────────────────────────
-
     private fun parseMonthFromFilename(name: String): YearMonth? {
         val match = SHARD_FILENAME_RE.find(name) ?: return null
-        return try {
-            YearMonth.parse(match.groupValues[1])
-        } catch (_: Exception) {
-            null
-        }
+        return try { YearMonth.parse(match.groupValues[1]) } catch (_: Exception) { null }
     }
 
     fun findShardForDate(date: LocalDate): File? {
@@ -207,14 +137,13 @@ class ShardManager(
         }
     }
 
-    fun findShardForSequence(sequence: Long): File? {
-        return shardDir.listFiles()?.firstOrNull { f ->
+    fun findShardForSequence(sequence: Long): File? =
+        shardDir.listFiles()?.firstOrNull { f ->
             val m = SHARD_SEQ_RE.find(f.name) ?: return@firstOrNull false
             val min = m.groupValues[1].toLongOrNull() ?: return@firstOrNull false
             val max = m.groupValues[2].toLongOrNull() ?: return@firstOrNull false
             sequence in min..max && f.name.endsWith(".db.gz")
         }
-    }
 
     companion object {
         private val SHARD_FILENAME_RE = Regex("""seraph_r24_(\d{4}-\d{2})_seq_""")

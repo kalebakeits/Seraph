@@ -1,8 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTheme } from '../theme';
 import { SettingsScreen } from '../features/profile/SettingsScreen';
-import { ProfileSettingsScreen } from '../features/profile/ProfileSettingsScreen';
+import { ProfileScreen } from '../features/profile/ProfileScreen';
+import { PreferencesScreen } from '../features/profile/PreferencesScreen';
 import { DataStorageScreen } from '../features/profile/DataStorageScreen';
 import { AboutScreen } from '../features/profile/AboutScreen';
 import { DebugMenuScreen } from '../features/device-management/device-details/DebugMenuScreen';
@@ -10,7 +12,8 @@ import { DebugMenuScreen } from '../features/device-management/device-details/De
 export interface SettingsStackParamList {
   [key: string]: object | undefined;
   SettingsMain: undefined;
-  ProfileSettings: undefined;
+  Profile: undefined;
+  Preferences: undefined;
   DataStorage: undefined;
   About: undefined;
   DebugMenu: undefined;
@@ -19,18 +22,20 @@ export interface SettingsStackParamList {
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
 
 export const SettingsStackNavigator: React.FC = () => {
+  const { theme } = useTheme();
   const { t } = useTranslation();
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
-        contentStyle: { backgroundColor: 'transparent' },
-        headerStyle: { backgroundColor: 'transparent' },
-        headerTransparent: true,
-        headerTintColor: '#ffffff',
-        headerTitle: '',
-        animation: 'fade',
-        animationDuration: 200,
+        headerStyle: { backgroundColor: theme.colors.surface.card },
+        headerTintColor: theme.colors.text.primary,
+        headerTitleStyle: { color: theme.colors.text.primary, fontWeight: '600' },
+        headerTitleAlign: 'center',
+        headerBackTitle: '',
+        headerShadowVisible: true,
+        animation: 'default',
+        contentStyle: { backgroundColor: theme.colors.background },
       }}
     >
       <Stack.Screen
@@ -39,9 +44,14 @@ export const SettingsStackNavigator: React.FC = () => {
         options={{ headerTitle: t('nav.settings') }}
       />
       <Stack.Screen
-        name="ProfileSettings"
-        component={ProfileSettingsScreen}
-        options={{ headerTitle: t('settings.profileAndPreferences') }}
+        name="Profile"
+        component={ProfileScreen}
+        options={{ headerTitle: t('settings.profile') }}
+      />
+      <Stack.Screen
+        name="Preferences"
+        component={PreferencesScreen}
+        options={{ headerTitle: t('settings.preferencesMenu') }}
       />
       <Stack.Screen
         name="DataStorage"

@@ -1,14 +1,23 @@
 package com.seraph.native.db
 
-/**
- * Process-lifetime singleton DB reference.
- * Initialized by the app's Application.onCreate() before any service or UI starts.
- */
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+
 object DbHolder {
     lateinit var db: SeraphDb
         private set
 
-    fun init(database: SeraphDb) {
+    lateinit var helper: SupportSQLiteOpenHelper
+        private set
+
+    var restorationResult: RestorationResult = RestorationResult.NONE
+        private set
+
+    fun init(database: SeraphDb, openHelper: SupportSQLiteOpenHelper, result: RestorationResult = RestorationResult.NONE) {
         db = database
+        helper = openHelper
+        restorationResult = result
     }
+
+    fun initFromTriple(triple: Triple<SeraphDb, SupportSQLiteOpenHelper, RestorationResult>) =
+        init(triple.first, triple.second, triple.third)
 }

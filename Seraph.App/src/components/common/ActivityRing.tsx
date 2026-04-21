@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import { SafeText } from './SafeText';
 
 interface ActivityRingProps {
@@ -33,6 +33,8 @@ export const ActivityRing: React.FC<ActivityRingProps> = ({
   targetHigh,
   onPress,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const center = size / 2;
   const radius = (size - strokeWidth) / 2;
 
@@ -80,7 +82,7 @@ export const ActivityRing: React.FC<ActivityRingProps> = ({
 
   if (compact) {
     const ringElement = (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.smx }}>
         <View style={[styles.ringContainer, { width: size, height: size }]}>
           <Canvas style={{ width: size, height: size }}>
             <Path
@@ -180,31 +182,33 @@ export const ActivityRing: React.FC<ActivityRingProps> = ({
   return content;
 };
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ringContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  centerContent: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  value: {
-    fontSize: 22,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-    textAlign: 'center',
-  },
-  label: {
-    fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.regular,
-    color: theme.colors.text.secondary,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ringContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    centerContent: {
+      position: 'absolute',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    value: {
+      fontSize: 22,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+      textAlign: 'center',
+    },
+    label: {
+      fontSize: theme.typography.sizes.xs,
+      fontWeight: theme.typography.weights.regular,
+      color: theme.colors.text.secondary,
+      marginTop: theme.spacing.xs,
+      textAlign: 'center',
+    },
+  });
+}

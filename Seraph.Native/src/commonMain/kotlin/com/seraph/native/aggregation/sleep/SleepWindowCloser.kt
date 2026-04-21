@@ -10,6 +10,7 @@ import com.seraph.native.aggregation.AggregationProfile
 import com.seraph.native.db.AggregationDao
 import com.seraph.native.db.R24Dao
 import com.seraph.native.db.SeraphDb
+import com.seraph.native.db.r24.R24
 import com.seraph.native.db.Sleep_events
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -27,7 +28,7 @@ internal data class RowAccum(
     val hrvCount: Long,
 )
 
-internal fun accumRow(row: com.seraph.native.db.R24): RowAccum {
+internal fun accumRow(row: R24): RowAccum {
     val hrValid = row.heart_rate in 30..220
     val hrSum = if (hrValid) row.heart_rate.toDouble() else 0.0
     val hrCount = if (hrValid) 1L else 0L

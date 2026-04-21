@@ -48,20 +48,34 @@ object Framing {
             crc32Bytes
     }
 
+    enum class ParseStatus { OK, INVALID, CRC_FAILED }
+
     data class ParsedPacket(
-        val valid: Boolean,
+        val status: ParseStatus,
         val payload: ByteArray?,
-    )
+    ) {
+        val valid: Boolean get() = status == ParseStatus.OK
+    }
 
     fun parsePacket(data: ByteArray): ParsedPacket {
-        if (data.size < 8) return ParsedPacket(false, null)
-        if (data[0] != 0xAA.toByte()) return ParsedPacket(false, null)
+        if (data.size < 8) return ParsedPacket(ParseStatus.INVALID, null)
+        if (data[0] != 0xAA.toByte()) return ParsedPacket(ParseStatus.INVALID, null)
 
         val length = (data[1].toInt() and 0xFF) or ((data[2].toInt() and 0xFF) shl 8)
         val payloadLength = length - 4
 
-        if (data.size < 4 + payloadLength + 4) return ParsedPacket(false, null)
+        if (data.size < 4 + payloadLength + 4) return ParsedPacket(ParseStatus.INVALID, null)
 
-        return ParsedPacket(true, data.copyOfRange(4, 4 + payloadLength))
+        val payload = data.copyOfRange(4, 4 + payloadLength)
+        val expectedCrc = crc32(payload)
+        val actualCrc =
+            (data[4 + payloadLength].toLong() and 0xFF) or
+                ((data[4 + payloadLength + 1].toLong() and 0xFF) shl 8) or
+                ((data[4 + payloadLength + 2].toLong() and 0xFF) shl 16) or
+                ((data[4 + payloadLength + 3].toLong() and 0xFF) shl 24)
+
+        if (expectedCrc != actualCrc) return ParsedPacket(ParseStatus.CRC_FAILED, null)
+
+        return ParsedPacket(ParseStatus.OK, payload)
     }
 }

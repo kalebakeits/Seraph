@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
+import { useTheme, type Theme } from '../../../theme';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { useTrainingLoad } from '../hooks/useTrainingLoad';
 import { ZONE_CONFIG } from '../utils/trainingLoadUtils';
 import { SemiGauge } from './SemiGauge';
@@ -13,6 +13,9 @@ interface Props {
 }
 
 export const TrainingLoadCard: React.FC<Props> = ({ anchorDate }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
   const { data } = useTrainingLoad(anchorDate);
   const {
@@ -31,7 +34,7 @@ export const TrainingLoadCard: React.FC<Props> = ({ anchorDate }) => {
     hasData: false,
   };
 
-  const zoneInfo = ZONE_CONFIG[zone];
+  const zoneInfo = ZONE_CONFIG(theme)[zone];
   const tsbSign = tsb >= 0 ? '+' : '';
 
   return (
@@ -68,50 +71,52 @@ export const TrainingLoadCard: React.FC<Props> = ({ anchorDate }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
-  },
-  title: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-  },
-  badge: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 4,
-    borderRadius: theme.borderRadius.sm,
-  },
-  badgeText: {
-    fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.semibold,
-  },
-  body: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-  },
-  stats: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  stat: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-  statLabel: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginTop: 2,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.sm,
+    },
+    title: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+    },
+    badge: {
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.sm,
+    },
+    badgeText: {
+      fontSize: theme.typography.sizes.xs,
+      fontWeight: theme.typography.weights.semibold,
+    },
+    body: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.md,
+    },
+    stats: {
+      flex: 1,
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+    },
+    stat: {
+      alignItems: 'center',
+    },
+    statValue: {
+      fontSize: theme.typography.sizes.xl,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    statLabel: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.6,
+      marginTop: theme.spacing.xxs,
+    },
+  });
+}

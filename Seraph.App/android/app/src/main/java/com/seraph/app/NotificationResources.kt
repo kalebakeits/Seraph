@@ -70,8 +70,17 @@ object NotificationResources {
                 lctx.getString(R.string.notifications_types_update_available) to body
             }
             "announcement" -> {
-                val message = p?.optString("message", null)
-                lctx.getString(R.string.notifications_types_announcement) to message
+                lctx.getString(R.string.notifications_types_announcement) to
+                    lctx.getString(R.string.notifications_announcement_body)
+            }
+            "low_battery" -> {
+                val level = p?.optInt("level", -1)?.takeIf { it >= 0 }
+                val body = level?.let { lctx.getString(R.string.notifications_low_battery_body, it) }
+                lctx.getString(R.string.notifications_types_low_battery) to body
+            }
+            "alarm_not_synced" -> {
+                lctx.getString(R.string.notifications_types_alarm_not_synced) to
+                    lctx.getString(R.string.notifications_alarm_not_synced_body)
             }
             else -> type to null
         }

@@ -11,6 +11,11 @@ import com.seraph.native.protocol.ResponseParser
 class Device(
     private val commandChannel: CommandChannel,
 ) {
+    // TODO: Investigate whether GET_BATTERY_LEVEL (0x1a) is actually answered by the strap.
+    // Logcat shows 10s timeouts on cmd 0x1a. If the strap doesn't respond, consider using
+    // the BATTERY_LEVEL push event instead (EventNumber.BATTERY_LEVEL), or deriving battery
+    // from GET_HELLO_HARVARD if a reliable offset can be found (currently Harvard only
+    // surfaces charging/onWrist at bytes 10 and 119).
     suspend fun getBattery() =
         commandChannel
             .sendAndAwaitQueued(Commands.getBatteryLevel(), CommandNumber.GET_BATTERY_LEVEL)

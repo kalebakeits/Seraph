@@ -1,13 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useDeviceStore } from './store/deviceStore';
-import { useCachedDevice } from './hooks/useCachedDevice';
 
 import { ScanSection } from './components/ScanSection';
 import { ConnectedDeviceView } from './device-details/ConnectedDeviceView';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 
 export const DeviceManagementScreen: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const {
     isConnected,
     isScanning,
@@ -16,11 +17,8 @@ export const DeviceManagementScreen: React.FC = () => {
     initialize,
     scan,
     connect,
-    connectCached,
     forgetDevice,
   } = useDeviceStore();
-
-  const { data: cachedDevice } = useCachedDevice();
 
   useEffect(() => {
     void initialize();
@@ -36,12 +34,10 @@ export const DeviceManagementScreen: React.FC = () => {
         <ConnectedDeviceView onForget={() => void forgetDevice()} />
       ) : (
         <ScanSection
-          cachedDevice={cachedDevice}
           scannedDevices={scannedDevices}
           isScanning={isScanning}
           isConnecting={isConnecting}
           onScan={() => void scan()}
-          onConnectCached={() => void connectCached()}
           onSelectDevice={d => void handleSelectDevice(d)}
         />
       )}
@@ -49,11 +45,13 @@ export const DeviceManagementScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    padding: theme.layout.screenPadding,
-    paddingTop: 80,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: 'transparent',
+      padding: theme.layout.screenPadding,
+      paddingTop: theme.layout.screenPadding,
+    },
+  });
+}

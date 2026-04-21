@@ -15,13 +15,35 @@ class AndroidNotificationChannel(
         type: String,
         payload: String?,
     ) {
+        // Always send in-app notification when foregrounded
         if (isForegrounded) {
             onInAppNotification(type, payload)
         } else {
-            val lang = db.seraphDbQueries.getAppParameter("language").executeAsOneOrNull() ?: "en"
-            val (title, body) = formatSystemNotification(lang, type, payload)
-            val deepLink = resolveDeepLink(type, payload)
-            serviceNotifications.sendEventAlert(title, body, deepLink)
+            // Check if system notifications are enabled for this type
+            if (shouldSendSystemNotification(type)) {
+                val lang = db.seraphDbQueries.getAppParameter("language").executeAsOneOrNull() ?: "en"
+                val (title, body) = formatSystemNotification(lang, type, payload)
+                val deepLink = resolveDeepLink(type, payload)
+                serviceNotifications.sendEventAlert(title, body, deepLink)
+            }
+        }
+    }
+
+    private fun shouldSendSystemNotification(type: String): Boolean {
+        // Check global toggle first
+        val globalEnabled = db.seraphDbQueries.getAppParameter("notif_global_enabled").executeAsOneOrNull() != "0"
+        if (!globalEnabled) return false
+
+        // Check specific notification type settings
+        return when (type) {
+            "low_battery" -> db.seraphDbQueries.getAppParameter("notif_device_low_battery").executeAsOneOrNull() != "0"
+            "alarm_not_synced" -> db.seraphDbQueries.getAppParameter("notif_device_alarm_not_set").executeAsOneOrNull() != "0"
+            "sleep_detected", "sleep_edited" -> db.seraphDbQueries.getAppParameter("notif_activity_sleep").executeAsOneOrNull() != "0"
+            "workout_detected", "workout_edited", "workout_recorded" -> {
+                val v = db.seraphDbQueries.getAppParameter("notif_activity_workout").executeAsOneOrNull()
+                v != "0"
+            }
+            else -> true // Default to enabled for unknown types
         }
     }
 

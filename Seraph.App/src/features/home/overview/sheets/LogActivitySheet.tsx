@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Alert, Modal, View, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,14 +6,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { SafeText } from '../../../../components/common/SafeText';
 import { TimePicker } from '../../../../components/TimePicker';
 import { BlockingOverlay } from '../../../../components/BlockingOverlay';
-import { theme } from '../../../../theme';
+import { useTheme, type Theme } from '../../../../theme';
 import {
   sleepEventsRepository,
   activityEventsRepository,
 } from '../../../../services/database/drizzle';
-import { r24Repository } from '../../../../services/database/drizzle/repositories/r24Repository';
 import { nativeRecalcSleep, nativeRecalcActivity } from '../../../../services/ble/nativeModule';
-import { applyTimeToDate, bucketHR } from './activitySheetUtils';
+import { applyTimeToDate } from './activitySheetUtils';
 import { formatTime } from '../../../../utils/dateUtils';
 
 import { ActivityType } from '../../../../types/ActivityType';
@@ -31,6 +30,8 @@ export const LogActivitySheet: React.FC<LogActivitySheetProps> = ({
   initialType,
   onClose,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
@@ -80,14 +81,9 @@ export const LogActivitySheet: React.FC<LogActivitySheetProps> = ({
         }
       }
       const durationMinutes = Math.round((endTs - startTs) / 60000);
-
-      const samples = await r24Repository.getRange(startTs, endTs);
-
-      const bucketMs = type === ActivityType.Sleep ? 120_000 : 15_000;
-      const hrSamples = bucketHR(samples, bucketMs);
-      const hrs = samples.map(s => s.heart_rate).filter(h => h > 0);
-      const avgHr = hrs.length > 0 ? Math.round(hrs.reduce((a, b) => a + b, 0) / hrs.length) : null;
-      const maxHr = hrs.length > 0 ? Math.max(...hrs) : null;
+      const hrSamples = null;
+      const avgHr = null;
+      const maxHr = null;
 
       if (type === ActivityType.Sleep) {
         const insertedId = await sleepEventsRepository.insert({
@@ -232,6 +228,7 @@ export const LogActivitySheet: React.FC<LogActivitySheetProps> = ({
           onCancel={() => {
             setStartPickerOpen(false);
           }}
+          mode="datetime"
         />
         <TimePicker
           time={endDate}
@@ -241,6 +238,7 @@ export const LogActivitySheet: React.FC<LogActivitySheetProps> = ({
           onCancel={() => {
             setEndPickerOpen(false);
           }}
+          mode="datetime"
         />
       </Modal>
 
@@ -249,84 +247,86 @@ export const LogActivitySheet: React.FC<LogActivitySheetProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  sheet: {
-    backgroundColor: theme.colors.surface.sheet,
-    borderTopLeftRadius: theme.borderRadius.xl,
-    borderTopRightRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-  },
-  title: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-  closeBtn: {
-    padding: theme.spacing.xs,
-  },
-  editRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.overlay.light,
-  },
-  editLabel: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.secondary,
-  },
-  editValue: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-  },
-  buttons: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginTop: theme.spacing.lg,
-  },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.overlay.light,
-    alignItems: 'center',
-  },
-  cancelText: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.secondary,
-  },
-  saveBtn: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    alignItems: 'center',
-  },
-  saveText: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    color: '#000',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: theme.colors.scrim.medium,
+    },
+    sheet: {
+      backgroundColor: theme.colors.surface.sheet,
+      borderTopLeftRadius: theme.borderRadius.xl,
+      borderTopRightRadius: theme.borderRadius.xl,
+      padding: theme.spacing.lg,
+      paddingBottom: theme.spacing.xxl,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.lg,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    title: {
+      fontSize: theme.typography.sizes.lg,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    closeBtn: {
+      padding: theme.spacing.xs,
+    },
+    editRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: theme.spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.overlay.light,
+    },
+    editLabel: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.secondary,
+    },
+    editValue: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+    },
+    buttons: {
+      flexDirection: 'row',
+      gap: theme.spacing.md,
+      marginTop: theme.spacing.lg,
+    },
+    cancelBtn: {
+      flex: 1,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.overlay.light,
+      alignItems: 'center',
+    },
+    cancelText: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.secondary,
+    },
+    saveBtn: {
+      flex: 1,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      alignItems: 'center',
+    },
+    saveText: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.icon.onLight,
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+  });
+}

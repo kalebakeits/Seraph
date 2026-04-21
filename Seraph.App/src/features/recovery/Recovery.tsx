@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
@@ -14,7 +14,7 @@ import { RecoveryCard } from './components/RecoveryCard';
 import { RecoveryBarChart } from './components/RecoveryBarChart';
 import { useRecoveryFactors } from './hooks/useRecoveryFactors';
 import { useRecoveryHistory } from './hooks/useRecoveryHistory';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import { todayISO, formatDateHeader } from '../../utils/dateUtils';
 import type { HomeStackParamList } from '../../navigation/HomeStackNavigator';
 
@@ -22,6 +22,8 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'Recovery'>;
 type NavProp = NativeStackNavigationProp<HomeStackParamList>;
 
 export const Recovery: React.FC<Props> = ({ route }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t, i18n } = useTranslation();
   const navigation = useNavigation<NavProp>();
   const date = route.params?.selectedDate ?? todayISO();
@@ -41,7 +43,10 @@ export const Recovery: React.FC<Props> = ({ route }) => {
       <Section
         title={t('recovery.trends')}
         onTitlePress={() => {
-          navigation.navigate('TrendRecovery', { anchorDate: route.params?.selectedDate });
+          navigation.navigate('Trends', {
+            initialTrend: 'recovery',
+            anchorDate: route.params?.selectedDate,
+          });
         }}
       >
         <HelperText translationKey="recovery.historyHelper" />
@@ -51,15 +56,17 @@ export const Recovery: React.FC<Props> = ({ route }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  content: {
-    gap: theme.spacing.md,
-  },
-  dateHeader: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-    paddingHorizontal: 2,
-    marginBottom: theme.spacing.xs,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    content: {
+      gap: theme.spacing.md,
+    },
+    dateHeader: {
+      fontSize: theme.typography.sizes.lg,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+      paddingHorizontal: theme.spacing.xxs,
+      marginBottom: theme.spacing.xs,
+    },
+  });
+}

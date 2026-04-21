@@ -1,14 +1,15 @@
 import { eq, asc, desc, and, or, lt, gt } from 'drizzle-orm';
-import { getDb } from '../db';
+import { getDb, insertAndGetId } from '../db';
 import { activityEvents, notifications, type ActivityEvent } from '../schema';
 
 class ActivityEventsRepository {
   async insert(event: Omit<ActivityEvent, 'id' | 'created_at'>): Promise<number> {
-    const result = await getDb().insert(activityEvents).values({
-      ...event,
-      created_at: Date.now(),
-    }).returning({ id: activityEvents.id });
-    return result[0].id;
+    return insertAndGetId(() =>
+      getDb().insert(activityEvents).values({
+        ...event,
+        created_at: Date.now(),
+      }),
+    );
   }
 
   async getById(id: number): Promise<ActivityEvent | null> {

@@ -37,8 +37,8 @@ class SyncSession(
     private val metadataChannel: Channel<PacketMetadata>,
     private val r24Dao: R24Dao,
     private val aggregationRunner: AggregationRunner,
-    private val deviceId: String,
     private val scope: CoroutineScope,
+    private val granularityMs: Long = 1_000L,
 ) {
     @Volatile var packetsReceived: Int = 0
         private set
@@ -57,6 +57,13 @@ class SyncSession(
 
     private val pendingPackets = mutableListOf<R24Packet>()
     private val pendingMutex = Mutex()
+
+    @Volatile
+    private var corruptBatch = false
+
+    fun markBatchCorrupt() {
+        corruptBatch = true
+    }
 
     suspend fun onR24(packet: R24Packet) {
         pendingMutex.withLock { pendingPackets.add(packet) }
@@ -79,7 +86,7 @@ class SyncSession(
             }
         withContext(Dispatchers.Default) {
             log.i { "Flushing ${batch.size} packets to DB" }
-            r24Dao.insertBatch(batch, deviceId)
+            r24Dao.insertBatch(batch, granularityMs)
         }
     }
 
@@ -137,13 +144,21 @@ class SyncSession(
                         log.i { "History transfer started" }
                     }
                     MetadataType.HISTORY_END -> {
-                        log.i { "Batch end — trim=${meta.trimValue} packets=$packetsReceived latest=$latestDate" }
-                        lastAcknowledgedTrim = meta.trimValue
-                        flushPackets()
-                        aggJob = scope.launch(Dispatchers.Default) { aggregateCompletedDays(onDateComplete) }
-                        onTrimAcked?.invoke(meta.trimValue, latestTimestampMs)
-                        commandChannel.send(Commands.sendHistoricalDataResult(meta.trimValue))
-                        onBatchComplete(packetsReceived, latestDate)
+                        if (corruptBatch) {
+                            val retryTrim = lastAcknowledgedTrim ?: meta.trimValue
+                            log.w { "Batch had CRC failures — re-requesting from trim=$retryTrim" }
+                            pendingMutex.withLock { pendingPackets.clear() }
+                            corruptBatch = false
+                            commandChannel.send(Commands.sendHistoricalDataResult(retryTrim))
+                        } else {
+                            log.i { "Batch end — trim=${meta.trimValue} packets=$packetsReceived latest=$latestDate" }
+                            lastAcknowledgedTrim = meta.trimValue
+                            flushPackets()
+                            aggJob = scope.launch(Dispatchers.Default) { aggregateCompletedDays(onDateComplete) }
+                            onTrimAcked?.invoke(meta.trimValue, latestTimestampMs)
+                            commandChannel.send(Commands.sendHistoricalDataResult(meta.trimValue))
+                            onBatchComplete(packetsReceived, latestDate)
+                        }
                     }
                     MetadataType.HISTORY_COMPLETE -> {
                         commandChannel.syncActive = false

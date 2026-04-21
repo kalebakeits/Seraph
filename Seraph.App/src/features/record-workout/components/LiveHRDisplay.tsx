@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 
 interface LiveHRDisplayProps {
   hr: number | null;
@@ -13,6 +13,8 @@ interface LiveHRDisplayProps {
 const ZONE_NAME_KEYS = ['z1Name', 'z2Name', 'z3Name', 'z4Name', 'z5Name'] as const;
 
 export const LiveHRDisplay: React.FC<LiveHRDisplayProps> = ({ hr, zone, zoneColor }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const zoneName = zone !== null ? t(`workout.${ZONE_NAME_KEYS[zone - 1]}`) : null;
 
@@ -39,38 +41,40 @@ export const LiveHRDisplay: React.FC<LiveHRDisplayProps> = ({ hr, zone, zoneColo
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    gap: 10,
-  },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    borderWidth: 1.5,
-    borderRadius: 28,
-    paddingHorizontal: 28,
-    paddingVertical: 12,
-    gap: 6,
-  },
-  hrValue: {
-    fontSize: 80,
-    fontWeight: '700',
-    lineHeight: 88,
-    letterSpacing: -2,
-  },
-  bpmLabel: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.muted,
-    marginBottom: 14,
-  },
-  zoneBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: theme.borderRadius.full,
-  },
-  zoneName: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      gap: theme.spacing.sm + theme.spacing.xxs,
+    },
+    pill: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      borderWidth: theme.borderWidth.medium,
+      borderRadius: 28,
+      paddingHorizontal: 28,
+      paddingVertical: 12,
+      gap: theme.spacing.smx,
+    },
+    hrValue: {
+      fontSize: 80,
+      fontWeight: '700',
+      lineHeight: 88,
+      letterSpacing: -2,
+    },
+    bpmLabel: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.muted,
+      marginBottom: 14,
+    },
+    zoneBadge: {
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.smx,
+      borderRadius: theme.borderRadius.full,
+    },
+    zoneName: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.semibold,
+    },
+  });
+}

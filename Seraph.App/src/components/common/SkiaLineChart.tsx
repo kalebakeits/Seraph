@@ -14,7 +14,7 @@ import {
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-worklets';
 import { SafeText } from './SafeText';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 
 export interface ChartPoint {
   value: number;
@@ -68,6 +68,8 @@ export const SkiaLineChart: React.FC<SkiaLineChartProps> = ({
   minValue: minValueProp,
   maxValue: maxValueProp,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const [containerWidth, setContainerWidth] = useState(0);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
@@ -218,7 +220,7 @@ export const SkiaLineChart: React.FC<SkiaLineChartProps> = ({
                 key={tick}
                 p1={vec(Y_AXIS_WIDTH, toY(tick))}
                 p2={vec(containerWidth - PADDING_RIGHT, toY(tick))}
-                color="rgba(255,255,255,0.05)"
+                color={theme.colors.overlay.dim}
                 strokeWidth={1}
               />
             ))}
@@ -314,7 +316,7 @@ export const SkiaLineChart: React.FC<SkiaLineChartProps> = ({
                 <Line
                   p1={vec(focusX, PADDING_TOP)}
                   p2={vec(focusX, PADDING_TOP + chartHeight)}
-                  color="rgba(255,255,255,0.2)"
+                  color={theme.colors.border.default}
                   strokeWidth={1}
                 />
                 <Circle cx={focusX} cy={focusY} r={5} color={color} />
@@ -361,48 +363,50 @@ export const SkiaLineChart: React.FC<SkiaLineChartProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  empty: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    color: theme.colors.text.tertiary,
-    fontSize: theme.typography.sizes.sm,
-  },
-  yLabel: {
-    position: 'absolute',
-    left: 0,
-    width: Y_AXIS_WIDTH - 4,
-    alignItems: 'flex-end',
-    zIndex: 1,
-  },
-  axisText: {
-    color: theme.colors.text.muted,
-    fontSize: 10,
-  },
-  xAxisRow: {
-    height: X_AXIS_HEIGHT,
-    position: 'relative',
-  },
-  tooltip: {
-    position: 'absolute',
-    top: -4,
-    zIndex: 10,
-    backgroundColor: 'rgba(30,15,50,0.92)',
-    borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 4,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
-  tooltipLabel: {
-    fontSize: 9,
-    color: theme.colors.text.muted,
-  },
-  tooltipValue: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.bold,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    empty: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emptyText: {
+      color: theme.colors.text.tertiary,
+      fontSize: theme.typography.sizes.sm,
+    },
+    yLabel: {
+      position: 'absolute',
+      left: 0,
+      width: Y_AXIS_WIDTH - 4,
+      alignItems: 'flex-end',
+      zIndex: 1,
+    },
+    axisText: {
+      color: theme.colors.text.muted,
+      fontSize: 10,
+    },
+    xAxisRow: {
+      height: X_AXIS_HEIGHT,
+      position: 'relative',
+    },
+    tooltip: {
+      position: 'absolute',
+      top: -4,
+      zIndex: 10,
+      backgroundColor: theme.colors.surface.tooltipDeep,
+      borderRadius: theme.borderRadius.sm,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border.subtle,
+    },
+    tooltipLabel: {
+      fontSize: 9,
+      color: theme.colors.text.muted,
+    },
+    tooltipValue: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.bold,
+    },
+  });
+}

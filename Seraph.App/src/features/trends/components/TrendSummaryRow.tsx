@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
-import { trendSharedStyles as s } from '../shared/TrendSharedStyles';
+import { buildTrendSharedStyles } from '../shared/TrendSharedStyles';
+import { useTheme } from '../../../theme';
 import type { TrendSummary } from '../useTrendData';
 
 interface Props {
@@ -13,6 +14,8 @@ interface Props {
 }
 
 export const TrendSummaryRow: React.FC<Props> = ({ summary, color, unit: _unit, fmt }) => {
+  const { theme } = useTheme();
+  const s = useMemo(() => buildTrendSharedStyles(theme), [theme]);
   const { t } = useTranslation();
   return (
     <View style={s.summaryRow}>

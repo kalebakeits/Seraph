@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- runOnJS: scheduleOnRN crashes, pending worklets upgrade */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,7 @@ import { Canvas, RoundedRect, Line, vec } from '@shopify/react-native-skia';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 import type { RecoveryDay } from '../hooks/useRecoveryHistory';
 import { formatDuration } from '../../../utils/dateUtils';
 
@@ -15,20 +15,15 @@ const ZONE_RED = 33;
 const ZONE_YELLOW = 66;
 const MAX_VALUE = 100;
 
-const COLOR_RED = '#ff3b30';
-const COLOR_YELLOW = '#ffd60a';
-const COLOR_GREEN = '#30d158';
-
 const CHART_PADDING = 4;
 const PADDING_TOP = 24;
 const PADDING_BOTTOM = 32;
 const BAR_RADIUS = 3;
-const GRID_COLOR = 'rgba(255,255,255,0.12)';
 
-function barColor(value: number): string {
-  if (value < ZONE_RED) return COLOR_RED;
-  if (value < ZONE_YELLOW) return COLOR_YELLOW;
-  return COLOR_GREEN;
+function barColor(value: number, theme: Theme): string {
+  if (value < ZONE_RED) return theme.colors.recoveryColors.low;
+  if (value < ZONE_YELLOW) return theme.colors.recoveryColors.medium;
+  return theme.colors.recoveryColors.high;
 }
 
 interface Props {
@@ -37,6 +32,8 @@ interface Props {
 }
 
 export const RecoveryBars: React.FC<Props> = ({ data, height = 220 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const [chartAreaWidth, setChartAreaWidth] = useState(0);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -106,7 +103,7 @@ export const RecoveryBars: React.FC<Props> = ({ data, height = 220 }) => {
           <SafeText style={styles.tooltipDate}>
             {focused.weekday} {focused.day}
           </SafeText>
-          <SafeText style={[styles.tooltipScore, { color: barColor(focused.recovery) }]}>
+          <SafeText style={[styles.tooltipScore, { color: barColor(focused.recovery, theme) }]}>
             {focused.recovery}%
           </SafeText>
           <View style={styles.tooltipFactors}>
@@ -141,7 +138,7 @@ export const RecoveryBars: React.FC<Props> = ({ data, height = 220 }) => {
                   {
                     left: barCenterX(i) - 16,
                     top: toY(d.recovery) - 18,
-                    color: barColor(d.recovery),
+                    color: barColor(d.recovery, theme),
                   },
                 ]}
               >
@@ -157,7 +154,7 @@ export const RecoveryBars: React.FC<Props> = ({ data, height = 220 }) => {
                 key={z}
                 p1={vec(CHART_PADDING, toY(z))}
                 p2={vec(chartAreaWidth - CHART_PADDING, toY(z))}
-                color={GRID_COLOR}
+                color={theme.colors.border.subtle}
                 strokeWidth={1}
               />
             ))}
@@ -176,7 +173,7 @@ export const RecoveryBars: React.FC<Props> = ({ data, height = 220 }) => {
                   width={barWidth}
                   height={h}
                   r={BAR_RADIUS}
-                  color={barColor(d.recovery)}
+                  color={barColor(d.recovery, theme)}
                   opacity={isFocused || focusedIndex === null ? 1 : 0.4}
                 />
               );
@@ -191,7 +188,7 @@ export const RecoveryBars: React.FC<Props> = ({ data, height = 220 }) => {
               style={{
                 position: 'absolute',
                 left: barCenterX(i) - 22,
-                width: 44,
+                width: theme.layout.chartLabelWidth,
                 alignItems: 'center',
               }}
             >
@@ -205,62 +202,64 @@ export const RecoveryBars: React.FC<Props> = ({ data, height = 220 }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  chartArea: {
-    position: 'relative',
-  },
-  scoreLabel: {
-    position: 'absolute',
-    fontSize: 10,
-    fontWeight: theme.typography.weights.semibold,
-    width: 32,
-    textAlign: 'center',
-    zIndex: 1,
-  },
-  xAxisRow: {
-    height: PADDING_BOTTOM,
-    position: 'relative',
-  },
-  axisWeekday: {
-    color: theme.colors.text.muted,
-    fontSize: 9,
-    lineHeight: 12,
-  },
-  axisDay: {
-    color: theme.colors.text.tertiary,
-    fontSize: 9,
-    lineHeight: 12,
-  },
-  tooltip: {
-    position: 'absolute',
-    top: 28,
-    zIndex: 10,
-    backgroundColor: 'rgba(20,10,40,0.94)',
-    borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 6,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    minWidth: 104,
-  },
-  tooltipDate: {
-    fontSize: 9,
-    color: theme.colors.text.muted,
-    marginBottom: 2,
-  },
-  tooltipScore: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    marginBottom: 4,
-  },
-  tooltipFactors: {
-    width: '100%',
-    gap: 1,
-  },
-  tooltipFactor: {
-    fontSize: 9,
-    color: theme.colors.text.secondary,
-    textAlign: 'center',
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    chartArea: {
+      position: 'relative',
+    },
+    scoreLabel: {
+      position: 'absolute',
+      fontSize: theme.typography.sizes.chartLabel,
+      fontWeight: theme.typography.weights.semibold,
+      width: theme.layout.iconSize.sm,
+      textAlign: 'center',
+      zIndex: 1,
+    },
+    xAxisRow: {
+      height: PADDING_BOTTOM,
+      position: 'relative',
+    },
+    axisWeekday: {
+      color: theme.colors.text.muted,
+      fontSize: theme.typography.sizes.tick,
+      lineHeight: 12,
+    },
+    axisDay: {
+      color: theme.colors.text.tertiary,
+      fontSize: theme.typography.sizes.tick,
+      lineHeight: 12,
+    },
+    tooltip: {
+      position: 'absolute',
+      top: 28,
+      zIndex: 10,
+      backgroundColor: theme.colors.surface.tooltipDark,
+      borderRadius: theme.borderRadius.sm,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.smx,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border.subtle,
+      minWidth: 104,
+    },
+    tooltipDate: {
+      fontSize: theme.typography.sizes.tick,
+      color: theme.colors.text.muted,
+      marginBottom: theme.spacing.xxs,
+    },
+    tooltipScore: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+      marginBottom: theme.spacing.xs,
+    },
+    tooltipFactors: {
+      width: '100%',
+      gap: 1,
+    },
+    tooltipFactor: {
+      fontSize: theme.typography.sizes.tick,
+      color: theme.colors.text.secondary,
+      textAlign: 'center',
+    },
+  });
+}

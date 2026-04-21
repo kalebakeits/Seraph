@@ -42,10 +42,6 @@ export function useSyncState(): SyncState {
         isBusy: isSyncing,
       });
 
-      if (event.status === 'aggregating' || event.status === 'complete') {
-        void queryClient.invalidateQueries({ queryKey: ['maxAggregatedDate'] });
-      }
-      // Invalidate all queries once sync + aggregation is done
       if (event.status === 'complete') {
         void queryClient.invalidateQueries();
       }

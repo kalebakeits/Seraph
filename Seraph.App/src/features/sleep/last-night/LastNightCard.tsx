@@ -1,14 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
 import { StatItem } from '../../../components/common/StatItem';
 import { ActivityRing } from '../../../components/common/ActivityRing';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 import { useRecentSleep } from './useRecentSleep';
 import { useSleepNeedMinutes } from '../hooks/useSleepNeed';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { formatDuration } from '../../../utils/dateUtils';
 
 interface LastNightCardProps {
@@ -24,6 +24,9 @@ export const LastNightCard: React.FC<LastNightCardProps> = ({
   onEditPress,
   showRing = true,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
   const { data: recent } = useRecentSleep(selectedDate);
   const needMinutes = useSleepNeedMinutes();
@@ -114,36 +117,38 @@ export const LastNightCard: React.FC<LastNightCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  leftCol: { flex: 1 },
-  editButton: { padding: 4 },
-  heroRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.xs,
-  },
-  heroValue: {
-    fontSize: theme.typography.sizes.hero,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-  heroGoal: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.tertiary,
-  },
-  statGrid: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  statCol: {
-    flex: 1,
-    gap: theme.spacing.md,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.md,
+      gap: theme.spacing.sm,
+    },
+    leftCol: { flex: 1 },
+    editButton: { padding: 4 },
+    heroRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      marginTop: theme.spacing.xs,
+    },
+    heroValue: {
+      fontSize: theme.typography.sizes.hero,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    heroGoal: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.tertiary,
+    },
+    statGrid: {
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+    },
+    statCol: {
+      flex: 1,
+      gap: theme.spacing.md,
+    },
+  });
+}

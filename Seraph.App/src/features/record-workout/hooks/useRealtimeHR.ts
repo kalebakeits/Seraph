@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { nativeToggleRealtimeHR, seraphEmitter } from '../../../services/ble/nativeModule';
+import {
+  nativeToggleRealtimeHR,
+  nativeGetRecordingState,
+  seraphEmitter,
+} from '../../../services/ble/nativeModule';
 import { theme } from '../../../theme';
+import { getEffectiveFthr } from '../../../utils/hrThreshold';
 
 const HR_STALE_MS = 10_000;
 
@@ -19,7 +24,7 @@ function calcZone(hr: number, fthr: number): 1 | 2 | 3 | 4 | 5 {
   return 5;
 }
 
-export function useRealtimeHR(fthr: number | null): RealtimeHRState {
+export function useRealtimeHR(fthr: number | null, age: number | null): RealtimeHRState {
   const [hr, setHr] = useState<number | null>(null);
   const [stale, setStale] = useState(false);
   const lastPacketTs = useRef(0);
@@ -28,7 +33,15 @@ export function useRealtimeHR(fthr: number | null): RealtimeHRState {
   useEffect(() => {
     void nativeToggleRealtimeHR(true);
     return () => {
-      void nativeToggleRealtimeHR(false);
+      // Don't disable realtime HR if a recording is still in progress —
+      // the native side needs it to keep writing to the file while backgrounded.
+      void nativeGetRecordingState()
+        .then(s => {
+          if (s.state === 'idle') void nativeToggleRealtimeHR(false);
+        })
+        .catch(() => {
+          void nativeToggleRealtimeHR(false);
+        });
     };
   }, []);
 
@@ -53,7 +66,7 @@ export function useRealtimeHR(fthr: number | null): RealtimeHRState {
     };
   }, []);
 
-  const zone = hr !== null && fthr !== null ? calcZone(hr, fthr) : null;
+  const zone = hr !== null ? calcZone(hr, getEffectiveFthr(fthr, age)) : null;
   const zoneColor = zone !== null ? theme.colors.zones[zone - 1] : theme.colors.text.muted;
 
   return { hr, stale, zone, zoneColor };

@@ -1,16 +1,17 @@
 import { eq, asc, gte, lte, and, or, lt, gt, ne } from 'drizzle-orm';
-import { getDb } from '../db';
+import { getDb, insertAndGetId } from '../db';
 import { sleepEvents, notifications, type SleepEvent } from '../schema';
 
 class SleepEventsRepository {
   async insert(event: Omit<SleepEvent, 'id' | 'created_at' | 'sleep_edited'>): Promise<number> {
-    const result = await getDb().insert(sleepEvents).values({
-      ...event,
-      sleep_edited: 0,
-      sleep_score: event.sleep_score ?? null,
-      created_at: Date.now(),
-    }).returning({ id: sleepEvents.id });
-    return result[0].id;
+    return insertAndGetId(() =>
+      getDb().insert(sleepEvents).values({
+        ...event,
+        sleep_edited: 0,
+        sleep_score: event.sleep_score ?? null,
+        created_at: Date.now(),
+      }),
+    );
   }
 
   async getByDate(date: string): Promise<SleepEvent[]> {
@@ -56,10 +57,32 @@ class SleepEventsRepository {
       .orderBy(asc(sleepEvents.date));
   }
 
+  async getActiveNap(): Promise<SleepEvent | null> {
+    const today = new Date().toISOString().slice(0, 10);
+    const rows = await getDb()
+      .select()
+      .from(sleepEvents)
+      .where(
+        and(
+          eq(sleepEvents.date, today),
+          eq(sleepEvents.finalized, 0),
+          or(eq(sleepEvents.is_manual, 2), eq(sleepEvents.is_manual, 3)),
+        ),
+      )
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
   async markFinalized(id: number): Promise<void> {
+    const rows = await getDb().select().from(sleepEvents).where(eq(sleepEvents.id, id)).limit(1);
+    const event = rows[0] as typeof rows[0] | undefined;
+    const durationMinutes =
+      event != null && event.start_ts > 0 && event.end_ts > event.start_ts
+        ? Math.max(0, Math.round((event.end_ts - event.start_ts) / 60000) - event.awake_minutes)
+        : undefined;
     await getDb()
       .update(sleepEvents)
-      .set({ finalized: 1 })
+      .set({ finalized: 1, ...(durationMinutes !== undefined ? { duration_minutes: durationMinutes } : {}) })
       .where(eq(sleepEvents.id, id));
   }
 

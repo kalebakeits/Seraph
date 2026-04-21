@@ -1,8 +1,7 @@
 export type Sex = 'male' | 'female' | '';
 export type PageKey =
   | 'welcome'
-  | 'rings'
-  | 'tour'
+  | 'theme'
   | 'profile'
   | 'sensitivity'
   | 'storage'

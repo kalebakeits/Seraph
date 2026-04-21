@@ -1,0 +1,85 @@
+import React, { useMemo } from 'react';
+import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { SafeText } from '../../components/common/SafeText';
+import { useTheme, type Theme } from '../../theme';
+
+interface Props {
+  visible: boolean;
+  onSave: () => void;
+  onDiscard: () => void;
+}
+
+export const NapSaveDiscardSheet: React.FC<Props> = ({ visible, onSave, onDiscard }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const { t } = useTranslation();
+  return (
+    <Modal visible={visible} transparent animationType="slide">
+      <View style={styles.overlay}>
+        <View style={styles.sheet}>
+          <SafeText style={styles.title}>{t('nap.endTitle')}</SafeText>
+          <SafeText style={styles.subtitle}>{t('nap.endMessage')}</SafeText>
+          <TouchableOpacity style={styles.saveBtn} activeOpacity={0.8} onPress={onSave}>
+            <SafeText style={styles.saveLabel}>{t('nap.endSave')}</SafeText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.discardBtn} activeOpacity={0.8} onPress={onDiscard}>
+            <SafeText style={styles.discardLabel}>{t('nap.endDiscard')}</SafeText>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: theme.colors.scrim.dark,
+    },
+    sheet: {
+      backgroundColor: theme.colors.surface.sheet,
+      borderTopLeftRadius: theme.borderRadius.xl,
+      borderTopRightRadius: theme.borderRadius.xl,
+      paddingTop: theme.spacing.xl,
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.xxl,
+      gap: theme.spacing.md,
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: theme.typography.sizes.xl,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    subtitle: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.muted,
+      textAlign: 'center',
+      marginBottom: theme.spacing.sm,
+    },
+    saveBtn: {
+      width: '100%',
+      paddingVertical: theme.spacing.md + 2,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: theme.colors.sleep,
+      alignItems: 'center',
+    },
+    saveLabel: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.icon.onLight,
+    },
+    discardBtn: {
+      width: '100%',
+      paddingVertical: theme.spacing.md,
+      alignItems: 'center',
+    },
+    discardLabel: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.muted,
+    },
+  });
+}

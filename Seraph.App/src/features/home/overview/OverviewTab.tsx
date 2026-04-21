@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { Animated, View, StyleSheet, PanResponder, type ViewStyle } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +8,7 @@ import { DailyStats } from './components/DailyStats';
 import { ActivitiesCard } from './components/ActivitiesCard';
 import { CompactRingsBar } from './components/CompactRingsBar';
 import { ActivityHighlight } from './components/ActivityHighlight';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 import { WakeUpTimeCard } from '../../wake-up-time/WakeUpTimeCard';
 import { useWithinWindDown } from '../hooks/useShowWakeUpTime';
 import { useActivityHighlight } from '../hooks/useActivityHighlight';
@@ -18,6 +18,7 @@ import type { HomeStackParamList } from '../../../navigation/HomeStackNavigator'
 import { ActivityType } from '../../../types/ActivityType';
 import { StressTimelineCard } from './components/StressTimelineCard';
 import { Section } from '../../../components/common/Section';
+import { HabitConsistencyStrip } from '../../habits/components/HabitConsistencyStrip';
 import { todayISO } from '../../../utils/dateUtils';
 
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>;
@@ -35,6 +36,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   onSwipeLeft,
   onSwipeRight,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const { withinWindDown } = useWithinWindDown();
   const isToday = !selectedDate || selectedDate === todayISO();
@@ -118,6 +121,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         )}
 
         <StressTimelineCard selectedDate={selectedDate} />
+        <HabitConsistencyStrip selectedDate={selectedDate} />
       </Animated.ScrollView>
       {showCompact && (
         <CompactRingsBar
@@ -139,12 +143,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  wrapper: { flex: 1 },
-  container: {
-    ...(theme.tabStyles.container as ViewStyle),
-  },
-  content: {
-    ...(theme.tabStyles.content as ViewStyle),
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    wrapper: { flex: 1 },
+    container: {
+      ...(theme.tabStyles.container as ViewStyle),
+    },
+    content: {
+      ...(theme.tabStyles.content as ViewStyle),
+    },
+  });
+}

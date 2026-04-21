@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- runOnJS: scheduleOnRN crashes, pending worklets upgrade */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { View, StyleSheet } from 'react-native';
 import { Canvas, RoundedRect, Line, vec } from '@shopify/react-native-skia';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import { SafeText } from '../../components/common/SafeText';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import type { TrendPoint, TrendSummary } from './useTrendData';
 
 const CHART_HEIGHT = 200;
@@ -14,7 +14,6 @@ const PADDING_TOP = 8;
 const PADDING_BOTTOM = 32;
 const BAR_RADIUS = 3;
 const Y_AXIS_WIDTH = 0;
-const GRID_COLOR = 'rgba(255,255,255,0.08)';
 const GRID_FRACS = [0.25, 0.5, 0.75, 1.0];
 
 export interface BarChartProps {
@@ -26,6 +25,8 @@ export interface BarChartProps {
 }
 
 export const BarChart: React.FC<BarChartProps> = ({ points, color, unit, format, summary }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const [canvasWidth, setCanvasWidth] = useState(0);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
@@ -113,7 +114,7 @@ export const BarChart: React.FC<BarChartProps> = ({ points, color, unit, format,
               <Line
                 p1={vec(Y_AXIS_WIDTH, y)}
                 p2={vec(canvasWidth, y)}
-                color={GRID_COLOR}
+                color={theme.colors.overlay.faint}
                 strokeWidth={1}
               />
             );
@@ -158,7 +159,7 @@ export const BarChart: React.FC<BarChartProps> = ({ points, color, unit, format,
             style={{
               position: 'absolute',
               left: barCenterX(i) - 22,
-              width: 44,
+              width: theme.layout.chartLabelWidth,
               alignItems: 'center',
             }}
           >
@@ -171,53 +172,55 @@ export const BarChart: React.FC<BarChartProps> = ({ points, color, unit, format,
   );
 };
 
-const styles = StyleSheet.create({
-  chartArea: {
-    position: 'relative',
-    width: '100%',
-  },
-  yLabel: {
-    position: 'absolute',
-    left: 0,
-    width: Y_AXIS_WIDTH - 4,
-    fontSize: 9,
-    color: theme.colors.text.muted,
-    textAlign: 'right',
-  },
-  tooltip: {
-    position: 'absolute',
-    top: 0,
-    zIndex: 10,
-    backgroundColor: 'rgba(20,10,40,0.94)',
-    borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 6,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    minWidth: 80,
-  },
-  tooltipDate: {
-    fontSize: 9,
-    color: theme.colors.text.muted,
-    marginBottom: 2,
-  },
-  tooltipValue: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-  },
-  xAxisRow: {
-    height: PADDING_BOTTOM,
-    position: 'relative',
-  },
-  axisWeekday: {
-    color: theme.colors.text.muted,
-    fontSize: 9,
-    lineHeight: 12,
-  },
-  axisDay: {
-    color: theme.colors.text.tertiary,
-    fontSize: 9,
-    lineHeight: 12,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    chartArea: {
+      position: 'relative',
+      width: '100%',
+    },
+    yLabel: {
+      position: 'absolute',
+      left: 0,
+      width: Y_AXIS_WIDTH - 4,
+      fontSize: 9,
+      color: theme.colors.text.muted,
+      textAlign: 'right',
+    },
+    tooltip: {
+      position: 'absolute',
+      top: 0,
+      zIndex: 10,
+      backgroundColor: theme.colors.surface.tooltipDark,
+      borderRadius: theme.borderRadius.sm,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.smx,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border.subtle,
+      minWidth: 80,
+    },
+    tooltipDate: {
+      fontSize: 9,
+      color: theme.colors.text.muted,
+      marginBottom: theme.spacing.xxs,
+    },
+    tooltipValue: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+    },
+    xAxisRow: {
+      height: PADDING_BOTTOM,
+      position: 'relative',
+    },
+    axisWeekday: {
+      color: theme.colors.text.muted,
+      fontSize: 9,
+      lineHeight: 12,
+    },
+    axisDay: {
+      color: theme.colors.text.tertiary,
+      fontSize: 9,
+      lineHeight: 12,
+    },
+  });
+}

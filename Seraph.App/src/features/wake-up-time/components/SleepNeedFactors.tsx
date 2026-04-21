@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 import { formatDuration } from '../../../utils/dateUtils';
 import type { SleepNeedFactors as SleepNeedFactorsData } from '../hooks/useSleepNeedFactors';
 
@@ -13,17 +13,24 @@ const FactorRow: React.FC<{
   label: string;
   value: string;
   dimmed?: boolean;
-}> = ({ icon, iconColor, label, value, dimmed }) => (
-  <View style={styles.row}>
-    <View
-      style={[styles.iconDot, { backgroundColor: iconColor + '22', borderColor: iconColor + '44' }]}
-    >
-      <Ionicons name={icon} size={14} color={iconColor} />
+}> = ({ icon, iconColor, label, value, dimmed }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  return (
+    <View style={styles.row}>
+      <View
+        style={[
+          styles.iconDot,
+          { backgroundColor: iconColor + '22', borderColor: iconColor + '44' },
+        ]}
+      >
+        <Ionicons name={icon} size={14} color={iconColor} />
+      </View>
+      <SafeText style={[styles.rowLabel, dimmed === true && styles.dimmed]}>{label}</SafeText>
+      <SafeText style={[styles.rowValue, dimmed === true && styles.dimmed]}>{value}</SafeText>
     </View>
-    <SafeText style={[styles.rowLabel, dimmed === true && styles.dimmed]}>{label}</SafeText>
-    <SafeText style={[styles.rowValue, dimmed === true && styles.dimmed]}>{value}</SafeText>
-  </View>
-);
+  );
+};
 
 export const SleepNeedFactors: React.FC<SleepNeedFactorsData> = ({
   goalMinutes,
@@ -31,6 +38,8 @@ export const SleepNeedFactors: React.FC<SleepNeedFactorsData> = ({
   strainAdjMinutes,
   totalMinutes,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
 
   return (
@@ -71,47 +80,49 @@ export const SleepNeedFactors: React.FC<SleepNeedFactorsData> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-  iconDot: {
-    width: 26,
-    height: 26,
-    borderRadius: theme.borderRadius.full,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rowLabel: {
-    flex: 1,
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.secondary,
-  },
-  rowValue: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-  },
-  dimmed: {
-    opacity: 0.4,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 2,
-  },
-  totalLabel: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.sleep,
-  },
-  totalValue: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.sleep,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    iconDot: {
+      width: 26,
+      height: 26,
+      borderRadius: theme.borderRadius.full,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    rowLabel: {
+      flex: 1,
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.secondary,
+    },
+    rowValue: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+    },
+    dimmed: {
+      opacity: 0.4,
+    },
+    totalRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: 2,
+    },
+    totalLabel: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.sleep,
+    },
+    totalValue: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.sleep,
+    },
+  });
+}

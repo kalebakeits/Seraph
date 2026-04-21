@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { OverviewTab } from './overview/OverviewTab';
 import { HomeHeader } from './components/HomeHeader';
@@ -11,7 +11,9 @@ import { DeviceState } from '../device-management/types/DeviceState';
 import { useLastSynced } from '../../hooks/useLastSynced';
 import { useUnreadCount } from '../../hooks/useUnreadCount';
 import { todayISO, addDaysISO } from '../../utils/dateUtils';
+import { useHomeDateStore } from './store/homeDateStore';
 import { ActivityType } from '../../types/ActivityType';
+import { useNapState } from '../nap/hooks/useNapState';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>;
 
@@ -20,6 +22,15 @@ export const HomeScreen: React.FC = () => {
   const { isConnected, isConnecting, isSyncing, isAggregating, battery } = useDeviceStore();
   const lastSynced = useLastSynced();
   const unreadCount = useUnreadCount();
+  const { napState } = useNapState();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (napState.active) {
+        navigation.navigate('NapActive');
+      }
+    }, [napState.active, navigation]),
+  );
 
   let deviceState: DeviceState;
   if (isSyncing) {
@@ -35,7 +46,7 @@ export const HomeScreen: React.FC = () => {
   }
 
   const today = todayISO();
-  const [selectedDate, setSelectedDate] = useState(today);
+  const { selectedDate, setSelectedDate } = useHomeDateStore();
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   const handleDateSelect = (date: string) => {
@@ -44,13 +55,11 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handlePrevDay = () => {
-    setSelectedDate(d => addDaysISO(d, -1));
+    setSelectedDate(addDaysISO(selectedDate, -1));
   };
   const handleNextDay = () => {
-    setSelectedDate(d => {
-      const next = addDaysISO(d, 1);
-      return next <= today ? next : d;
-    });
+    const next = addDaysISO(selectedDate, 1);
+    if (next <= today) setSelectedDate(next);
   };
 
   return (

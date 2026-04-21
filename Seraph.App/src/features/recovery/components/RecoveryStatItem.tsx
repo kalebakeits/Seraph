@@ -1,17 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
-
-const ARROW: Record<
-  string,
-  { name: React.ComponentProps<typeof Ionicons>['name']; color: string }
-> = {
-  up: { name: 'arrow-up', color: theme.colors.recovery },
-  down: { name: 'arrow-down', color: theme.colors.error },
-  flat: { name: 'remove-outline', color: theme.colors.text.muted },
-};
+import { useTheme, type Theme } from '../../../theme';
 
 export interface RecoveryStatItemProps {
   iconName: React.ComponentProps<typeof Ionicons>['name'];
@@ -30,6 +21,8 @@ export const RecoveryStatItem: React.FC<RecoveryStatItemProps> = ({
   direction,
   favorable,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   let arrowColor: string;
 
   if (favorable === null) {
@@ -39,6 +32,13 @@ export const RecoveryStatItem: React.FC<RecoveryStatItemProps> = ({
   } else {
     arrowColor = theme.colors.error;
   }
+
+  const arrowIcon = (dir: string): React.ComponentProps<typeof Ionicons>['name'] => {
+    if (dir === 'up') return 'arrow-up';
+    if (dir === 'down') return 'arrow-down';
+    return 'remove-outline';
+  };
+
   return (
     <View style={styles.statItem}>
       <View style={styles.statLabelRow}>
@@ -48,7 +48,7 @@ export const RecoveryStatItem: React.FC<RecoveryStatItemProps> = ({
       <View style={styles.statValueRow}>
         <SafeText style={styles.statValue}>{value}</SafeText>
         {direction && direction !== 'flat' && (
-          <Ionicons name={ARROW[direction].name} size={11} color={arrowColor} />
+          <Ionicons name={arrowIcon(direction)} size={11} color={arrowColor} />
         )}
       </View>
       <SafeText style={styles.baseline}>{baseline}</SafeText>
@@ -56,30 +56,32 @@ export const RecoveryStatItem: React.FC<RecoveryStatItemProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  statItem: {},
-  statLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-  },
-  statValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  statValue: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-  },
-  baseline: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    marginTop: 1,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    statItem: {},
+    statLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.xxs,
+    },
+    statLabel: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+    },
+    statValueRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+    },
+    statValue: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+    },
+    baseline: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      marginTop: 1,
+    },
+  });
+}

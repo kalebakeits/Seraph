@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 
 interface GradientBackgroundProps {
   children: React.ReactNode;
@@ -9,12 +9,16 @@ interface GradientBackgroundProps {
 }
 
 export const GradientBackground: React.FC<GradientBackgroundProps> = ({ children, style }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   return <View style={[styles.background, style]}>{children}</View>;
 };
 
-const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    background: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+  });
+}

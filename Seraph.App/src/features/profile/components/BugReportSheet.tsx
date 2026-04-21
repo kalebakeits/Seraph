@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Modal,
   View,
@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as Sentry from '@sentry/react-native';
 import { SafeText } from '../../../components/common/SafeText';
-import { theme } from '../../../theme';
+import { useTheme, type Theme } from '../../../theme';
 
 interface Props {
   visible: boolean;
@@ -21,6 +21,8 @@ interface Props {
 }
 
 export const BugReportSheet: React.FC<Props> = ({ visible, onClose }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const [description, setDescription] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -107,96 +109,98 @@ export const BugReportSheet: React.FC<Props> = ({ visible, onClose }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  keyboardAvoid: {
-    flex: 1,
-  },
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  sheet: {
-    backgroundColor: theme.colors.surface.sheet,
-    borderTopLeftRadius: theme.borderRadius.xl,
-    borderTopRightRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-  },
-  title: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-  closeBtn: {
-    padding: theme.spacing.xs,
-  },
-  hint: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.muted,
-    marginBottom: theme.spacing.md,
-  },
-  input: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: theme.borderRadius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: theme.colors.overlay.light,
-    color: theme.colors.text.primary,
-    fontSize: theme.typography.sizes.sm,
-    padding: theme.spacing.md,
-    minHeight: 120,
-  },
-  buttons: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginTop: theme.spacing.lg,
-  },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.overlay.light,
-    alignItems: 'center',
-  },
-  cancelText: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.secondary,
-  },
-  submitBtn: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.colors.active,
-    alignItems: 'center',
-  },
-  submitText: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    color: '#000',
-  },
-  disabled: {
-    opacity: 0.4,
-  },
-  thankYou: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.xl,
-    gap: theme.spacing.md,
-  },
-  thankYouText: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.text.secondary,
-    textAlign: 'center',
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    keyboardAvoid: {
+      flex: 1,
+    },
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: theme.colors.scrim.medium,
+    },
+    sheet: {
+      backgroundColor: theme.colors.surface.sheet,
+      borderTopLeftRadius: theme.borderRadius.xl,
+      borderTopRightRadius: theme.borderRadius.xl,
+      padding: theme.spacing.lg,
+      paddingBottom: theme.spacing.xxl,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.md,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    title: {
+      fontSize: theme.typography.sizes.lg,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    closeBtn: {
+      padding: theme.spacing.xs,
+    },
+    hint: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.muted,
+      marginBottom: theme.spacing.md,
+    },
+    input: {
+      backgroundColor: theme.colors.overlay.muted,
+      borderRadius: theme.borderRadius.md,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.colors.overlay.light,
+      color: theme.colors.text.primary,
+      fontSize: theme.typography.sizes.sm,
+      padding: theme.spacing.md,
+      minHeight: 120,
+    },
+    buttons: {
+      flexDirection: 'row',
+      gap: theme.spacing.md,
+      marginTop: theme.spacing.lg,
+    },
+    cancelBtn: {
+      flex: 1,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.overlay.light,
+      alignItems: 'center',
+    },
+    cancelText: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.secondary,
+    },
+    submitBtn: {
+      flex: 1,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: theme.colors.active,
+      alignItems: 'center',
+    },
+    submitText: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.icon.onLight,
+    },
+    disabled: {
+      opacity: 0.4,
+    },
+    thankYou: {
+      alignItems: 'center',
+      paddingVertical: theme.spacing.xl,
+      gap: theme.spacing.md,
+    },
+    thankYouText: {
+      fontSize: theme.typography.sizes.md,
+      color: theme.colors.text.secondary,
+      textAlign: 'center',
+    },
+  });
+}

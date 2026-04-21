@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, Alert, TextInput } from 'react-native';
 import { SafeText } from '../../../../../components/common/SafeText';
 import { ActionRow } from '../ActionRow';
-import { theme } from '../../../../../theme';
+import { useTheme, type Theme } from '../../../../../theme';
 import {
   nativeIsBlobUploadAvailable,
   nativeGetBlobUploadConfig,
@@ -11,6 +11,8 @@ import {
 import { errorMessage } from '../../../../../utils/errorUtils';
 
 export const BlobUploadSection: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const [available, setAvailable] = useState(false);
   const [uploadUrl, setUploadUrl] = useState('');
   const [bearerToken, setBearerToken] = useState('');
@@ -85,38 +87,40 @@ export const BlobUploadSection: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  sectionTitle: {
-    fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.muted,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginTop: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    marginLeft: theme.spacing.xs,
-  },
-  card: {
-    ...theme.cardStyles.default,
-    padding: 0,
-    overflow: 'hidden',
-  },
-  inputRow: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: 12,
-    gap: 4,
-  },
-  inputLabel: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-  },
-  input: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.primary,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: theme.colors.overlay.light,
-    marginLeft: 52,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    sectionTitle: {
+      fontSize: theme.typography.sizes.xs,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.muted,
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+      marginTop: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
+      marginLeft: theme.spacing.xs,
+    },
+    card: {
+      ...theme.cardStyles.default,
+      padding: 0,
+      overflow: 'hidden',
+    },
+    inputRow: {
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: 12,
+      gap: theme.spacing.xs,
+    },
+    inputLabel: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+    },
+    input: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.primary,
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: theme.colors.overlay.light,
+      marginLeft: 52,
+    },
+  });
+}

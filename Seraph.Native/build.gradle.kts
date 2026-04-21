@@ -69,7 +69,13 @@ sqldelight {
     databases {
         create("SeraphDb") {
             packageName.set("com.seraph.native.db")
-            srcDirs.setFrom("src/commonMain/sqldelight")
+            srcDirs.setFrom("src/commonMain/sqldelight/seraph")
+            deriveSchemaFromMigrations.set(true)
+            verifyMigrations.set(true)
+        }
+        create("R24Db") {
+            packageName.set("com.seraph.native.db.r24")
+            srcDirs.setFrom("src/commonMain/sqldelight/r24")
             deriveSchemaFromMigrations.set(true)
             verifyMigrations.set(true)
         }

@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
 import { SkiaBandChart } from '../../../components/common/SkiaBandChart';
-import { theme } from '../../../theme';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
+import { useTheme, type Theme } from '../../../theme';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { useTrainingLoad } from '../hooks/useTrainingLoad';
 import { PRODUCTIVE_MIN, PRODUCTIVE_MAX } from '../utils/trainingLoadUtils';
 
@@ -13,6 +13,9 @@ interface Props {
 }
 
 export const TrainingLoadHistoryCard: React.FC<Props> = ({ anchorDate }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
   const { data } = useTrainingLoad(anchorDate);
   const { history } = data ?? { history: [] };
@@ -36,41 +39,43 @@ export const TrainingLoadHistoryCard: React.FC<Props> = ({ anchorDate }) => {
       <SkiaBandChart
         data={chartData}
         height={160}
-        color="#f39c12"
-        bandColor="#2ecc71"
+        color={theme.colors.trainingLoad.overreaching}
+        bandColor={theme.colors.trainingLoad.productive}
         noOfSections={3}
       />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
-  },
-  title: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.primary,
-  },
-  bandLegend: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  bandDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 2,
-    borderWidth: 1,
-    borderColor: '#2ecc71',
-    borderStyle: 'dashed',
-  },
-  bandLabel: {
-    fontSize: 10,
-    color: theme.colors.text.muted,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.sm,
+    },
+    title: {
+      fontSize: theme.typography.sizes.md,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+    },
+    bandLegend: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.smx,
+    },
+    bandDot: {
+      width: theme.layout.legendDotLg,
+      height: theme.layout.legendDotLg,
+      borderRadius: 2,
+      borderWidth: theme.borderWidth.thin,
+      borderColor: theme.colors.trainingLoad.productive,
+      borderStyle: 'dashed',
+    },
+    bandLabel: {
+      fontSize: 10,
+      color: theme.colors.text.muted,
+    },
+  });
+}

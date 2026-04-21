@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,8 +8,9 @@ import { syncAlarmToDevice } from '../../services/alarm/syncAlarmToDevice';
 import { SafeText } from '../../components/common/SafeText';
 import { Section } from '../../components/common/Section';
 import { HelperText } from '../../components/common/HelperText';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 import type { AlarmMode } from '../../services/database/userPreferences/alarmPreferences';
+import { timeStringToDate, formatDisplayTime } from '../../utils/dateUtils';
 
 const MODES: { key: AlarmMode; labelKey: string }[] = [
   { key: 'disabled', labelKey: 'alarm.off' },
@@ -19,24 +20,9 @@ const MODES: { key: AlarmMode; labelKey: string }[] = [
 
 const DAY_KEYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-function timeStringToDate(time: string): Date {
-  const [h, m] = time.split(':').map(Number);
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  return d;
-}
-
-function formatDisplayTime(time: string): { hours: string; minutes: string; ampm: string } {
-  const date = timeStringToDate(time);
-  const h = date.getHours();
-  const m = date.getMinutes();
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const hours = String(h % 12 || 12);
-  const minutes = String(m).padStart(2, '0');
-  return { hours, minutes, ampm };
-}
-
 export const WakeUpScreen: React.FC = () => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const { alarmTime, alarmMode, alarmSchedule, updateTime, updateMode, updateSchedule, isLoading } =
     useAlarmPreferences();
@@ -92,7 +78,7 @@ export const WakeUpScreen: React.FC = () => {
     scheduleAutoSave(pendingTime, pendingMode, next);
   };
 
-  const { hours, minutes, ampm } = formatDisplayTime(pendingTime);
+  const { hours, minutes, ampm } = formatDisplayTime(timeStringToDate(pendingTime));
   const isEnabled = pendingMode !== 'disabled';
 
   return (
@@ -126,8 +112,8 @@ export const WakeUpScreen: React.FC = () => {
         </Section>
 
         {/* ── Mode segmented control ── */}
-        <Section title={t('alarm.off')}>
-          <HelperText translationKey="alarm.modeHelper" />
+        <Section title={t(`alarm.modeLabel.${pendingMode}`)}>
+          <HelperText translationKey={`alarm.modeDesc.${pendingMode}`} />
           <View style={styles.segmented}>
             {MODES.map((m, idx) => {
               const active = pendingMode === m.key;
@@ -193,113 +179,115 @@ export const WakeUpScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: 100,
-    paddingBottom: theme.tabStyles.content.paddingBottom,
-    gap: theme.spacing.lg,
-  },
-  // Hero time display
-  timeHero: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.lg,
-    gap: theme.spacing.xs,
-  },
-  timeRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: theme.spacing.sm,
-  },
-  timeDigits: {
-    fontSize: 72,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-    letterSpacing: -2,
-    lineHeight: 80,
-  },
-  timeAmPm: {
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.text.secondary,
-    paddingBottom: theme.spacing.sm,
-  },
-  editHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  editHintText: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-  },
-  dimmed: {
-    opacity: 0.3,
-  },
-  // Segmented control
-  segmented: {
-    flexDirection: 'row',
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    overflow: 'hidden',
-  },
-  segment: {
-    flex: 1,
-    paddingVertical: theme.spacing.sm + 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.15)',
-  },
-  segmentFirst: {},
-  segmentLast: {
-    borderRightWidth: 0,
-  },
-  segmentActive: {
-    backgroundColor: theme.colors.primary + '33',
-  },
-  segmentText: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.text.muted,
-    fontWeight: theme.typography.weights.medium,
-  },
-  segmentTextActive: {
-    color: theme.colors.primary,
-    fontWeight: theme.typography.weights.semibold,
-  },
-  // Day circles
-  daysRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: theme.spacing.xs,
-  },
-  dayCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: theme.borderRadius.full,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayCircleActive: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '22',
-  },
-  dayText: {
-    fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.medium,
-    color: theme.colors.text.muted,
-  },
-  dayTextActive: {
-    color: theme.colors.primary,
-    fontWeight: theme.typography.weights.semibold,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    scroll: {
+      flex: 1,
+    },
+    content: {
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.layout.screenPadding,
+      paddingBottom: theme.tabStyles.content.paddingBottom,
+      gap: theme.spacing.lg,
+    },
+    // Hero time display
+    timeHero: {
+      alignItems: 'center',
+      paddingVertical: theme.spacing.lg,
+      gap: theme.spacing.xs,
+    },
+    timeRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: theme.spacing.sm,
+    },
+    timeDigits: {
+      fontSize: 72,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+      letterSpacing: -2,
+      lineHeight: 80,
+    },
+    timeAmPm: {
+      fontSize: theme.typography.sizes.xl,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.secondary,
+      paddingBottom: theme.spacing.sm,
+    },
+    editHint: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    editHintText: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+    },
+    dimmed: {
+      opacity: 0.3,
+    },
+    // Segmented control
+    segmented: {
+      flexDirection: 'row',
+      borderRadius: theme.borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.overlay.medium,
+      overflow: 'hidden',
+    },
+    segment: {
+      flex: 1,
+      paddingVertical: theme.spacing.sm + 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRightWidth: 1,
+      borderRightColor: theme.colors.overlay.medium,
+    },
+    segmentFirst: {},
+    segmentLast: {
+      borderRightWidth: 0,
+    },
+    segmentActive: {
+      backgroundColor: theme.colors.primary + '33',
+    },
+    segmentText: {
+      fontSize: theme.typography.sizes.sm,
+      color: theme.colors.text.muted,
+      fontWeight: theme.typography.weights.medium,
+    },
+    segmentTextActive: {
+      color: theme.colors.primary,
+      fontWeight: theme.typography.weights.semibold,
+    },
+    // Day circles
+    daysRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingTop: theme.spacing.xs,
+    },
+    dayCircle: {
+      width: 38,
+      height: 38,
+      borderRadius: theme.borderRadius.full,
+      borderWidth: 1,
+      borderColor: theme.colors.overlay.medium,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dayCircleActive: {
+      borderColor: theme.colors.primary,
+      backgroundColor: theme.colors.primary + '22',
+    },
+    dayText: {
+      fontSize: theme.typography.sizes.xs,
+      fontWeight: theme.typography.weights.medium,
+      color: theme.colors.text.muted,
+    },
+    dayTextActive: {
+      color: theme.colors.primary,
+      fontWeight: theme.typography.weights.semibold,
+    },
+  });
+}

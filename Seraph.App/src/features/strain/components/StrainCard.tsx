@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -6,8 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import { SafeText } from '../../../components/common/SafeText';
 import { StatItem } from '../../../components/common/StatItem';
 import { ActivityRing } from '../../../components/common/ActivityRing';
-import { theme } from '../../../theme';
-import { sectionStyles } from '../../../theme/shared/SectionStyles';
+import { useTheme, type Theme } from '../../../theme';
+import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { useRecommendedStrain } from '../hooks/useRecommendedStrain';
 import { useActivityRings } from '../../home/hooks/useActivityRings';
 import { activityEventsRepository } from '../../../services/database/drizzle';
@@ -19,6 +19,9 @@ interface Props {
 }
 
 export const StrainCard: React.FC<Props> = ({ anchorDate }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
   const date = anchorDate ?? todayISO();
   const { data: rings } = useActivityRings(anchorDate);
@@ -109,32 +112,34 @@ export const StrainCard: React.FC<Props> = ({ anchorDate }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  leftCol: { flex: 1 },
-  heroRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginTop: theme.spacing.xs,
-  },
-  heroValue: {
-    fontSize: theme.typography.sizes.hero,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.text.primary,
-  },
-  heroSub: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    marginTop: 2,
-  },
-  statGrid: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  statCol: { flex: 1 },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.md,
+      gap: theme.spacing.sm,
+    },
+    leftCol: { flex: 1 },
+    heroRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      marginTop: theme.spacing.xs,
+    },
+    heroValue: {
+      fontSize: theme.typography.sizes.hero,
+      fontWeight: theme.typography.weights.bold,
+      color: theme.colors.text.primary,
+    },
+    heroSub: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      marginTop: theme.spacing.xxs,
+    },
+    statGrid: {
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+    },
+    statCol: { flex: 1 },
+  });
+}

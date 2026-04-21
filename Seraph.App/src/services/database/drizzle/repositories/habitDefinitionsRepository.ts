@@ -1,0 +1,101 @@
+import { eq, inArray } from 'drizzle-orm';
+import { getDb, insertAndGetId } from '../db';
+import { habitDefinitions, habitLogs, type HabitDefinition } from '../schema';
+
+class HabitDefinitionsRepository {
+  async getAll(): Promise<HabitDefinition[]> {
+    return getDb()
+      .select()
+      .from(habitDefinitions)
+      .orderBy(habitDefinitions.sort_order, habitDefinitions.id);
+  }
+
+  async getActive(): Promise<HabitDefinition[]> {
+    return getDb()
+      .select()
+      .from(habitDefinitions)
+      .where(eq(habitDefinitions.is_active, 1))
+      .orderBy(habitDefinitions.sort_order, habitDefinitions.id);
+  }
+
+  /** Active habits + any habit that has a log on the given date (so deselected habits still appear if already logged). */
+  async getActiveForDate(date: string): Promise<HabitDefinition[]> {
+    const [active, logsOnDate] = await Promise.all([
+      this.getActive(),
+      getDb().select({ habit_id: habitLogs.habit_id }).from(habitLogs).where(eq(habitLogs.date, date)),
+    ]);
+    const loggedIds = logsOnDate.map(r => r.habit_id);
+    const extraIds = loggedIds.filter(id => !active.some(h => h.id === id));
+    let extras: HabitDefinition[] = [];
+    if (extraIds.length > 0) {
+      extras = await getDb()
+        .select()
+        .from(habitDefinitions)
+        .where(inArray(habitDefinitions.id, extraIds));
+    }
+    return [...active, ...extras].sort((a, b) => a.sort_order - b.sort_order || a.id - b.id);
+  }
+
+  async setActive(id: number, active: boolean): Promise<void> {
+    await getDb()
+      .update(habitDefinitions)
+      .set({ is_active: active ? 1 : 0 })
+      .where(eq(habitDefinitions.id, id));
+  }
+
+  async setSortOrder(id: number, sortOrder: number): Promise<void> {
+    await getDb()
+      .update(habitDefinitions)
+      .set({ sort_order: sortOrder })
+      .where(eq(habitDefinitions.id, id));
+  }
+
+  async maxActiveSortOrder(): Promise<number> {
+    const rows = await getDb()
+      .select({ sort_order: habitDefinitions.sort_order })
+      .from(habitDefinitions)
+      .where(eq(habitDefinitions.is_active, 1))
+      .orderBy(habitDefinitions.sort_order);
+    return rows.length > 0 ? rows[rows.length - 1].sort_order : -1;
+  }
+
+  async insertCustom(params: {
+    name: string;
+    type: 'boolean' | 'count' | 'duration';
+    unit: string | null;
+    step: number | null;
+  }): Promise<number> {
+    const nextOrder = (await this.maxActiveSortOrder()) + 1;
+    return insertAndGetId(() =>
+      getDb()
+        .insert(habitDefinitions)
+        .values({
+          name_custom: params.name,
+          type: params.type,
+          unit: params.unit,
+          step: params.step,
+          is_manual: 1,
+          is_active: 1,
+          sort_order: nextOrder,
+          created_at: Date.now(),
+        }),
+    );
+  }
+
+  async insert(habit: Omit<HabitDefinition, 'id'>): Promise<number> {
+    return insertAndGetId(() => getDb().insert(habitDefinitions).values(habit));
+  }
+
+  async deleteCustom(id: number): Promise<void> {
+    await getDb()
+      .delete(habitDefinitions)
+      .where(eq(habitDefinitions.id, id));
+  }
+
+  async count(): Promise<number> {
+    const rows = await getDb().select({ id: habitDefinitions.id }).from(habitDefinitions);
+    return rows.length;
+  }
+}
+
+export const habitDefinitionsRepository = new HabitDefinitionsRepository();

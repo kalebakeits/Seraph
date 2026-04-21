@@ -1,25 +1,5 @@
 import { sqliteTable, integer, real, text, uniqueIndex, index } from 'drizzle-orm/sqlite-core';
 
-// ─── r24 ────────────────────────────────────────────────────────────────────
-
-export const r24 = sqliteTable('r24', {
-  id:           integer('id').primaryKey({ autoIncrement: true }),
-  sequence:     integer('sequence').notNull(),
-  timestamp:    integer('timestamp').notNull(),
-  subseconds:   integer('subseconds').notNull(),
-  heart_rate:   integer('heart_rate').notNull(),
-  rr_intervals: text('rr_intervals'),
-  skin_temp:    real('skin_temp').notNull(),
-  step_count:   integer('step_count').notNull(),
-  b2:           integer('b2').notNull(),
-  b80:          integer('b80').notNull().default(0),
-  device_id:    text('device_id').notNull(),
-  created_at:   integer('created_at').notNull(),
-}, (t) => [
-  uniqueIndex('r24_device_seq_idx').on(t.device_id, t.sequence),
-  index('r24_device_ts_idx').on(t.device_id, t.timestamp),
-]);
-
 // ─── app_parameters ─────────────────────────────────────────────────────────
 
 export const appParameters = sqliteTable('app_parameters', {
@@ -122,12 +102,48 @@ export const notifications = sqliteTable('notifications', {
   index('notifications_created_idx').on(t.created_at),
 ]);
 
+// ─── habit_definitions ───────────────────────────────────────────────────────
+
+export const habitDefinitions = sqliteTable('habit_definitions', {
+  id:               integer('id').primaryKey({ autoIncrement: true }),
+  name_key:         text('name_key'),         // i18n key for seeded habits
+  name_custom:      text('name_custom'),       // user-entered name, shown as-is when is_manual = 1
+  type:             text('type').notNull(),    // 'boolean' | 'count' | 'duration'
+  unit:             text('unit'),              // display only: 'cups', 'hours', 'sessions', etc.
+  default_quantity: real('default_quantity'),  // pre-filled value when logging
+  step:             real('step'),              // stepper increment; null = type default (1 for count, 5 for duration)
+  is_manual:        integer('is_manual').notNull().default(0),  // 0 = seeded, 1 = user-created
+  is_active:        integer('is_active').notNull().default(0),  // 1 = user is tracking this habit
+  sort_order:       integer('sort_order').notNull().default(0),
+  created_at:       integer('created_at').notNull(),
+}, (t) => [
+  index('habit_definitions_active_idx').on(t.is_active),
+]);
+
+// ─── habit_logs ──────────────────────────────────────────────────────────────
+
+export const habitLogs = sqliteTable('habit_logs', {
+  id:          integer('id').primaryKey({ autoIncrement: true }),
+  habit_id:    integer('habit_id').notNull(),
+  date:        text('date').notNull(),         // ISO date: 'YYYY-MM-DD'
+  quantity:    real('quantity').notNull(),     // boolean: 1.0=yes 0.0=no; count/duration: value
+  time_of_day: text('time_of_day'),            // nullable: 'morning' | 'afternoon' | 'evening'
+  created_at:  integer('created_at').notNull(),
+}, (t) => [
+  uniqueIndex('habit_logs_habit_date_idx').on(t.habit_id, t.date),
+  index('habit_logs_date_idx').on(t.date),
+]);
+
 // ─── Inferred types ──────────────────────────────────────────────────────────
 
-export type R24Record        = typeof r24.$inferSelect;
 export type DailyAggregation = typeof dailyAggregations.$inferSelect;
 export type SleepEvent       = typeof sleepEvents.$inferSelect;
 export type ActivityEvent    = typeof activityEvents.$inferSelect;
 export type Notification     = typeof notifications.$inferSelect;
+export type HabitDefinition  = typeof habitDefinitions.$inferSelect;
+export type HabitLog         = typeof habitLogs.$inferSelect;
+
+export type HabitType    = 'boolean' | 'count' | 'duration';
+export type TimeOfDay    = 'morning' | 'afternoon' | 'evening';
 
 export interface ZoneSeconds { z1: number; z2: number; z3: number; z4: number; z5: number }

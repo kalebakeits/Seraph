@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { sectionStyles } from '../../theme/shared/SectionStyles';
+import { buildSectionStyles } from '../../theme/shared/SectionStyles';
 import { SafeText } from './SafeText';
-import { theme } from '../../theme';
+import { useTheme, type Theme } from '../../theme';
 
 interface Props {
   title: string;
@@ -24,6 +24,9 @@ export const Section: React.FC<Props> = ({
   action,
   children,
 }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const needsRow = !!onDismiss || !!action || !!onTitlePress;
 
   const titleText = onTitlePress ? (
@@ -64,16 +67,18 @@ export const Section: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  titlePressable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  subtitle: {
-    fontSize: theme.typography.sizes.xs,
-    color: theme.colors.text.muted,
-    lineHeight: 18,
-    marginBottom: theme.spacing.sm,
-  },
-});
+function buildStyles(theme: Theme) {
+  return StyleSheet.create({
+    titlePressable: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    subtitle: {
+      fontSize: theme.typography.sizes.xs,
+      color: theme.colors.text.muted,
+      lineHeight: 18,
+      marginBottom: theme.spacing.sm,
+    },
+  });
+}

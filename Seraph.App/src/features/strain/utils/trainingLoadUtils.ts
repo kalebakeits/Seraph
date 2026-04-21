@@ -1,13 +1,16 @@
+import type { Theme } from '../../../theme';
 import type { TrainingZone } from '../hooks/useTrainingLoad';
 
-export const ZONE_CONFIG: Record<TrainingZone, { label: string; color: string }> = {
-  detraining: { label: 'Detraining', color: '#f5576c' },
-  recovery: { label: 'Recovery', color: '#4facfe' },
-  maintaining: { label: 'Maintaining', color: '#2ecc71' },
-  productive: { label: 'Productive', color: '#2ecc71' },
-  overreaching: { label: 'Overreaching', color: '#f39c12' },
-  overtraining: { label: 'Overtraining', color: '#f5576c' },
-};
+export function ZONE_CONFIG(theme: Theme): Record<TrainingZone, { label: string; color: string }> {
+  return {
+    detraining: { label: 'Detraining', color: theme.colors.trainingLoad.detraining },
+    recovery: { label: 'Recovery', color: theme.colors.trainingLoad.recovery },
+    maintaining: { label: 'Maintaining', color: theme.colors.trainingLoad.maintaining },
+    productive: { label: 'Productive', color: theme.colors.trainingLoad.productive },
+    overreaching: { label: 'Overreaching', color: theme.colors.trainingLoad.overreaching },
+    overtraining: { label: 'Overtraining', color: theme.colors.trainingLoad.overtraining },
+  };
+}
 
 export const RATIO_MIN = 0.5;
 export const RATIO_MAX = 1.75;
@@ -31,10 +34,12 @@ export function ratioToSkiaDeg(ratio: number): number {
 }
 
 // Zones: first band gray (detraining/no-data baseline), then color by zone
-export const ARC_ZONES: [number, number, string][] = [
-  [0.5, 0.8, 'rgba(255,255,255,0.15)'], // detraining — gray (no-data baseline)
-  [0.8, 1.0, '#4facfe'], // recovery
-  [1.0, 1.25, '#2ecc71'], // productive (includes maintaining)
-  [1.25, 1.5, '#f39c12'], // overreaching
-  [1.5, 1.75, '#f5576c'], // overtraining
-];
+export function ARC_ZONES(theme: Theme): [number, number, string][] {
+  return [
+    [0.5, 0.8, theme.colors.overlay.medium], // detraining — gray (no-data baseline)
+    [0.8, 1.0, theme.colors.trainingLoad.recovery], // recovery
+    [1.0, 1.25, theme.colors.trainingLoad.productive], // productive (includes maintaining)
+    [1.25, 1.5, theme.colors.trainingLoad.overreaching], // overreaching
+    [1.5, 1.75, theme.colors.trainingLoad.overtraining], // overtraining
+  ];
+}
