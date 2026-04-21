@@ -11,9 +11,8 @@ import {
   sleepEventsRepository,
   activityEventsRepository,
 } from '../../../../services/database/drizzle';
-import { r24Repository } from '../../../../services/database/drizzle/repositories/r24Repository';
 import { nativeRecalcSleep, nativeRecalcActivity } from '../../../../services/ble/nativeModule';
-import { applyTimeToDate, bucketHR } from './activitySheetUtils';
+import { applyTimeToDate } from './activitySheetUtils';
 import { formatTime } from '../../../../utils/dateUtils';
 
 import { ActivityType } from '../../../../types/ActivityType';
@@ -82,14 +81,9 @@ export const LogActivitySheet: React.FC<LogActivitySheetProps> = ({
         }
       }
       const durationMinutes = Math.round((endTs - startTs) / 60000);
-
-      const samples = await r24Repository.getRange(startTs, endTs);
-
-      const bucketMs = type === ActivityType.Sleep ? 120_000 : 15_000;
-      const hrSamples = bucketHR(samples, bucketMs);
-      const hrs = samples.map(s => s.heart_rate).filter(h => h > 0);
-      const avgHr = hrs.length > 0 ? Math.round(hrs.reduce((a, b) => a + b, 0) / hrs.length) : null;
-      const maxHr = hrs.length > 0 ? Math.max(...hrs) : null;
+      const hrSamples = null;
+      const avgHr = null;
+      const maxHr = null;
 
       if (type === ActivityType.Sleep) {
         const insertedId = await sleepEventsRepository.insert({

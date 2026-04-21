@@ -3,7 +3,7 @@
 package com.seraph.native.recording
 
 import co.touchlab.kermit.Logger
-import com.seraph.native.db.R24
+import com.seraph.native.db.r24.R24
 import com.seraph.native.db.SeraphDb
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -83,7 +83,7 @@ class RecordingManager(
 
         // Write to file: 0 HR during pause so we can skip on read
         val isRecording = _state.value == RecordingState.RECORDING
-        val hrToWrite = if (isRecording) hr else 0  // paused/auto-paused samples written as 0, skipped on stop()
+        val hrToWrite = if (isRecording) hr else 0 // paused/auto-paused samples written as 0, skipped on stop()
 
         try {
             val buf = ByteBuffer.allocate(RECORD_BYTES).order(ByteOrder.LITTLE_ENDIAN)
@@ -94,24 +94,38 @@ class RecordingManager(
             log.e(e) { "Failed to write HR sample" }
         }
 
-        // Auto-pause: only when enabled and FTHR is explicitly set by the user
-        val autoPauseEnabled = db.seraphDbQueries
-            .getAppParameter("recording_auto_pause_enabled")
-            .executeAsOneOrNull() == "1"
-        val fthr = db.seraphDbQueries
-            .getAppParameter("profile_threshold_hr")
-            .executeAsOneOrNull()?.toDoubleOrNull()
+        // Auto-pause: FTHR falls back to age-estimated (220 - age) * 0.85, mirroring AggregationRunner
+        val autoPauseEnabled =
+            db.seraphDbQueries
+                .getAppParameter("recording_auto_pause_enabled")
+                .executeAsOneOrNull() == "1"
 
-        if (autoPauseEnabled && fthr != null) {
+        if (autoPauseEnabled) {
+            val fthrParam =
+                db.seraphDbQueries
+                    .getAppParameter("profile_threshold_hr")
+                    .executeAsOneOrNull()
+                    ?.toDoubleOrNull()
+            val age =
+                db.seraphDbQueries
+                    .getAppParameter("profile_age")
+                    .executeAsOneOrNull()
+                    ?.toIntOrNull()
+            val fthr = fthrParam ?: ((220 - (age ?: 30)) * 0.85)
             val z1Threshold = fthr * 0.72
-            val z1DurationMs = (db.seraphDbQueries
-                .getAppParameter("recording_auto_pause_z1_seconds")
-                .executeAsOneOrNull()?.toLongOrNull() ?: 90L) * 1000L
+            val z1DurationMs =
+                (
+                    db.seraphDbQueries
+                        .getAppParameter("recording_auto_pause_z1_seconds")
+                        .executeAsOneOrNull()
+                        ?.toLongOrNull() ?: 90L
+                ) * 1000L
 
             if (isRecording) {
                 if (hr in 1..220 && hr < z1Threshold) {
-                    if (z1StartMs == 0L) z1StartMs = now
-                    else if (now - z1StartMs > z1DurationMs) {
+                    if (z1StartMs == 0L) {
+                        z1StartMs = now
+                    } else if (now - z1StartMs > z1DurationMs) {
                         log.i { "Auto-pause: HR in Z1 for ${(now - z1StartMs) / 1000}s" }
                         autoPause()
                     }
@@ -197,7 +211,6 @@ class RecordingManager(
                             step_count = 0L,
                             b2 = 0L,
                             b80 = 0L,
-                            device_id = "",
                             created_at = now,
                         ),
                     )

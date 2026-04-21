@@ -58,8 +58,7 @@ function AppContent() {
   useNotificationPermission();
   const { themeName } = useTheme();
   const systemScheme = useColorScheme();
-  const isLight =
-    themeName === 'light' || (themeName === 'system' && systemScheme === 'light');
+  const isLight = themeName === 'light' || (themeName === 'system' && systemScheme === 'light');
   const statusBarStyle = isLight ? 'dark' : 'light';
 
   return (
@@ -81,8 +80,14 @@ export default Sentry.wrap(function App() {
     const init = async () => {
       const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
       const validThemes: ThemeName[] = [
-        'midnightPurple', 'dark', 'light', 'system',
-        'monokai', 'tomorrowNightBlue', 'sierraSunset', 'kimbieDark',
+        'midnightPurple',
+        'dark',
+        'light',
+        'system',
+        'monokai',
+        'tomorrowNightBlue',
+        'sierraSunset',
+        'kimbieDark',
       ];
       if (savedTheme && (validThemes as string[]).includes(savedTheme)) {
         setInitialTheme(savedTheme as ThemeName);
@@ -96,7 +101,8 @@ export default Sentry.wrap(function App() {
         await seedHabitsIfNeeded();
         const onboarded = await appParametersRepository.get('onboarding_complete');
         setAppState(onboarded === '1' ? 'ready' : 'onboarding');
-      } catch {
+      } catch (e) {
+        console.error('[App] init error:', e);
         setAppState('onboarding');
       } finally {
         SplashScreen.setOptions({ fade: true, duration: 500 });

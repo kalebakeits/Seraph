@@ -43,7 +43,7 @@ export const DailyStats: React.FC<DailyStatsProps> = ({ selectedDate }) => {
           current={today.steps}
           previous={sevenDayAvg.steps !== null ? Math.round(sevenDayAvg.steps) : null}
           unit=""
-          trendRoute="TrendSteps"
+          trendKey="steps"
           anchorDate={selectedDate}
         />
         <MetricCard
@@ -56,7 +56,7 @@ export const DailyStats: React.FC<DailyStatsProps> = ({ selectedDate }) => {
             sevenDayAvg.activeMinutes !== null ? Math.round(sevenDayAvg.activeMinutes) : null
           }
           unit=" min"
-          trendRoute="TrendActiveTime"
+          trendKey="activeTime"
           anchorDate={selectedDate}
         />
         <MetricCard
@@ -67,7 +67,7 @@ export const DailyStats: React.FC<DailyStatsProps> = ({ selectedDate }) => {
           current={today.hrv}
           previous={sevenDayAvg.hrv !== null ? Math.round(sevenDayAvg.hrv) : null}
           unit=" ms"
-          trendRoute="TrendHrv"
+          trendKey="hrv"
           anchorDate={selectedDate}
         />
         <MetricCard
@@ -78,7 +78,7 @@ export const DailyStats: React.FC<DailyStatsProps> = ({ selectedDate }) => {
           current={today.rhr}
           previous={sevenDayAvg.rhr !== null ? Math.round(sevenDayAvg.rhr) : null}
           unit=" bpm"
-          trendRoute="TrendHr"
+          trendKey="rhr"
           anchorDate={selectedDate}
         />
         <MetricCard
@@ -90,7 +90,7 @@ export const DailyStats: React.FC<DailyStatsProps> = ({ selectedDate }) => {
           previous={sevenDayAvg.skinTemp}
           unit="°C"
           format={v => v.toFixed(1)}
-          trendRoute="TrendSkinTemp"
+          trendKey="skinTemp"
           anchorDate={selectedDate}
         />
         <MetricCard
@@ -101,7 +101,7 @@ export const DailyStats: React.FC<DailyStatsProps> = ({ selectedDate }) => {
           current={today.dailyStress ?? 0}
           previous={sevenDayAvg.dailyStress !== null ? Math.round(sevenDayAvg.dailyStress) : null}
           unit=""
-          trendRoute="TrendDailyStress"
+          trendKey="dailyStress"
           anchorDate={selectedDate}
         />
       </View>

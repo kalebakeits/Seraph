@@ -43,7 +43,10 @@ export const Recovery: React.FC<Props> = ({ route }) => {
       <Section
         title={t('recovery.trends')}
         onTitlePress={() => {
-          navigation.navigate('TrendRecovery', { anchorDate: route.params?.selectedDate });
+          navigation.navigate('Trends', {
+            initialTrend: 'recovery',
+            anchorDate: route.params?.selectedDate,
+          });
         }}
       >
         <HelperText translationKey="recovery.historyHelper" />

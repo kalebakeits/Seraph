@@ -8,6 +8,7 @@ import com.seraph.native.aggregation.DateUtils
 import com.seraph.native.db.AggregationDao
 import com.seraph.native.db.R24Dao
 import com.seraph.native.db.SeraphDb
+import com.seraph.native.db.r24.R24
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -27,7 +28,7 @@ class AllDayHRVAggregator(
 ) {
     fun run(
         date: String,
-        rows: List<com.seraph.native.db.R24>,
+        rows: List<R24>,
     ) {
         if (rows.isEmpty()) return
 
@@ -67,7 +68,7 @@ class AllDayHRVAggregator(
     }
 
     private fun groupBySlot(
-        rows: List<com.seraph.native.db.R24>,
+        rows: List<R24>,
         dayStartMs: Long,
     ): Map<Int, List<String?>> {
         val bySlot = mutableMapOf<Int, MutableList<String?>>()
@@ -139,7 +140,8 @@ class AllDayHRVAggregator(
             val t = dayStartMs + i * WINDOW_MS
             val v = windows[i]
             if (v != null) {
-                sb.append("{\"t\":$t,\"v\":${(v * 10).toLong() / 10.0}}")
+                val rounded = (v * 10).toLong()
+                sb.append("{\"t\":$t,\"v\":${rounded / 10}.${rounded % 10}}")
             } else {
                 sb.append("{\"t\":$t,\"v\":null}")
             }

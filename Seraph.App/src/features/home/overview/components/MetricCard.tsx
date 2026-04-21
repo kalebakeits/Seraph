@@ -6,18 +6,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeText } from '../../../../components/common/SafeText';
 import { useTheme, type Theme } from '../../../../theme';
 import type { HomeStackParamList } from '../../../../navigation/HomeStackNavigator';
+import type { TrendKey } from '../../../trends/TrendConfig';
 
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList>;
-
-type TrendRoute =
-  | 'TrendSteps'
-  | 'TrendActiveTime'
-  | 'TrendHrv'
-  | 'TrendHr'
-  | 'TrendSkinTemp'
-  | 'TrendDailyStress'
-  | 'TrendSleep'
-  | 'TrendSleepAwake';
 
 export interface MetricCardProps {
   iconName: React.ComponentProps<typeof Ionicons>['name'];
@@ -28,7 +19,7 @@ export interface MetricCardProps {
   previous: number | null;
   unit: string;
   format?: (v: number) => string;
-  trendRoute: TrendRoute;
+  trendKey: TrendKey;
   anchorDate?: string;
 }
 
@@ -41,7 +32,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   previous,
   unit,
   format,
-  trendRoute,
+  trendKey,
   anchorDate,
 }) => {
   const { theme } = useTheme();
@@ -56,7 +47,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       style={styles.card}
       activeOpacity={0.7}
       onPress={() => {
-        navigation.navigate(trendRoute, { anchorDate });
+        navigation.navigate('Trends', { initialTrend: trendKey, anchorDate });
       }}
     >
       <View style={styles.header}>

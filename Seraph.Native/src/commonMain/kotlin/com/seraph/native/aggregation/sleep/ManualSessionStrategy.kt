@@ -1,7 +1,7 @@
 package com.seraph.native.aggregation.sleep
 
 import com.seraph.native.aggregation.AggregationProfile
-import com.seraph.native.db.R24
+import com.seraph.native.db.r24.R24
 import com.seraph.native.db.SeraphDb
 import com.seraph.native.db.Sleep_events
 

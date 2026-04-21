@@ -9,6 +9,7 @@ import {
   nativeScan,
   nativeGetBattery,
   nativeGetHello,
+  nativeGetVersion,
   type SyncStatus,
   type ScannedDevice,
 } from '../../../services/ble/nativeModule';
@@ -43,6 +44,7 @@ interface DeviceStore {
   clearError: () => void;
 }
 
+// TODO: Things are looking a bit holy over here.
 export const useDeviceStore = create<DeviceStore>((set, _get) => {
   const refreshBattery = () =>
     nativeGetBattery()
@@ -62,6 +64,25 @@ export const useDeviceStore = create<DeviceStore>((set, _get) => {
         /* ignore — may fail if device disconnects mid-query */
       });
 
+  const fetchVersion = () =>
+    nativeGetVersion()
+      .then(async info => {
+        const cached = await DeviceCache.getDevice();
+        if (!cached) return;
+        if (cached.firmwareVersion === info.harvard && cached.hardwareVersion === info.boylston)
+          return;
+        const updated = {
+          ...cached,
+          firmwareVersion: info.harvard,
+          hardwareVersion: info.boylston,
+        };
+        await DeviceCache.saveDevice(updated);
+        set({ cachedDevice: updated });
+      })
+      .catch(() => {
+        /* ignore */
+      });
+
   // Subscribe to native sync state events
   seraphEmitter.addListener('onSyncStateChange', (event: SyncStatus) => {
     switch (event.status) {
@@ -72,6 +93,7 @@ export const useDeviceStore = create<DeviceStore>((set, _get) => {
         set({ isConnected: true, isConnecting: false, deviceReady: true, error: null });
         void refreshBattery();
         void refreshHello();
+        void fetchVersion();
         break;
       case 'disconnected':
         set({
@@ -106,14 +128,8 @@ export const useDeviceStore = create<DeviceStore>((set, _get) => {
         break;
       case 'error':
         set({
-          isConnected: false,
-          isConnecting: false,
           isSyncing: false,
           isAggregating: false,
-          deviceReady: false,
-          battery: undefined,
-          charging: undefined,
-          onWrist: undefined,
           error: event.message,
         });
         break;

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import { SafeText } from '../../../../components/common/SafeText';
@@ -12,6 +12,7 @@ export interface ActionRowProps {
   onPress: () => void;
   destructive?: boolean;
   disabled?: boolean;
+  loading?: boolean;
   onLongPress?: () => void;
 }
 
@@ -22,16 +23,18 @@ export const ActionRow: React.FC<ActionRowProps> = ({
   onPress,
   destructive,
   disabled,
+  loading,
   onLongPress,
 }) => {
   const { theme } = useTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
+  const isInactive = disabled === true || loading === true;
   return (
     <TouchableOpacity
-      style={[styles.actionRow, disabled && styles.actionRowDisabled]}
+      style={[styles.actionRow, isInactive && styles.actionRowDisabled]}
       onPress={onPress}
       onLongPress={onLongPress}
-      disabled={disabled}
+      disabled={isInactive}
       activeOpacity={0.6}
     >
       <Ionicons
@@ -46,7 +49,11 @@ export const ActionRow: React.FC<ActionRowProps> = ({
         </SafeText>
         {sublabel ? <SafeText style={styles.actionRowSublabel}>{sublabel}</SafeText> : null}
       </View>
-      <Ionicons name="chevron-forward" size={14} color={theme.colors.text.muted} />
+      {loading ? (
+        <ActivityIndicator size="small" color={theme.colors.text.muted} />
+      ) : (
+        <Ionicons name="chevron-forward" size={14} color={theme.colors.text.muted} />
+      )}
     </TouchableOpacity>
   );
 };

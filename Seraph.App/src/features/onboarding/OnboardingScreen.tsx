@@ -142,9 +142,10 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
 
     if (age !== null) entries.push(['profile_age', String(age)]);
 
-    await Promise.all(
-      entries.filter(([, v]) => v !== '').map(([k, v]) => appParametersRepository.set(k, v)),
-    );
+    await Promise.all([
+      ...entries.filter(([, v]) => v !== '').map(([k, v]) => appParametersRepository.set(k, v)),
+      appParametersRepository.set('onboarding_complete', '1'),
+    ]);
     onComplete();
   };
 
@@ -223,11 +224,10 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
 
             {!isConnect && (
               <TouchableOpacity
-                style={[
-                  styles.nextBtn,
-                  isDone && { backgroundColor: theme.colors.recovery },
-                ]}
-                onPress={() => { void handleNext(); }}
+                style={[styles.nextBtn, isDone && { backgroundColor: theme.colors.recovery }]}
+                onPress={() => {
+                  void handleNext();
+                }}
                 activeOpacity={0.8}
               >
                 <SafeText style={styles.nextText}>

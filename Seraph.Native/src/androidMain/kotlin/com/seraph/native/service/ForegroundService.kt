@@ -10,9 +10,14 @@ import co.touchlab.kermit.Logger
 import com.seraph.native.aggregation.AggregationRunner
 import com.seraph.native.ble.ConnectionManager
 import com.seraph.native.blob.BlobWriter
+import com.seraph.native.db.CorruptionHandler
+import com.seraph.native.db.RestorationResult
 import com.seraph.native.db.DbHolder
 import com.seraph.native.db.R24Dao
+import com.seraph.native.db.R24DbHolder
 import com.seraph.native.db.SeraphDb
+import com.seraph.native.db.SnapshotManager
+import com.seraph.native.db.r24.R24Db
 import com.seraph.native.db.ShardManager
 import com.seraph.native.notifications.AndroidNotificationChannel
 import com.seraph.native.notifications.NotificationWriter
@@ -53,19 +58,21 @@ class ForegroundService : Service() {
 
         fun dbPath(context: android.content.Context): String = context.getDatabasePath("seraph.db").absolutePath
 
-        fun openDb(context: android.content.Context): SeraphDb {
-            val file = File(dbPath(context))
+        fun r24DbPath(context: android.content.Context): String = context.getDatabasePath("seraph_r24.db").absolutePath
+
+        fun openR24Db(context: android.content.Context): R24Db {
+            val file = File(r24DbPath(context))
             file.parentFile?.mkdirs()
             val driver =
                 AndroidSqliteDriver(
                     androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory().create(
                         SupportSQLiteOpenHelper.Configuration
                             .builder(context.applicationContext)
-                            .name("seraph.db")
+                            .name("seraph_r24.db")
                             .callback(
-                                object : SupportSQLiteOpenHelper.Callback(SeraphDb.Schema.version.toInt()) {
+                                object : SupportSQLiteOpenHelper.Callback(R24Db.Schema.version.toInt()) {
                                     override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
-                                        SeraphDb.Schema.create(AndroidSqliteDriver(db))
+                                        R24Db.Schema.create(AndroidSqliteDriver(db))
                                     }
 
                                     override fun onUpgrade(
@@ -73,7 +80,7 @@ class ForegroundService : Service() {
                                         oldVersion: Int,
                                         newVersion: Int,
                                     ) {
-                                        SeraphDb.Schema.migrate(AndroidSqliteDriver(db), oldVersion.toLong(), newVersion.toLong())
+                                        R24Db.Schema.migrate(AndroidSqliteDriver(db), oldVersion.toLong(), newVersion.toLong())
                                     }
 
                                     override fun onDowngrade(
@@ -83,21 +90,58 @@ class ForegroundService : Service() {
                                     ) {}
 
                                     override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
-                                        db.query("PRAGMA journal_mode=WAL").close()
-                                        db.query("PRAGMA busy_timeout=5000").close()
-                                    }
-
-                                    override fun onCorruption(db: androidx.sqlite.db.SupportSQLiteDatabase) {
-                                        android.util.Log.e(
-                                            "SeraphDb",
-                                            "Database corruption detected — preserving file, skipping delete",
-                                        )
+                                        db.query("PRAGMA busy_timeout=5000").use { it.moveToFirst() }
                                     }
                                 },
                             ).build(),
                     ),
                 )
-            return SeraphDb(driver)
+            return R24Db(driver)
+        }
+
+        fun openDb(context: android.content.Context): Triple<SeraphDb, SupportSQLiteOpenHelper, RestorationResult> {
+            val file = File(dbPath(context))
+            file.parentFile?.mkdirs()
+            val snapshots = SnapshotManager(context)
+            val restorationResult = CorruptionHandler(context).handleIfCorrupt(file.absolutePath, snapshots)
+            val helper = androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory().create(
+                SupportSQLiteOpenHelper.Configuration
+                    .builder(context.applicationContext)
+                    .name("seraph.db")
+                    .callback(
+                        object : SupportSQLiteOpenHelper.Callback(SeraphDb.Schema.version.toInt()) {
+                            override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                                SeraphDb.Schema.create(AndroidSqliteDriver(db))
+                            }
+
+                            override fun onUpgrade(
+                                db: androidx.sqlite.db.SupportSQLiteDatabase,
+                                oldVersion: Int,
+                                newVersion: Int,
+                            ) {
+                                SeraphDb.Schema.migrate(AndroidSqliteDriver(db), oldVersion.toLong(), newVersion.toLong())
+                            }
+
+                            override fun onDowngrade(
+                                db: androidx.sqlite.db.SupportSQLiteDatabase,
+                                oldVersion: Int,
+                                newVersion: Int,
+                            ) {}
+
+                            override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                                db.query("PRAGMA busy_timeout=5000").use { it.moveToFirst() }
+                            }
+
+                            override fun onCorruption(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                                android.util.Log.e(
+                                    "SeraphDb",
+                                    "Database corruption detected — preserving file, skipping delete",
+                                )
+                            }
+                        },
+                    ).build(),
+            )
+            return Triple(SeraphDb(AndroidSqliteDriver(helper)), helper, restorationResult)
         }
     }
 
@@ -164,8 +208,9 @@ class ForegroundService : Service() {
         notifications.createChannels()
 
         val opened = DbHolder.db
+        val r24Db = R24DbHolder.db
         db = opened
-        val aggRunner = AggregationRunner.build(opened)
+        val aggRunner = AggregationRunner.build(opened, r24Db)
         aggregationRunner = aggRunner
         val rm = RecordingManager(cacheDir, opened)
         recordingManager = rm
@@ -179,12 +224,12 @@ class ForegroundService : Service() {
             )
         notificationWriter = NotificationWriter(opened, notificationChannel)
 
-        val shardManager = ShardManager(this, opened)
+        val shardManager = ShardManager(this, r24Db)
 
         syncRunner =
             SyncRunner(
                 orchestrator = orchestrator,
-                r24Dao = R24Dao(opened),
+                r24Dao = R24Dao(r24Db),
                 db = opened,
                 aggregationRunner = aggRunner,
                 scope = scope,

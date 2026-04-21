@@ -14,7 +14,6 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useDeviceStore } from '../store/deviceStore';
-import { useCachedDevice } from '../hooks/useCachedDevice';
 import { DeviceInfoCard } from './components/DeviceInfoCard';
 import { ActionRow } from './components/ActionRow';
 import { SafeText } from '../../../components/common/SafeText';
@@ -33,8 +32,7 @@ export const ConnectedDeviceView: React.FC<ConnectedDeviceViewProps> = ({ onForg
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
-  const { battery, charging, onWrist } = useDeviceStore();
-  const { data: cachedDevice } = useCachedDevice();
+  const { battery, charging, onWrist, cachedDevice } = useDeviceStore();
   const queryClient = useQueryClient();
 
   const deviceName = cachedDevice?.name ?? t('device.unknownDevice');

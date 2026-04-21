@@ -46,3 +46,4 @@ CLAUDE.md
 *.jks
 *.p12
 .env*
+/_db_backups

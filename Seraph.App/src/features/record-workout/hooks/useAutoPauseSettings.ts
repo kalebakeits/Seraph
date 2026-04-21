@@ -7,6 +7,7 @@ export interface AutoPauseSettings {
   enabled: boolean;
   z1Seconds: number;
   fthr: number | null;
+  age: number | null;
 }
 
 export function useAutoPauseSettings() {
@@ -14,19 +15,22 @@ export function useAutoPauseSettings() {
     enabled: false,
     z1Seconds: DEFAULT_Z1_SECONDS,
     fthr: null,
+    age: null,
   });
 
   useEffect(() => {
     void (async () => {
-      const [enabled, z1, fthr] = await Promise.all([
+      const [enabled, z1, fthr, age] = await Promise.all([
         appParametersRepository.get('recording_auto_pause_enabled'),
         appParametersRepository.getNumeric('recording_auto_pause_z1_seconds'),
         appParametersRepository.getNumeric('profile_threshold_hr'),
+        appParametersRepository.getNumeric('profile_age'),
       ]);
       setSettings({
         enabled: enabled === '1',
         z1Seconds: z1 ?? DEFAULT_Z1_SECONDS,
         fthr: fthr,
+        age: age,
       });
     })();
   }, []);

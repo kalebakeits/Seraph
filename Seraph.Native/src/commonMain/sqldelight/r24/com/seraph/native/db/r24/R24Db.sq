@@ -1,0 +1,74 @@
+CREATE TABLE IF NOT EXISTS r24 (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    sequence INTEGER NOT NULL,
+    timestamp INTEGER NOT NULL,
+    subseconds INTEGER NOT NULL,
+    heart_rate INTEGER NOT NULL,
+    rr_intervals TEXT,
+    skin_temp REAL NOT NULL,
+    step_count INTEGER NOT NULL,
+    b2 INTEGER NOT NULL,
+    b80 INTEGER DEFAULT 0 NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS r24_sequence_idx ON r24 (sequence);
+CREATE INDEX IF NOT EXISTS r24_timestamp_idx ON r24 (timestamp);
+
+insertR24:
+INSERT OR REPLACE INTO r24(sequence, timestamp, subseconds, heart_rate, rr_intervals, skin_temp, step_count, b2, b80, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+queryR24ByDateRange:
+SELECT * FROM r24 WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC;
+
+sampleHrBuckets:
+SELECT
+    (timestamp / :bucketMs) * :bucketMs AS bucket_start,
+    CAST(AVG(heart_rate) AS INTEGER) AS avg_hr
+FROM r24
+WHERE timestamp >= :startMs AND timestamp <= :endMs
+  AND heart_rate BETWEEN 30 AND 220
+GROUP BY bucket_start
+ORDER BY bucket_start ASC;
+
+rrIntervalsInRange:
+SELECT timestamp, rr_intervals FROM r24
+WHERE timestamp >= ? AND timestamp <= ?
+  AND rr_intervals IS NOT NULL
+ORDER BY timestamp ASC;
+
+calcRhrForWindow:
+SELECT CAST(AVG(heart_rate) AS INTEGER) AS rhr
+FROM r24
+WHERE timestamp >= ? AND timestamp <= ?
+GROUP BY (timestamp / 60000)
+ORDER BY AVG(heart_rate) ASC
+LIMIT 1;
+
+queryR24ByDate:
+SELECT * FROM r24 WHERE date(timestamp / 1000, 'unixepoch') = ? ORDER BY timestamp ASC;
+
+deleteR24OlderThan:
+DELETE FROM r24 WHERE timestamp < ?;
+
+deleteR24InRange:
+DELETE FROM r24 WHERE timestamp >= ? AND timestamp <= ?;
+
+getDistinctR24Months:
+SELECT DISTINCT strftime('%Y-%m', timestamp / 1000, 'unixepoch') AS month FROM r24 ORDER BY month ASC;
+
+getR24SeqRangeForMonth:
+SELECT MIN(sequence) AS MIN, MAX(sequence) AS MAX FROM r24 WHERE timestamp >= ? AND timestamp <= ?;
+
+queryR24FromTs:
+SELECT * FROM r24 WHERE date(timestamp / 1000, 'unixepoch') = ? AND timestamp > ? ORDER BY timestamp ASC;
+
+queryR24BySequence:
+SELECT timestamp FROM r24 WHERE sequence = (? % 256) ORDER BY timestamp DESC LIMIT 1;
+
+getOldestTimestamp:
+SELECT MIN(timestamp) AS oldest_ts FROM r24;
+
+getDistinctDatesNewerThan:
+SELECT DISTINCT date(timestamp / 1000, 'unixepoch') AS day FROM r24 WHERE timestamp > ? ORDER BY day ASC;

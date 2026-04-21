@@ -19,19 +19,35 @@ interface ThemeOption {
 }
 
 const SYSTEM_SWATCH: readonly [string, string] = [
-  palettes['light'].previewSwatch[0],
-  palettes['dark'].previewSwatch[0],
+  palettes.light.previewSwatch[0],
+  palettes.dark.previewSwatch[0],
 ];
 
 const THEME_OPTIONS: ThemeOption[] = [
-  { name: 'system',            labelKey: 'settings.themeSystem',            swatch: SYSTEM_SWATCH },
-  { name: 'light',             labelKey: 'settings.themeLight',             swatch: palettes['light'].previewSwatch },
-  { name: 'dark',              labelKey: 'settings.themeDark',              swatch: palettes['dark'].previewSwatch },
-  { name: 'midnightPurple',   labelKey: 'settings.themeMidnightPurple',   swatch: palettes['midnightPurple'].previewSwatch },
-  { name: 'monokai',          labelKey: 'settings.themeMonokai',          swatch: palettes['monokai'].previewSwatch },
-  { name: 'tomorrowNightBlue',labelKey: 'settings.themeTomorrowNightBlue',swatch: palettes['tomorrowNightBlue'].previewSwatch },
-  { name: 'sierraSunset',     labelKey: 'settings.themeSierraSunset',     swatch: palettes['sierraSunset'].previewSwatch },
-  { name: 'kimbieDark',       labelKey: 'settings.themeKimbieDark',       swatch: palettes['kimbieDark'].previewSwatch },
+  { name: 'system', labelKey: 'settings.themeSystem', swatch: SYSTEM_SWATCH },
+  { name: 'light', labelKey: 'settings.themeLight', swatch: palettes.light.previewSwatch },
+  { name: 'dark', labelKey: 'settings.themeDark', swatch: palettes.dark.previewSwatch },
+  {
+    name: 'midnightPurple',
+    labelKey: 'settings.themeMidnightPurple',
+    swatch: palettes.midnightPurple.previewSwatch,
+  },
+  { name: 'monokai', labelKey: 'settings.themeMonokai', swatch: palettes.monokai.previewSwatch },
+  {
+    name: 'tomorrowNightBlue',
+    labelKey: 'settings.themeTomorrowNightBlue',
+    swatch: palettes.tomorrowNightBlue.previewSwatch,
+  },
+  {
+    name: 'sierraSunset',
+    labelKey: 'settings.themeSierraSunset',
+    swatch: palettes.sierraSunset.previewSwatch,
+  },
+  {
+    name: 'kimbieDark',
+    labelKey: 'settings.themeKimbieDark',
+    swatch: palettes.kimbieDark.previewSwatch,
+  },
 ];
 
 const SWATCH_SIZE = 24;
@@ -77,14 +93,19 @@ export const ThemePickerPage: React.FC<Props> = ({ width }) => {
             key={option.name}
             style={[
               pickerStyles.row,
-              { borderColor: theme.colors.border.faint, backgroundColor: theme.colors.overlay.ghost },
+              {
+                borderColor: theme.colors.border.faint,
+                backgroundColor: theme.colors.overlay.ghost,
+              },
               themeName === option.name && {
                 borderColor: theme.colors.primary,
                 backgroundColor: theme.colors.iconTint.primary,
               },
             ]}
             activeOpacity={0.7}
-            onPress={() => setTheme(option.name)}
+            onPress={() => {
+              setTheme(option.name);
+            }}
           >
             <ThemeSwatch colors={option.swatch} />
             <SafeText style={[pickerStyles.label, { color: theme.colors.text.primary }]}>

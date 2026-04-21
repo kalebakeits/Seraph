@@ -1,0 +1,16 @@
+CREATE TABLE r24 (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    sequence INTEGER NOT NULL,
+    timestamp INTEGER NOT NULL,
+    subseconds INTEGER NOT NULL,
+    heart_rate INTEGER NOT NULL,
+    rr_intervals TEXT,
+    skin_temp REAL NOT NULL,
+    step_count INTEGER NOT NULL,
+    b2 INTEGER NOT NULL,
+    b80 INTEGER DEFAULT 0 NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+CREATE UNIQUE INDEX r24_sequence_idx ON r24 (sequence);
+CREATE INDEX r24_timestamp_idx ON r24 (timestamp);

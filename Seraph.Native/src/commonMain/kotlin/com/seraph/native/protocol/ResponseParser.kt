@@ -21,14 +21,18 @@ object ResponseParser {
     )
 
     fun parseBattery(data: ByteArray): BatteryInfo? {
-        val (valid, payload) = Framing.parsePacket(data)
+        val parsed = Framing.parsePacket(data)
+        val valid = parsed.valid
+        val payload = parsed.payload
         if (!valid || payload == null || payload.size < 7) return null
         val rawValue = (payload[5].toInt() and 0xFF) or ((payload[6].toInt() and 0xFF) shl 8)
         return BatteryInfo(rawValue / 10f, rawValue)
     }
 
     fun parseVersionInfo(data: ByteArray): VersionInfo? {
-        val (valid, payload) = Framing.parsePacket(data)
+        val parsed = Framing.parsePacket(data)
+        val valid = parsed.valid
+        val payload = parsed.payload
         log.d { "parseVersionInfo: valid=$valid payloadSize=${payload?.size}" }
         if (!valid || payload == null || payload.size < 38) return null
         var offset = 6
@@ -54,7 +58,9 @@ object ResponseParser {
     }
 
     fun parseHelloHarvard(data: ByteArray): HelloHarvard? {
-        val (valid, payload) = Framing.parsePacket(data)
+        val parsed = Framing.parsePacket(data)
+        val valid = parsed.valid
+        val payload = parsed.payload
         if (!valid || payload == null || payload.size < 120) return null
         return HelloHarvard(payload[10] != 0.toByte(), payload[119] != 0.toByte())
     }
@@ -64,7 +70,9 @@ object ResponseParser {
      * Response: [type, seq, cmd, 00, 01, timestamp(4 LE), ...]
      */
     fun parseClock(data: ByteArray): Int? {
-        val (valid, payload) = Framing.parsePacket(data)
+        val parsed = Framing.parsePacket(data)
+        val valid = parsed.valid
+        val payload = parsed.payload
         if (!valid || payload == null || payload.size < 9) return null
         if (payload[2] != CommandNumber.GET_CLOCK) return null
         val seconds =
@@ -81,7 +89,9 @@ object ResponseParser {
      * Response: [type, seq, cmd, 00, 01, 01, 01, timestamp(4 LE), ...]
      */
     fun parseAlarmTime(data: ByteArray): Int? {
-        val (valid, payload) = Framing.parsePacket(data)
+        val parsed = Framing.parsePacket(data)
+        val valid = parsed.valid
+        val payload = parsed.payload
         if (!valid || payload == null || payload.size < 12) return null
         if (payload[2] != CommandNumber.GET_ALARM_TIME) return null
         return (payload[7].toInt() and 0xFF) or
@@ -91,7 +101,9 @@ object ResponseParser {
     }
 
     fun parseMetadata(data: ByteArray): PacketMetadata? {
-        val (valid, payload) = Framing.parsePacket(data)
+        val parsed = Framing.parsePacket(data)
+        val valid = parsed.valid
+        val payload = parsed.payload
         if (!valid || payload == null || payload.size < 3) return null
         val type = payload[2]
         if (type == MetadataType.HISTORY_COMPLETE) return PacketMetadata(type, -1)

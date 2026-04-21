@@ -17,14 +17,14 @@ interface ThemeOption {
 }
 
 const THEME_OPTIONS: ThemeOption[] = [
-  { name: 'system',           labelKey: 'settings.themeSystem' },
-  { name: 'dark',             labelKey: 'settings.themeDark' },
-  { name: 'light',            labelKey: 'settings.themeLight' },
-  { name: 'midnightPurple',   labelKey: 'settings.themeMidnightPurple' },
-  { name: 'monokai',          labelKey: 'settings.themeMonokai' },
-  { name: 'tomorrowNightBlue',labelKey: 'settings.themeTomorrowNightBlue' },
-  { name: 'sierraSunset',     labelKey: 'settings.themeSierraSunset' },
-  { name: 'kimbieDark',       labelKey: 'settings.themeKimbieDark' },
+  { name: 'system', labelKey: 'settings.themeSystem' },
+  { name: 'dark', labelKey: 'settings.themeDark' },
+  { name: 'light', labelKey: 'settings.themeLight' },
+  { name: 'midnightPurple', labelKey: 'settings.themeMidnightPurple' },
+  { name: 'monokai', labelKey: 'settings.themeMonokai' },
+  { name: 'tomorrowNightBlue', labelKey: 'settings.themeTomorrowNightBlue' },
+  { name: 'sierraSunset', labelKey: 'settings.themeSierraSunset' },
+  { name: 'kimbieDark', labelKey: 'settings.themeKimbieDark' },
 ];
 
 // 'system' has no palette entry — use a fixed half-and-half swatch.

@@ -133,11 +133,17 @@ class SyncRunner(
             log.w { "Packet too short (${raw.size}b)" }
             return
         }
-        val (valid, payload) = Framing.parsePacket(raw)
-        if (!valid || payload == null) {
+        val parsed = Framing.parsePacket(raw)
+        if (parsed.status == Framing.ParseStatus.CRC_FAILED) {
+            log.w { "CRC failure on incoming packet — requesting batch retry" }
+            activeSession?.markBatchCorrupt()
+            return
+        }
+        if (!parsed.valid || parsed.payload == null) {
             log.w { "Frame invalid" }
             return
         }
+        val payload = parsed.payload
         when (payload[0]) {
             PacketType.COMMAND_RESPONSE -> {
                 if (payload.size >= 3) commandChannel.onCommandResponse(payload[2], raw)
@@ -192,7 +198,8 @@ class SyncRunner(
             _state.value = SyncState.Syncing(0)
             while (!metadataChannel.isEmpty) metadataChannel.tryReceive()
 
-            val session = SyncSession(commandChannel, metadataChannel, r24Dao, aggregationRunner, "", scope)
+            val granularityMs = r24Dao.loadGranularityMs(db)
+            val session = SyncSession(commandChannel, metadataChannel, r24Dao, aggregationRunner, scope, granularityMs)
             activeSession = session
             val result =
                 session.run(

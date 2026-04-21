@@ -82,7 +82,7 @@ export const Sleep: React.FC<Props> = ({ route }) => {
       <Section
         title={t('sleep.trends')}
         onTitlePress={() => {
-          navigation.navigate('TrendSleep', { anchorDate: selectedDate });
+          navigation.navigate('Trends', { initialTrend: 'sleep', anchorDate: selectedDate });
         }}
       >
         <HelperText translationKey="sleep.trendsHelper" />

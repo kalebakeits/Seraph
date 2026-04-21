@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { Animated, Pressable, StyleSheet, View, TouchableOpacity, LayoutChangeEvent } from 'react-native';
+import type { LayoutChangeEvent } from 'react-native';
+import { Animated, Pressable, StyleSheet, View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -61,8 +62,8 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
 
   // Per-tab animated widths (only used when showPlusButton)
   const tabWidths = useRef(
-    state.routes.map((_, i) =>
-      new Animated.Value(i === state.index ? TAB_ACTIVE_WIDTH : TAB_MIN_WIDTH),
+    state.routes.map(
+      (_, i) => new Animated.Value(i === state.index ? TAB_ACTIVE_WIDTH : TAB_MIN_WIDTH),
     ),
   ).current;
 
@@ -194,7 +195,9 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
             <TouchableOpacity
               style={styles.plusBtn}
               activeOpacity={0.85}
-              onPress={() => setSheetOpen(true)}
+              onPress={() => {
+                setSheetOpen(true);
+              }}
             >
               <Ionicons name="add" size={26} color={theme.colors.text.primary} />
             </TouchableOpacity>
@@ -205,7 +208,9 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
       {sheetOpen && (
         <ActivityActionSheet
           selectedDate={selectedDate}
-          onClose={() => setSheetOpen(false)}
+          onClose={() => {
+            setSheetOpen(false);
+          }}
         />
       )}
     </>

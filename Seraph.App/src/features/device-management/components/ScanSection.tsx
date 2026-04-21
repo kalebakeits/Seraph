@@ -33,7 +33,11 @@ export const ScanSection: React.FC<ScanSectionProps> = ({
       {showTitle && <SafeText style={styles.sectionTitle}>{t('device.connection.title')}</SafeText>}
 
       <TouchableOpacity
-        style={[styles.scanButton, { backgroundColor: theme.colors.bluetooth }, isDisabled && styles.disabled]}
+        style={[
+          styles.scanButton,
+          { backgroundColor: theme.colors.bluetooth },
+          isDisabled && styles.disabled,
+        ]}
         onPress={onScan}
         disabled={isDisabled}
         activeOpacity={0.8}

@@ -71,7 +71,7 @@ export const SleepSessionMetrics: React.FC<Props> = ({
         label={t('sleep.avgHr')}
         value={avgHr != null ? t('sleep.avgHrValue', { value: Math.round(avgHr) }) : '--'}
         onPress={() => {
-          navigation.navigate('TrendHr', { anchorDate });
+          navigation.navigate('Trends', { initialTrend: 'rhr', anchorDate });
         }}
       />
       <MetricTile
@@ -79,7 +79,7 @@ export const SleepSessionMetrics: React.FC<Props> = ({
         label={t('sleep.hrv')}
         value={hrv != null ? t('sleep.hrvValue', { value: Math.round(hrv) }) : '--'}
         onPress={() => {
-          navigation.navigate('TrendHrv', { anchorDate });
+          navigation.navigate('Trends', { initialTrend: 'hrv', anchorDate });
         }}
       />
       <MetricTile
@@ -87,7 +87,7 @@ export const SleepSessionMetrics: React.FC<Props> = ({
         label={t('sleep.rhr')}
         value={rhr != null ? t('sleep.rhrValue', { value: rhr }) : '--'}
         onPress={() => {
-          navigation.navigate('TrendHr', { anchorDate });
+          navigation.navigate('Trends', { initialTrend: 'rhr', anchorDate });
         }}
       />
       <MetricTile
@@ -95,7 +95,7 @@ export const SleepSessionMetrics: React.FC<Props> = ({
         label={t('sleep.stageAwake')}
         value={`${String(awakeMinutes)} min`}
         onPress={() => {
-          navigation.navigate('TrendSleepAwake', { anchorDate });
+          navigation.navigate('Trends', { initialTrend: 'sleepAwake', anchorDate });
         }}
       />
     </View>

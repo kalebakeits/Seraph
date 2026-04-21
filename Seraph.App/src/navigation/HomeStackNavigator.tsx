@@ -13,18 +13,10 @@ import { ProfileSettingsScreen } from '../features/profile/ProfileSettingsScreen
 import { DataStorageScreen } from '../features/profile/DataStorageScreen';
 import { AboutScreen } from '../features/profile/AboutScreen';
 import { DebugMenuScreen } from '../features/device-management/device-details/DebugMenuScreen';
-import { StepsTrendScreen } from '../features/trends/steps/StepsTrendScreen';
-import { ActiveTimeTrendScreen } from '../features/trends/active-time/ActiveTimeTrendScreen';
-import { HrvTrendScreen } from '../features/trends/hrv/HrvTrendScreen';
-import { HeartRateTrendScreen } from '../features/trends/rhr/HeartRateTrendScreen';
-import { SkinTempTrendScreen } from '../features/trends/skin-temp/SkinTempTrendScreen';
-import { DailyStressTrendScreen } from '../features/trends/daily-stress/DailyStressTrendScreen';
-import { SleepTrendScreen } from '../features/trends/sleep/SleepTrendScreen';
-import { RecoveryTrendScreen } from '../features/trends/recovery/RecoveryTrendScreen';
-import { StrainTrendScreen } from '../features/trends/strain/StrainTrendScreen';
+import { TrendsScreen } from '../features/trends/TrendsScreen';
+import type { TrendKey } from '../features/trends/TrendConfig';
 import { WorkoutDetailScreen } from '../features/workout/WorkoutDetailScreen';
 import { SleepSessionScreen } from '../features/sleep/session/SleepSessionScreen';
-import { SleepAwakeTrendScreen } from '../features/trends/sleep/SleepAwakeTrendScreen';
 import { RecordWorkoutScreen } from '../features/record-workout/RecordWorkoutScreen';
 import { NotificationCenterScreen } from '../features/notifications/NotificationCenterScreen';
 import { SystemNotificationDetailScreen } from '../features/notifications/SystemNotificationDetailScreen';
@@ -46,16 +38,7 @@ export interface HomeStackParamList {
   DataStorage: undefined;
   About: undefined;
   DebugMenu: undefined;
-  TrendSteps: { anchorDate?: string } | undefined;
-  TrendActiveTime: { anchorDate?: string } | undefined;
-  TrendHrv: { anchorDate?: string } | undefined;
-  TrendHr: { anchorDate?: string } | undefined;
-  TrendSkinTemp: { anchorDate?: string } | undefined;
-  TrendDailyStress: { anchorDate?: string } | undefined;
-  TrendSleep: { anchorDate?: string } | undefined;
-  TrendRecovery: { anchorDate?: string } | undefined;
-  TrendStrain: { anchorDate?: string } | undefined;
-  TrendSleepAwake: { anchorDate?: string } | undefined;
+  Trends: { initialTrend?: TrendKey; anchorDate?: string } | undefined;
   WorkoutDetail: { activityId: number; selectedDate?: string };
   SleepSessionDetail: { sleepId: number; selectedDate?: string };
   RecordWorkout: undefined;
@@ -134,49 +117,9 @@ export const HomeStackNavigator: React.FC = () => {
       />
       <Stack.Screen name="DebugMenu" component={DebugMenuScreen} options={{ headerShown: false }} />
       <Stack.Screen
-        name="TrendSteps"
-        component={StepsTrendScreen}
-        options={{ headerTitle: t('nav.trendSteps'), headerBackTitle: '' }}
-      />
-      <Stack.Screen
-        name="TrendActiveTime"
-        component={ActiveTimeTrendScreen}
-        options={{ headerTitle: t('nav.trendActiveTime'), headerBackTitle: '' }}
-      />
-      <Stack.Screen
-        name="TrendHrv"
-        component={HrvTrendScreen}
-        options={{ headerTitle: t('nav.trendHrv'), headerBackTitle: '' }}
-      />
-      <Stack.Screen
-        name="TrendHr"
-        component={HeartRateTrendScreen}
-        options={{ headerTitle: t('nav.trendHr'), headerBackTitle: '' }}
-      />
-      <Stack.Screen
-        name="TrendSkinTemp"
-        component={SkinTempTrendScreen}
-        options={{ headerTitle: t('nav.trendSkinTemp'), headerBackTitle: '' }}
-      />
-      <Stack.Screen
-        name="TrendDailyStress"
-        component={DailyStressTrendScreen}
-        options={{ headerTitle: t('nav.trendDailyStress'), headerBackTitle: '' }}
-      />
-      <Stack.Screen
-        name="TrendSleep"
-        component={SleepTrendScreen}
-        options={{ headerTitle: t('nav.trendSleep'), headerBackTitle: '' }}
-      />
-      <Stack.Screen
-        name="TrendRecovery"
-        component={RecoveryTrendScreen}
-        options={{ headerTitle: t('nav.trendRecovery'), headerBackTitle: '' }}
-      />
-      <Stack.Screen
-        name="TrendStrain"
-        component={StrainTrendScreen}
-        options={{ headerTitle: t('nav.trendStrain'), headerBackTitle: '' }}
+        name="Trends"
+        component={TrendsScreen}
+        options={{ headerShown: false, headerBackTitle: '' }}
       />
       <Stack.Screen
         name="WorkoutDetail"
@@ -193,11 +136,6 @@ export const HomeStackNavigator: React.FC = () => {
           headerTitle: t('nav.sleepSession'),
           headerBackTitle: '',
         }}
-      />
-      <Stack.Screen
-        name="TrendSleepAwake"
-        component={SleepAwakeTrendScreen}
-        options={{ headerTitle: t('nav.trendSleepAwake'), headerBackTitle: '' }}
       />
       <Stack.Screen
         name="RecordWorkout"

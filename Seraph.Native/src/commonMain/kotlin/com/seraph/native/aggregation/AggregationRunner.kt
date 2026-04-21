@@ -10,6 +10,7 @@ import com.seraph.native.aggregation.workout.TrainingLoadCalculator
 import com.seraph.native.db.AggregationDao
 import com.seraph.native.db.R24Dao
 import com.seraph.native.db.SeraphDb
+import com.seraph.native.db.r24.R24Db
 import kotlinx.coroutines.sync.Mutex
 
 class OverlapException(
@@ -122,7 +123,7 @@ class AggregationRunner(
      */
     fun finalizeRecordedActivity(
         activityId: Long,
-        syntheticRows: List<com.seraph.native.db.R24>,
+        syntheticRows: List<com.seraph.native.db.r24.R24>,
     ) {
         val activity =
             db.seraphDbQueries.getActivityById(activityId).executeAsOneOrNull()
@@ -245,7 +246,7 @@ class AggregationRunner(
 
     private fun runForDate(
         date: String,
-        rows: List<com.seraph.native.db.R24>,
+        rows: List<com.seraph.native.db.r24.R24>,
         strategy: IAggregationStrategy,
         profile: AggregationProfile,
     ): AggregationResult {
@@ -283,9 +284,9 @@ class AggregationRunner(
     }
 
     companion object {
-        fun build(db: SeraphDb): AggregationRunner {
+        fun build(db: SeraphDb, r24Db: R24Db): AggregationRunner {
             val aggDao = AggregationDao(db)
-            val r24Dao = R24Dao(db)
+            val r24Dao = R24Dao(r24Db)
             return AggregationRunner(
                 db = db,
                 aggDao = aggDao,

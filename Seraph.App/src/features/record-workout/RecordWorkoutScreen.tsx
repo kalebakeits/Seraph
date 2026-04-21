@@ -52,9 +52,14 @@ export const RecordWorkoutScreen: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [startTs, setStartTs] = useState<number | null>(null);
   const [fthr, setFthr] = useState<number | null>(null);
+  const [age, setAge] = useState<number | null>(null);
   const [recentSports, setRecentSports] = useState<string[]>([]);
   const [saveSheetOpen, setSaveSheetOpen] = useState(false);
-  const { settings: autoPauseSettings, setEnabled: setAutoPauseEnabled, setZ1Seconds } = useAutoPauseSettings();
+  const {
+    settings: autoPauseSettings,
+    setEnabled: setAutoPauseEnabled,
+    setZ1Seconds,
+  } = useAutoPauseSettings();
 
   const handleExitRequest = useCallback(async () => {
     if (phase === 'idle') {
@@ -85,6 +90,9 @@ export const RecordWorkoutScreen: React.FC = () => {
     void appParametersRepository.getNumeric('profile_threshold_hr').then(val => {
       if (val != null) setFthr(val);
     });
+    void appParametersRepository.getNumeric('profile_age').then(val => {
+      if (val != null) setAge(val);
+    });
 
     void activityEventsRepository.getRecentRecordedSports(3).then(setRecentSports);
   }, []);
@@ -107,17 +115,21 @@ export const RecordWorkoutScreen: React.FC = () => {
       void queryClient.invalidateQueries({ queryKey: ['activityRings'] });
       void queryClient.invalidateQueries({ queryKey: ['strainDetail'] });
     });
-    return () => sub.remove();
+    return () => {
+      sub.remove();
+    };
   }, [queryClient]);
 
   useEffect(() => {
     const sub = seraphEmitter.addListener('onRecordingAutoPaused', () => {
       setPhase('auto_paused');
     });
-    return () => sub.remove();
+    return () => {
+      sub.remove();
+    };
   }, []);
 
-  const { hr, zone, zoneColor } = useRealtimeHR(fthr);
+  const { hr, zone, zoneColor } = useRealtimeHR(fthr, age);
   const elapsedMs = useWorkoutTimer(phase === 'recording', startTs);
   const { total: liveStrain } = useLiveStrain(phase === 'recording', elapsedMs, zone);
 

@@ -28,7 +28,13 @@ interface Props {
   onRangeChange: (r: TrendRange) => void;
 }
 
-export const TrendRangeControl: React.FC<Props> = ({ range, color, tint, anchorDate, onRangeChange }) => {
+export const TrendRangeControl: React.FC<Props> = ({
+  range,
+  color,
+  tint,
+  anchorDate,
+  onRangeChange,
+}) => {
   const { theme } = useTheme();
   const s = useMemo(() => buildTrendSharedStyles(theme), [theme]);
   const { t } = useTranslation();
@@ -49,7 +55,9 @@ export const TrendRangeControl: React.FC<Props> = ({ range, color, tint, anchorD
           <TouchableOpacity
             key={r}
             style={[s.rangeBtn, range === r && { borderColor: color, backgroundColor: tint }]}
-            onPress={() => { onRangeChange(r); }}
+            onPress={() => {
+              onRangeChange(r);
+            }}
             activeOpacity={0.7}
           >
             <SafeText style={[s.rangeBtnText, range === r && { color }]}>{rangeLabels[r]}</SafeText>

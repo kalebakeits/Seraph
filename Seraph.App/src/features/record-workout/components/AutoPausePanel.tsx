@@ -5,6 +5,7 @@ import { SafeText } from '../../../components/common/SafeText';
 import { StepperHabitInput } from '../../habits/components/StepperHabitInput';
 import { useTheme, type Theme } from '../../../theme';
 import type { AutoPauseSettings } from '../hooks/useAutoPauseSettings';
+import { getZ1Threshold } from '../../../utils/hrThreshold';
 
 interface Props {
   settings: AutoPauseSettings;
@@ -17,7 +18,7 @@ export const AutoPausePanel: React.FC<Props> = ({ settings, onToggle, onZ1Change
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
 
-  const z1Threshold = settings.fthr != null ? Math.round(settings.fthr * 0.72) : null;
+  const z1Threshold = Math.round(getZ1Threshold(settings.fthr, settings.age));
 
   return (
     <View style={styles.container}>
@@ -32,19 +33,19 @@ export const AutoPausePanel: React.FC<Props> = ({ settings, onToggle, onZ1Change
       </View>
 
       <SafeText style={styles.helper}>
-        {z1Threshold != null
-          ? t('workout.autoPauseHelper', { threshold: z1Threshold })
-          : t('workout.autoPauseHelperNoThreshold')}
+        {t('workout.autoPauseHelper', { threshold: z1Threshold })}
       </SafeText>
 
-      {settings.enabled && z1Threshold != null && (
+      {settings.enabled && (
         <View style={styles.row}>
           <SafeText style={styles.label}>{t('workout.autoPauseDelay')}</SafeText>
           <View style={styles.stepperRow}>
             <StepperHabitInput
               value={settings.z1Seconds}
               step={10}
-              onChange={v => v != null && v > 0 && onZ1Change(v)}
+              onChange={v => {
+                if (v != null && v > 0) onZ1Change(v);
+              }}
             />
             <SafeText style={styles.unit}>{t('workout.autoPauseDelayUnit')}</SafeText>
           </View>

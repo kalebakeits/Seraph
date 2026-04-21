@@ -1,5 +1,5 @@
 import { eq, inArray } from 'drizzle-orm';
-import { getDb } from '../db';
+import { getDb, insertAndGetId } from '../db';
 import { habitDefinitions, habitLogs, type HabitDefinition } from '../schema';
 
 class HabitDefinitionsRepository {
@@ -66,28 +66,24 @@ class HabitDefinitionsRepository {
     step: number | null;
   }): Promise<number> {
     const nextOrder = (await this.maxActiveSortOrder()) + 1;
-    const result = await getDb()
-      .insert(habitDefinitions)
-      .values({
-        name_custom: params.name,
-        type: params.type,
-        unit: params.unit,
-        step: params.step,
-        is_manual: 1,
-        is_active: 1,
-        sort_order: nextOrder,
-        created_at: Date.now(),
-      })
-      .returning({ id: habitDefinitions.id });
-    return result[0].id;
+    return insertAndGetId(() =>
+      getDb()
+        .insert(habitDefinitions)
+        .values({
+          name_custom: params.name,
+          type: params.type,
+          unit: params.unit,
+          step: params.step,
+          is_manual: 1,
+          is_active: 1,
+          sort_order: nextOrder,
+          created_at: Date.now(),
+        }),
+    );
   }
 
   async insert(habit: Omit<HabitDefinition, 'id'>): Promise<number> {
-    const result = await getDb()
-      .insert(habitDefinitions)
-      .values(habit)
-      .returning({ id: habitDefinitions.id });
-    return result[0].id;
+    return insertAndGetId(() => getDb().insert(habitDefinitions).values(habit));
   }
 
   async deleteCustom(id: number): Promise<void> {

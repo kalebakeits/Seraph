@@ -6,7 +6,6 @@ import { SafeText } from '../../components/common/SafeText';
 import { useTheme } from '../../theme';
 import { ScanSection } from '../device-management/components/ScanSection';
 import { useDeviceStore } from '../device-management/store/deviceStore';
-import { appParametersRepository } from '../../services/database/drizzle';
 import { PageContainer } from './PageContainer';
 import { buildStyles } from './OnboardingStyles';
 
@@ -19,14 +18,11 @@ export const ConnectPage: React.FC<Props> = ({ width, onConnected }) => {
   const { theme } = useTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
-  const { isConnected, isScanning, isConnecting, scannedDevices, scan, connect } =
-    useDeviceStore();
+  const { isConnected, isScanning, isConnecting, scannedDevices, scan, connect } = useDeviceStore();
 
   useEffect(() => {
     if (isConnected) {
-      void appParametersRepository.set('onboarding_complete', '1').then(() => {
-        onConnected();
-      });
+      onConnected();
     }
   }, [isConnected, onConnected]);
 

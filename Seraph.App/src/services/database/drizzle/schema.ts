@@ -1,25 +1,5 @@
 import { sqliteTable, integer, real, text, uniqueIndex, index } from 'drizzle-orm/sqlite-core';
 
-// ─── r24 ────────────────────────────────────────────────────────────────────
-
-export const r24 = sqliteTable('r24', {
-  id:           integer('id').primaryKey({ autoIncrement: true }),
-  sequence:     integer('sequence').notNull(),
-  timestamp:    integer('timestamp').notNull(),
-  subseconds:   integer('subseconds').notNull(),
-  heart_rate:   integer('heart_rate').notNull(),
-  rr_intervals: text('rr_intervals'),
-  skin_temp:    real('skin_temp').notNull(),
-  step_count:   integer('step_count').notNull(),
-  b2:           integer('b2').notNull(),
-  b80:          integer('b80').notNull().default(0),
-  device_id:    text('device_id').notNull(),
-  created_at:   integer('created_at').notNull(),
-}, (t) => [
-  uniqueIndex('r24_device_seq_idx').on(t.device_id, t.sequence),
-  index('r24_device_ts_idx').on(t.device_id, t.timestamp),
-]);
-
 // ─── app_parameters ─────────────────────────────────────────────────────────
 
 export const appParameters = sqliteTable('app_parameters', {
@@ -156,7 +136,6 @@ export const habitLogs = sqliteTable('habit_logs', {
 
 // ─── Inferred types ──────────────────────────────────────────────────────────
 
-export type R24Record        = typeof r24.$inferSelect;
 export type DailyAggregation = typeof dailyAggregations.$inferSelect;
 export type SleepEvent       = typeof sleepEvents.$inferSelect;
 export type ActivityEvent    = typeof activityEvents.$inferSelect;

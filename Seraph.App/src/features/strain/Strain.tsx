@@ -49,7 +49,10 @@ export const Strain: React.FC<Props> = ({ route }) => {
       <Section
         title={t('common.strainTrends')}
         onTitlePress={() => {
-          navigation.navigate('TrendStrain', { anchorDate: route.params?.selectedDate });
+          navigation.navigate('Trends', {
+            initialTrend: 'strain',
+            anchorDate: route.params?.selectedDate,
+          });
         }}
       >
         <HelperText translationKey="strain.trendsHelper" />
