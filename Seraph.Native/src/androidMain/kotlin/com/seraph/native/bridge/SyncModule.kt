@@ -32,10 +32,15 @@ class SyncModule(
     }
 
     @ReactMethod
-    fun connect(deviceId: String, promise: Promise) {
+    fun connect(
+        deviceId: String,
+        promise: Promise,
+    ) {
         reactApplicationContext
             .getSharedPreferences("seraph_service", Context.MODE_PRIVATE)
-            .edit().putString("device_id", deviceId).apply()
+            .edit()
+            .putString("device_id", deviceId)
+            .apply()
         reactApplicationContext.startForegroundService(
             Intent(reactApplicationContext, ForegroundService::class.java)
                 .putExtra(ForegroundService.EXTRA_DEVICE_ID, deviceId),
@@ -57,13 +62,24 @@ class SyncModule(
     }
 
     @ReactMethod
-    fun syncNow(options: ReadableMap?, promise: Promise) {
+    fun syncNow(
+        options: ReadableMap?,
+        promise: Promise,
+    ) {
         scope.launch {
             try {
-                val runner = serviceProvider()?.syncRunner
-                    ?: run { promise.reject("SERVICE_NOT_READY", "Service not started"); return@launch }
-                val trim = if (options?.hasKey("lastTrim") == true && !options.isNull("lastTrim"))
-                    options.getInt("lastTrim") else null
+                val runner =
+                    serviceProvider()?.syncRunner
+                        ?: run {
+                            promise.reject("SERVICE_NOT_READY", "Service not started")
+                            return@launch
+                        }
+                val trim =
+                    if (options?.hasKey("lastTrim") == true && !options.isNull("lastTrim")) {
+                        options.getInt("lastTrim")
+                    } else {
+                        null
+                    }
                 runner.requestSync(trim)
                 promise.resolve(null)
             } catch (e: Exception) {
@@ -85,11 +101,18 @@ class SyncModule(
     }
 
     @ReactMethod
-    fun forceTrim(trimValue: Int, promise: Promise) {
+    fun forceTrim(
+        trimValue: Int,
+        promise: Promise,
+    ) {
         scope.launch {
             try {
-                val runner = serviceProvider()?.syncRunner
-                    ?: run { promise.reject("SERVICE_NOT_READY", "Service not started"); return@launch }
+                val runner =
+                    serviceProvider()?.syncRunner
+                        ?: run {
+                            promise.reject("SERVICE_NOT_READY", "Service not started")
+                            return@launch
+                        }
                 runner.forceTrim(trimValue)
                 promise.resolve(null)
             } catch (e: Exception) {
@@ -102,17 +125,23 @@ class SyncModule(
     fun getLastTrim(promise: Promise) {
         scope.launch {
             try {
-                val runner = serviceProvider()?.syncRunner
-                    ?: run { promise.resolve(null); return@launch }
+                val runner =
+                    serviceProvider()?.syncRunner
+                        ?: run {
+                            promise.resolve(null)
+                            return@launch
+                        }
                 val (trimVal, savedAt, r24Ts) = runner.getLastTrim()
                 if (trimVal == null) {
                     promise.resolve(null)
                 } else {
-                    promise.resolve(com.facebook.react.bridge.Arguments.createMap().apply {
-                        putInt("trimValue", trimVal)
-                        savedAt?.let { putDouble("savedAt", it.toDouble()) }
-                        r24Ts?.let { putDouble("r24Timestamp", it.toDouble()) }
-                    })
+                    promise.resolve(
+                        com.facebook.react.bridge.Arguments.createMap().apply {
+                            putInt("trimValue", trimVal)
+                            savedAt?.let { putDouble("savedAt", it.toDouble()) }
+                            r24Ts?.let { putDouble("r24Timestamp", it.toDouble()) }
+                        },
+                    )
                 }
             } catch (e: Exception) {
                 promise.reject("GET_LAST_TRIM_ERROR", e.message, e)
@@ -121,11 +150,18 @@ class SyncModule(
     }
 
     @ReactMethod
-    fun reaggregate(datesArray: ReadableArray, promise: Promise) {
+    fun reaggregate(
+        datesArray: ReadableArray,
+        promise: Promise,
+    ) {
         scope.launch {
             try {
-                val coordinator = serviceProvider()?.aggregationCoordinator
-                    ?: run { promise.reject("SERVICE_NOT_READY", "Service not started"); return@launch }
+                val coordinator =
+                    serviceProvider()?.aggregationCoordinator
+                        ?: run {
+                            promise.reject("SERVICE_NOT_READY", "Service not started")
+                            return@launch
+                        }
                 val dates = (0 until datesArray.size()).mapNotNull { datesArray.getString(it) }
                 coordinator.reaggregate(dates)
                 promise.resolve(null)
@@ -136,11 +172,18 @@ class SyncModule(
     }
 
     @ReactMethod
-    fun recalcActivity(activityId: Double, promise: Promise) {
+    fun recalcActivity(
+        activityId: Double,
+        promise: Promise,
+    ) {
         scope.launch(Dispatchers.IO) {
             try {
-                val coordinator = awaitService()?.aggregationCoordinator
-                    ?: run { promise.reject("SERVICE_NOT_READY", "Service not started"); return@launch }
+                val coordinator =
+                    awaitService()?.aggregationCoordinator
+                        ?: run {
+                            promise.reject("SERVICE_NOT_READY", "Service not started")
+                            return@launch
+                        }
                 coordinator.recalcActivity(activityId.toLong())
                 promise.resolve(null)
             } catch (e: OverlapException) {
@@ -152,11 +195,18 @@ class SyncModule(
     }
 
     @ReactMethod
-    fun recalcSleep(sleepId: Double, promise: Promise) {
+    fun recalcSleep(
+        sleepId: Double,
+        promise: Promise,
+    ) {
         scope.launch(Dispatchers.IO) {
             try {
-                val coordinator = awaitService()?.aggregationCoordinator
-                    ?: run { promise.reject("SERVICE_NOT_READY", "Service not started"); return@launch }
+                val coordinator =
+                    awaitService()?.aggregationCoordinator
+                        ?: run {
+                            promise.reject("SERVICE_NOT_READY", "Service not started")
+                            return@launch
+                        }
                 coordinator.recalcSleep(sleepId.toLong())
                 promise.resolve(null)
             } catch (e: OverlapException) {
@@ -168,11 +218,18 @@ class SyncModule(
     }
 
     @ReactMethod
-    fun refreshDailyLoad(date: String, promise: Promise) {
+    fun refreshDailyLoad(
+        date: String,
+        promise: Promise,
+    ) {
         scope.launch(Dispatchers.IO) {
             try {
-                val coordinator = awaitService()?.aggregationCoordinator
-                    ?: run { promise.reject("SERVICE_NOT_READY", "Service not started"); return@launch }
+                val coordinator =
+                    awaitService()?.aggregationCoordinator
+                        ?: run {
+                            promise.reject("SERVICE_NOT_READY", "Service not started")
+                            return@launch
+                        }
                 coordinator.refreshDailyLoad(date)
                 promise.resolve(null)
             } catch (e: Exception) {

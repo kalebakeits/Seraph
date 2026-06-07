@@ -2,9 +2,9 @@ package com.seraph.native.aggregation.workout
 
 import com.seraph.core.calculators.ZoneSeconds
 import com.seraph.native.db.Activity_events
-import com.seraph.native.db.r24.R24
 import com.seraph.native.db.R24Dao
 import com.seraph.native.db.SeraphDb
+import com.seraph.native.db.r24.R24
 
 internal interface ActivityWindow {
     val row: Activity_events

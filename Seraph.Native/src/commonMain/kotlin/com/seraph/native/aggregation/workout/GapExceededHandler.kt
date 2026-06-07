@@ -1,8 +1,8 @@
 package com.seraph.native.aggregation.workout
 
-import com.seraph.native.db.r24.R24
 import com.seraph.native.db.R24Dao
 import com.seraph.native.db.SeraphDb
+import com.seraph.native.db.r24.R24
 
 internal class GapExceededHandler(
     private val db: SeraphDb,

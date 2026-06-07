@@ -2,9 +2,9 @@ package com.seraph.native.aggregation.sleep
 
 import com.seraph.core.calculators.isSleepByte
 import com.seraph.native.aggregation.AggregationProfile
-import com.seraph.native.db.r24.R24
 import com.seraph.native.db.SeraphDb
 import com.seraph.native.db.Sleep_events
+import com.seraph.native.db.r24.R24
 
 /**
  * Processes rows for a smart nap session (is_manual = 3).

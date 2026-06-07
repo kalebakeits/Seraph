@@ -21,7 +21,10 @@ class NotificationModule(
     fun getUnreadNotificationCount(promise: Promise) {
         scope.launch {
             try {
-                val count = DbHolder.db.seraphDbQueries.getUnreadNotificationCount().executeAsOne()
+                val count =
+                    DbHolder.db.seraphDbQueries
+                        .getUnreadNotificationCount()
+                        .executeAsOne()
                 promise.resolve(count.toInt())
             } catch (e: Exception) {
                 promise.reject("DB_ERROR", e.message, e)
@@ -30,7 +33,10 @@ class NotificationModule(
     }
 
     @ReactMethod
-    fun markNotificationRead(id: Double, promise: Promise) {
+    fun markNotificationRead(
+        id: Double,
+        promise: Promise,
+    ) {
         scope.launch {
             try {
                 DbHolder.db.seraphDbQueries.markNotificationRead(id.toLong())

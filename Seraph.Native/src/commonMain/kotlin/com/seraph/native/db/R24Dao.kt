@@ -16,8 +16,11 @@ class R24Dao(
             subseconds = packet.subseconds.toLong(),
             heart_rate = packet.heartRate.toLong(),
             rr_intervals =
-                if (packet.rrIntervals.isEmpty()) null
-                else packet.rrIntervals.joinToString(",", "[", "]"),
+                if (packet.rrIntervals.isEmpty()) {
+                    null
+                } else {
+                    packet.rrIntervals.joinToString(",", "[", "]")
+                },
             skin_temp = packet.skinTemp.toDouble(),
             step_count = packet.stepCount.toLong(),
             b2 = packet.b2.toLong(),
@@ -26,7 +29,10 @@ class R24Dao(
         )
     }
 
-    fun insertBatch(packets: List<R24Packet>, granularityMs: Long = 1_000L) {
+    fun insertBatch(
+        packets: List<R24Packet>,
+        granularityMs: Long = 1_000L,
+    ) {
         val now = Clock.System.now().toEpochMilliseconds()
         db.r24DbQueries.transactionWithResult {
             for (packet in packets) {
@@ -37,8 +43,11 @@ class R24Dao(
                     subseconds = packet.subseconds.toLong(),
                     heart_rate = packet.heartRate.toLong(),
                     rr_intervals =
-                        if (packet.rrIntervals.isEmpty()) null
-                        else packet.rrIntervals.joinToString(",", "[", "]"),
+                        if (packet.rrIntervals.isEmpty()) {
+                            null
+                        } else {
+                            packet.rrIntervals.joinToString(",", "[", "]")
+                        },
                     skin_temp = packet.skinTemp.toDouble(),
                     step_count = packet.stepCount.toLong(),
                     b2 = packet.b2.toLong(),
@@ -58,27 +67,44 @@ class R24Dao(
         return secs.coerceIn(1L, 10L) * 1_000L
     }
 
-    fun queryByDateRange(startMs: Long, endMs: Long) =
-        db.r24DbQueries.queryR24ByDateRange(startMs, endMs).executeAsList()
+    fun queryByDateRange(
+        startMs: Long,
+        endMs: Long,
+    ) = db.r24DbQueries.queryR24ByDateRange(startMs, endMs).executeAsList()
 
-    fun queryByDate(date: String) =
-        db.r24DbQueries.queryR24ByDate(date).executeAsList()
+    fun queryByDate(date: String) = db.r24DbQueries.queryR24ByDate(date).executeAsList()
 
-    fun queryFromTs(date: String, fromTs: Long) =
-        db.r24DbQueries.queryR24FromTs(date, fromTs).executeAsList()
+    fun queryFromTs(
+        date: String,
+        fromTs: Long,
+    ) = db.r24DbQueries.queryR24FromTs(date, fromTs).executeAsList()
 
-    fun sampleHrBuckets(startMs: Long, endMs: Long, bucketMs: Long) =
-        db.r24DbQueries.sampleHrBuckets(bucketMs = bucketMs, startMs = startMs, endMs = endMs).executeAsList()
+    fun sampleHrBuckets(
+        startMs: Long,
+        endMs: Long,
+        bucketMs: Long,
+    ) = db.r24DbQueries.sampleHrBuckets(bucketMs = bucketMs, startMs = startMs, endMs = endMs).executeAsList()
 
-    fun rrIntervalsInRange(startMs: Long, endMs: Long) =
-        db.r24DbQueries.rrIntervalsInRange(startMs, endMs).executeAsList()
+    fun rrIntervalsInRange(
+        startMs: Long,
+        endMs: Long,
+    ) = db.r24DbQueries.rrIntervalsInRange(startMs, endMs).executeAsList()
 
-    fun calcRhrForWindow(startMs: Long, endMs: Long): Int =
-        db.r24DbQueries.calcRhrForWindow(startMs, endMs).executeAsOneOrNull()?.rhr?.toInt() ?: 0
+    fun calcRhrForWindow(
+        startMs: Long,
+        endMs: Long,
+    ): Int =
+        db.r24DbQueries
+            .calcRhrForWindow(startMs, endMs)
+            .executeAsOneOrNull()
+            ?.rhr
+            ?.toInt() ?: 0
 
-    fun deleteOlderThan(cutoffMs: Long) =
-        db.r24DbQueries.deleteR24OlderThan(cutoffMs)
+    fun deleteOlderThan(cutoffMs: Long) = db.r24DbQueries.deleteR24OlderThan(cutoffMs)
 
     fun getOldestTimestamp(): Long? =
-        db.r24DbQueries.getOldestTimestamp().executeAsOneOrNull()?.oldest_ts
+        db.r24DbQueries
+            .getOldestTimestamp()
+            .executeAsOneOrNull()
+            ?.oldest_ts
 }

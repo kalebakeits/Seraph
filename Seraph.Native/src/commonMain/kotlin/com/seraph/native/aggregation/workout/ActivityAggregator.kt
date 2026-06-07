@@ -5,9 +5,9 @@ package com.seraph.native.aggregation.workout
 import co.touchlab.kermit.Logger
 import com.seraph.core.calculators.getMaxHR
 import com.seraph.native.aggregation.AggregationProfile
-import com.seraph.native.db.r24.R24
 import com.seraph.native.db.R24Dao
 import com.seraph.native.db.SeraphDb
+import com.seraph.native.db.r24.R24
 
 private val log = Logger.withTag("ActivityAggregator")
 
@@ -61,6 +61,9 @@ class ActivityAggregator(
                 .forEach { it.onRow(row, db) }
 
             if (openManuals.any { row.timestamp in it.row.start_ts..it.row.end_ts }) continue
+
+            // Skip rows already processed in a previous incremental pass
+            if (openAuto != null && row.timestamp <= openAuto.row.end_ts) continue
 
             val active = row.heart_rate in 30..220 && row.heart_rate >= thresholdHR.toLong()
             val handler = handlerFactory.create(row, active, openAuto) ?: continue

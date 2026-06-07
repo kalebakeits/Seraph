@@ -9,8 +9,8 @@ import com.seraph.core.calculators.calculateStrain
 import com.seraph.core.calculators.getMaxHR
 import com.seraph.native.aggregation.sleep.SleepNeedCalculator
 import com.seraph.native.db.AggregationDao
-import com.seraph.native.db.r24.R24
 import com.seraph.native.db.SeraphDb
+import com.seraph.native.db.r24.R24
 import kotlin.math.roundToInt
 import kotlin.time.Clock
 

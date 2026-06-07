@@ -12,15 +12,18 @@ private const val SNAP_B = "seraph.snap.b.db"
 private const val RATE_LIMIT_MS = 6 * 60 * 60 * 1_000L
 private const val PARAM_LAST_SNAPSHOT = "last_snapshot_ts"
 
-class SnapshotManager(private val context: Context) {
+class SnapshotManager(
+    private val context: Context,
+) {
     private val dbDir: File get() = context.getDatabasePath("seraph.db").parentFile!!
 
     fun takeIfDue() {
         val now = System.currentTimeMillis()
-        val last = DbHolder.db.seraphDbQueries
-            .getAppParameter(PARAM_LAST_SNAPSHOT)
-            .executeAsOneOrNull()
-            ?.toLongOrNull() ?: 0L
+        val last =
+            DbHolder.db.seraphDbQueries
+                .getAppParameter(PARAM_LAST_SNAPSHOT)
+                .executeAsOneOrNull()
+                ?.toLongOrNull() ?: 0L
         if (now - last < RATE_LIMIT_MS) return
         try {
             rotate()
@@ -51,15 +54,14 @@ class SnapshotManager(private val context: Context) {
         }
     }
 
-    private fun isHealthy(f: File): Boolean {
-        return try {
+    private fun isHealthy(f: File): Boolean =
+        try {
             val db = SQLiteDatabase.openDatabase(f.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
             db.close()
             true
         } catch (_: Exception) {
             false
         }
-    }
 
     private fun copyWithBackupApi(dstPath: String) {
         val conn = DbHolder.helper.writableDatabase

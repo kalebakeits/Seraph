@@ -28,19 +28,37 @@ export function ChooseHabitsScreen() {
   const displayItems = items ?? habits;
 
   const saveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savingRef = useRef(false);
+  const pendingSaveRef = useRef<HabitDefinition[] | null>(null);
 
   const scheduleSave = useCallback(
     (snapshot: HabitDefinition[]) => {
+      pendingSaveRef.current = snapshot;
       if (saveRef.current) clearTimeout(saveRef.current);
+      if (savingRef.current) return;
       saveRef.current = setTimeout(() => {
+        const saveSnapshot = pendingSaveRef.current;
+        pendingSaveRef.current = null;
+        if (!saveSnapshot) return;
         void (async () => {
-          for (const h of snapshot) {
-            await habitDefinitionsRepository.setActive(h.id, h.is_active === 1);
+          savingRef.current = true;
+          try {
+            for (const h of saveSnapshot) {
+              await habitDefinitionsRepository.setActive(h.id, h.is_active === 1);
+            }
+            for (let i = 0; i < saveSnapshot.length; i++) {
+              await habitDefinitionsRepository.setSortOrder(saveSnapshot[i].id, i);
+            }
+            void queryClient.invalidateQueries({ queryKey: ['habits'] });
+          } catch (e) {
+            console.error('[ChooseHabits] Failed to save', e);
+          } finally {
+            savingRef.current = false;
+            const pendingSnapshot = pendingSaveRef.current;
+            if (pendingSnapshot) {
+              scheduleSave(pendingSnapshot);
+            }
           }
-          for (let i = 0; i < snapshot.length; i++) {
-            await habitDefinitionsRepository.setSortOrder(snapshot[i].id, i);
-          }
-          void queryClient.invalidateQueries({ queryKey: ['habits'] });
         })();
       }, 400);
     },

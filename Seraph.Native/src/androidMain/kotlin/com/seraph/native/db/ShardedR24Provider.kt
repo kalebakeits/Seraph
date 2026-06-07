@@ -6,8 +6,8 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import co.touchlab.kermit.Logger
-import com.seraph.native.db.r24.R24Db
 import com.seraph.native.db.r24.R24
+import com.seraph.native.db.r24.R24Db
 import java.io.File
 import java.io.FileOutputStream
 import java.time.LocalDate
@@ -23,24 +23,39 @@ class ShardedR24Provider(
 ) {
     fun queryByDate(date: String): List<R24> {
         val localDate = LocalDate.parse(date)
-        return if (isHot(localDate)) r24Dao.queryByDate(date)
-        else queryFromShard(YearMonth.from(localDate)) { it.queryByDate(date) }
+        return if (isHot(localDate)) {
+            r24Dao.queryByDate(date)
+        } else {
+            queryFromShard(YearMonth.from(localDate)) { it.queryByDate(date) }
+        }
     }
 
-    fun queryFromTs(date: String, fromTs: Long): List<R24> {
+    fun queryFromTs(
+        date: String,
+        fromTs: Long,
+    ): List<R24> {
         val localDate = LocalDate.parse(date)
-        return if (isHot(localDate)) r24Dao.queryFromTs(date, fromTs)
-        else queryFromShard(YearMonth.from(localDate)) { it.queryFromTs(date, fromTs) }
+        return if (isHot(localDate)) {
+            r24Dao.queryFromTs(date, fromTs)
+        } else {
+            queryFromShard(YearMonth.from(localDate)) { it.queryFromTs(date, fromTs) }
+        }
     }
 
-    fun queryByDateRange(startMs: Long, endMs: Long): List<R24> {
+    fun queryByDateRange(
+        startMs: Long,
+        endMs: Long,
+    ): List<R24> {
         val startMonth = YearMonth.from(LocalDate.ofEpochDay(startMs / 86_400_000))
         val endMonth = YearMonth.from(LocalDate.ofEpochDay(endMs / 86_400_000))
 
         if (startMonth == endMonth) {
             val date = LocalDate.ofEpochDay(startMs / 86_400_000)
-            return if (isHot(date)) r24Dao.queryByDateRange(startMs, endMs)
-            else queryFromShard(startMonth) { it.queryByDateRange(startMs, endMs) }
+            return if (isHot(date)) {
+                r24Dao.queryByDateRange(startMs, endMs)
+            } else {
+                queryFromShard(startMonth) { it.queryByDateRange(startMs, endMs) }
+            }
         }
 
         val results = mutableListOf<R24>()
@@ -65,7 +80,10 @@ class ShardedR24Provider(
         return !date.isBefore(hotBoundary)
     }
 
-    private fun queryFromShard(month: YearMonth, query: (R24Dao) -> List<R24>): List<R24> {
+    private fun queryFromShard(
+        month: YearMonth,
+        query: (R24Dao) -> List<R24>,
+    ): List<R24> {
         val gzFile = shardManager.findShardForDate(month.atDay(1))
         if (gzFile == null) {
             log.w { "No shard found for $month — returning empty" }
@@ -80,7 +98,10 @@ class ShardedR24Provider(
         }
     }
 
-    private fun unzip(gz: File, dest: File) {
+    private fun unzip(
+        gz: File,
+        dest: File,
+    ) {
         GZIPInputStream(gz.inputStream()).use { gis ->
             FileOutputStream(dest).use { gis.copyTo(it) }
         }
@@ -97,11 +118,19 @@ class ShardedR24Provider(
                             object : SupportSQLiteOpenHelper.Callback(R24Db.Schema.version.toInt()) {
                                 override fun onCreate(db: SupportSQLiteDatabase) {}
 
-                                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                                override fun onUpgrade(
+                                    db: SupportSQLiteDatabase,
+                                    oldVersion: Int,
+                                    newVersion: Int,
+                                ) {
                                     R24Db.Schema.migrate(AndroidSqliteDriver(db), oldVersion.toLong(), newVersion.toLong())
                                 }
 
-                                override fun onDowngrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+                                override fun onDowngrade(
+                                    db: SupportSQLiteDatabase,
+                                    oldVersion: Int,
+                                    newVersion: Int,
+                                ) {}
                             },
                         ).build(),
                 ),
