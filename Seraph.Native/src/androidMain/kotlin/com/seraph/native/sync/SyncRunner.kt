@@ -77,6 +77,8 @@ class SyncRunner(
     private val _trimAcked = MutableSharedFlow<Int>(extraBufferCapacity = 16)
     val trimAcked: SharedFlow<Int> = _trimAcked.asSharedFlow()
 
+    fun hasDevice(): Boolean = ::device.isInitialized
+
     @Volatile private var activeSession: SyncSession? = null
 
     @Volatile private var syncJob: Job? = null

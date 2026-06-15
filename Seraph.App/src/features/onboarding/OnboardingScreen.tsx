@@ -115,38 +115,42 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
   }, [advanceTo]);
 
   const saveAndComplete = async () => {
-    const preset = SENSITIVITY_PRESETS.find(p => p.key === sensitivity) ?? SENSITIVITY_PRESETS[2];
+    try {
+      const preset = SENSITIVITY_PRESETS.find(p => p.key === sensitivity) ?? SENSITIVITY_PRESETS[2];
 
-    let age: number | null = null;
-    if (draft.dob) {
-      const dob = new Date(draft.dob + 'T12:00:00Z');
-      const today = new Date();
-      age = today.getFullYear() - dob.getFullYear();
-      const m = today.getMonth() - dob.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+      let age: number | null = null;
+      if (draft.dob) {
+        const dob = new Date(draft.dob + 'T12:00:00Z');
+        const today = new Date();
+        age = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+      }
+
+      type Param = Parameters<typeof appParametersRepository.set>[0];
+      const entries: [Param, string][] = [
+        ['profile_name', draft.name],
+        ['profile_dob', draft.dob],
+        ['profile_sex', draft.sex],
+        ['profile_height_cm', draft.height_cm],
+        ['profile_weight_kg', draft.weight_kg],
+        ['profile_sleep_goal_minutes', String(draft.sleep_goal_minutes)],
+        ['profile_threshold_hr', draft.fthr],
+        ['activity_min_trimp', String(preset.minTrimp)],
+        ['activity_min_ms', String(preset.minMs)],
+        ['r24_granularity_seconds', String(granularity)],
+      ];
+
+      if (age !== null) entries.push(['profile_age', String(age)]);
+
+      await Promise.all([
+        ...entries.filter(([, v]) => v !== '').map(([k, v]) => appParametersRepository.set(k, v)),
+        appParametersRepository.set('onboarding_complete', '1'),
+      ]);
+      onComplete();
+    } catch (e) {
+      console.error('[Onboarding] Failed to save settings', e);
     }
-
-    type Param = Parameters<typeof appParametersRepository.set>[0];
-    const entries: [Param, string][] = [
-      ['profile_name', draft.name],
-      ['profile_dob', draft.dob],
-      ['profile_sex', draft.sex],
-      ['profile_height_cm', draft.height_cm],
-      ['profile_weight_kg', draft.weight_kg],
-      ['profile_sleep_goal_minutes', String(draft.sleep_goal_minutes)],
-      ['profile_threshold_hr', draft.fthr],
-      ['activity_min_trimp', String(preset.minTrimp)],
-      ['activity_min_ms', String(preset.minMs)],
-      ['r24_granularity_seconds', String(granularity)],
-    ];
-
-    if (age !== null) entries.push(['profile_age', String(age)]);
-
-    await Promise.all([
-      ...entries.filter(([, v]) => v !== '').map(([k, v]) => appParametersRepository.set(k, v)),
-      appParametersRepository.set('onboarding_complete', '1'),
-    ]);
-    onComplete();
   };
 
   const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {

@@ -34,7 +34,11 @@ class DbModule(
     }
 
     @ReactMethod
-    fun dbQuery(sql: String, params: ReadableArray, promise: Promise) {
+    fun dbQuery(
+        sql: String,
+        params: ReadableArray,
+        promise: Promise,
+    ) {
         scope.launch {
             try {
                 promise.resolve(bridge.query(sql, params))
@@ -45,7 +49,11 @@ class DbModule(
     }
 
     @ReactMethod
-    fun dbExec(sql: String, params: ReadableArray, promise: Promise) {
+    fun dbExec(
+        sql: String,
+        params: ReadableArray,
+        promise: Promise,
+    ) {
         scope.launch {
             try {
                 promise.resolve(bridge.exec(sql, params))
@@ -67,7 +75,12 @@ class DbModule(
     }
 
     @ReactMethod
-    fun dbExecInTx(txId: String, sql: String, params: ReadableArray, promise: Promise) {
+    fun dbExecInTx(
+        txId: String,
+        sql: String,
+        params: ReadableArray,
+        promise: Promise,
+    ) {
         scope.launch {
             try {
                 promise.resolve(bridge.execInTx(txId, sql, params))
@@ -78,7 +91,12 @@ class DbModule(
     }
 
     @ReactMethod
-    fun dbQueryInTx(txId: String, sql: String, params: ReadableArray, promise: Promise) {
+    fun dbQueryInTx(
+        txId: String,
+        sql: String,
+        params: ReadableArray,
+        promise: Promise,
+    ) {
         scope.launch {
             try {
                 promise.resolve(bridge.queryInTx(txId, sql, params))
@@ -89,7 +107,10 @@ class DbModule(
     }
 
     @ReactMethod
-    fun dbCommit(txId: String, promise: Promise) {
+    fun dbCommit(
+        txId: String,
+        promise: Promise,
+    ) {
         scope.launch {
             try {
                 bridge.commit(txId)
@@ -102,7 +123,10 @@ class DbModule(
     }
 
     @ReactMethod
-    fun dbRollback(txId: String, promise: Promise) {
+    fun dbRollback(
+        txId: String,
+        promise: Promise,
+    ) {
         scope.launch {
             try {
                 bridge.rollback(txId)

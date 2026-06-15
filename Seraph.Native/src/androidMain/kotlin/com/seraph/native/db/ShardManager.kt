@@ -42,8 +42,13 @@ class ShardManager(
             shardDir.listFiles()?.mapNotNull { parseMonthFromFilename(it.name) }?.toSet() ?: emptySet()
         val rows = r24Db.r24DbQueries.getDistinctR24Months().executeAsList()
         return rows
-            .mapNotNull { monthStr -> try { YearMonth.parse(monthStr) } catch (_: Exception) { null } }
-            .filter { it < cutoff && it !in alreadySharded }
+            .mapNotNull { monthStr ->
+                try {
+                    YearMonth.parse(monthStr)
+                } catch (_: Exception) {
+                    null
+                }
+            }.filter { it < cutoff && it !in alreadySharded }
             .sorted()
     }
 
@@ -105,11 +110,19 @@ class ShardManager(
                                     R24Db.Schema.create(AndroidSqliteDriver(db))
                                 }
 
-                                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                                override fun onUpgrade(
+                                    db: SupportSQLiteDatabase,
+                                    oldVersion: Int,
+                                    newVersion: Int,
+                                ) {
                                     R24Db.Schema.migrate(AndroidSqliteDriver(db), oldVersion.toLong(), newVersion.toLong())
                                 }
 
-                                override fun onDowngrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+                                override fun onDowngrade(
+                                    db: SupportSQLiteDatabase,
+                                    oldVersion: Int,
+                                    newVersion: Int,
+                                ) {}
                             },
                         ).build(),
                 ),
@@ -117,7 +130,10 @@ class ShardManager(
         return R24Db(driver)
     }
 
-    private fun gzip(source: File, dest: File) {
+    private fun gzip(
+        source: File,
+        dest: File,
+    ) {
         FileInputStream(source).use { fis ->
             GZIPOutputStream(FileOutputStream(dest)).use { gos ->
                 fis.copyTo(gos)
@@ -127,7 +143,11 @@ class ShardManager(
 
     private fun parseMonthFromFilename(name: String): YearMonth? {
         val match = SHARD_FILENAME_RE.find(name) ?: return null
-        return try { YearMonth.parse(match.groupValues[1]) } catch (_: Exception) { null }
+        return try {
+            YearMonth.parse(match.groupValues[1])
+        } catch (_: Exception) {
+            null
+        }
     }
 
     fun findShardForDate(date: LocalDate): File? {

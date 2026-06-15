@@ -66,6 +66,14 @@ export const ProfileScreen: React.FC = () => {
 
   const saveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (saveRef.current) {
+        clearTimeout(saveRef.current);
+      }
+    };
+  }, []);
+
   const persist = useCallback(
     async (patch: Partial<SettingsState>) => {
       const merged = { ...state, ...patch };

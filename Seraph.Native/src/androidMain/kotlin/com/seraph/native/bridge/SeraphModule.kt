@@ -24,10 +24,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 
 private val log = Logger.withTag("SeraphModule")
 
@@ -46,20 +44,24 @@ class SeraphModule(
 
     fun getService(): ForegroundService? = service
 
-    private val connection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName, b: IBinder) {
-            service = (b as ForegroundService.LocalBinder).service
-            service!!.uiOpen = true
-            service!!.onInAppNotification = { type, payload -> emitters.emitInAppNotification(type, payload) }
-            subscribeToFlows()
-            log.i { "Bound to ForegroundService" }
-        }
+    private val connection =
+        object : ServiceConnection {
+            override fun onServiceConnected(
+                name: ComponentName,
+                b: IBinder,
+            ) {
+                service = (b as ForegroundService.LocalBinder).service
+                service!!.uiOpen = true
+                service!!.onInAppNotification = { type, payload -> emitters.emitInAppNotification(type, payload) }
+                subscribeToFlows()
+                log.i { "Bound to ForegroundService" }
+            }
 
-        override fun onServiceDisconnected(name: ComponentName) {
-            service = null
-            log.w { "Unbound from ForegroundService" }
+            override fun onServiceDisconnected(name: ComponentName) {
+                service = null
+                log.w { "Unbound from ForegroundService" }
+            }
         }
-    }
 
     init {
         reactContext.bindService(
@@ -76,12 +78,16 @@ class SeraphModule(
                     }
                     if (event == Lifecycle.Event.ON_START) {
                         service?.uiOpen = true
-                        service?.syncLoopRunner?.let { it.start(); it.triggerImmediately() }
+                        service?.syncLoopRunner?.let {
+                            it.start()
+                            it.triggerImmediately()
+                        }
                         val svc = service
                         if (svc != null && svc.connectionManager.connectionState.value !is ConnectionState.Connected) {
-                            val deviceId = reactApplicationContext
-                                .getSharedPreferences("seraph_service", Context.MODE_PRIVATE)
-                                .getString("device_id", null)
+                            val deviceId =
+                                reactApplicationContext
+                                    .getSharedPreferences("seraph_service", Context.MODE_PRIVATE)
+                                    .getString("device_id", null)
                             if (deviceId != null) {
                                 try {
                                     reactApplicationContext.startForegroundService(
@@ -113,37 +119,57 @@ class SeraphModule(
         fun subscribeToRunners() {
             val svc = service ?: return
             emitters.emitSyncState(svc.syncRunner.state.value)
-            orchestratorJobs.add(svc.syncRunner.state.onEach { emitters.emitSyncState(it) }.launchIn(scope))
-            orchestratorJobs.add(svc.aggregationCoordinator.state.onEach { emitters.emitSyncState(it) }.launchIn(scope))
-            orchestratorJobs.add(svc.syncRunner.deviceEvents.onEach { emitters.emitDeviceEvent(it) }.launchIn(scope))
             orchestratorJobs.add(
-                svc.syncRunner.trimAcked.onEach { trim ->
-                    emitters.emit("onTrimUpdated", Arguments.createMap().apply { putInt("trimValue", trim) })
-                }.launchIn(scope),
+                svc.syncRunner.state
+                    .onEach { emitters.emitSyncState(it) }
+                    .launchIn(scope),
             )
             orchestratorJobs.add(
-                svc.syncRunner.realtimeHR.onEach { hr ->
-                    emitters.emit("onRealtimeHR", Arguments.createMap().apply { putInt("hr", hr) })
-                }.launchIn(scope),
+                svc.aggregationCoordinator.state
+                    .onEach { emitters.emitSyncState(it) }
+                    .launchIn(scope),
+            )
+            orchestratorJobs.add(
+                svc.syncRunner.deviceEvents
+                    .onEach { emitters.emitDeviceEvent(it) }
+                    .launchIn(scope),
+            )
+            orchestratorJobs.add(
+                svc.syncRunner.trimAcked
+                    .onEach { trim ->
+                        emitters.emit("onTrimUpdated", Arguments.createMap().apply { putInt("trimValue", trim) })
+                    }.launchIn(scope),
+            )
+            orchestratorJobs.add(
+                svc.syncRunner.realtimeHR
+                    .onEach { hr ->
+                        emitters.emit("onRealtimeHR", Arguments.createMap().apply { putInt("hr", hr) })
+                    }.launchIn(scope),
             )
             svc.napRunner.onSleepOnset = { startTs -> emitters.emitNapSleepOnset(startTs) }
             svc.recordingManager?.let { rm ->
                 orchestratorJobs.add(
-                    rm.state.onEach { state ->
-                        if (state == RecordingState.AUTO_PAUSED)
-                            emitters.emit("onRecordingAutoPaused", Arguments.createMap())
-                    }.launchIn(scope),
+                    rm.state
+                        .onEach { state ->
+                            if (state == RecordingState.AUTO_PAUSED) {
+                                emitters.emit("onRecordingAutoPaused", Arguments.createMap())
+                            }
+                        }.launchIn(scope),
                 )
             }
             orchestratorJobs.add(
-                svc.syncRunner.state.onEach { state ->
-                    if (state is SyncState.Complete) {
-                        dbModule.onSyncComplete(state)
-                        emitters.emit("onWorkoutProcessed", Arguments.createMap().apply {
-                            state.closedActivityStartTs.firstOrNull()?.let { putDouble("activityId", it.toDouble()) }
-                        })
-                    }
-                }.launchIn(scope),
+                svc.syncRunner.state
+                    .onEach { state ->
+                        if (state is SyncState.Complete) {
+                            dbModule.onSyncComplete(state)
+                            emitters.emit(
+                                "onWorkoutProcessed",
+                                Arguments.createMap().apply {
+                                    state.closedActivityStartTs.firstOrNull()?.let { putDouble("activityId", it.toDouble()) }
+                                },
+                            )
+                        }
+                    }.launchIn(scope),
             )
             svc.syncLoopRunner.start()
             svc.syncLoopRunner.triggerImmediately()
@@ -152,9 +178,10 @@ class SeraphModule(
         if (cm.connectionState.value is ConnectionState.Connected) subscribeToRunners()
 
         flowJobs.add(
-            cm.connectionState.onEach { state ->
-                if (state is ConnectionState.Connected) subscribeToRunners()
-            }.launchIn(scope),
+            cm.connectionState
+                .onEach { state ->
+                    if (state is ConnectionState.Connected) subscribeToRunners()
+                }.launchIn(scope),
         )
     }
 
@@ -164,5 +191,6 @@ class SeraphModule(
     }
 
     @ReactMethod fun addListener(eventName: String) {}
+
     @ReactMethod fun removeListeners(count: Int) {}
 }

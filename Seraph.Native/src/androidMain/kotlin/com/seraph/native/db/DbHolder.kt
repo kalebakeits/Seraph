@@ -12,7 +12,11 @@ object DbHolder {
     var restorationResult: RestorationResult = RestorationResult.NONE
         private set
 
-    fun init(database: SeraphDb, openHelper: SupportSQLiteOpenHelper, result: RestorationResult = RestorationResult.NONE) {
+    fun init(
+        database: SeraphDb,
+        openHelper: SupportSQLiteOpenHelper,
+        result: RestorationResult = RestorationResult.NONE,
+    ) {
         db = database
         helper = openHelper
         restorationResult = result

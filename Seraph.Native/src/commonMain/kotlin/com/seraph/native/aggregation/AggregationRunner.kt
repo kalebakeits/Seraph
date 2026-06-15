@@ -171,7 +171,7 @@ class AggregationRunner(
     /**
      * Recalculates a single sleep row from raw R24 data.
      * Throws [OverlapException] if the new window overlaps another finalized sleep.
-     * No-op if no R24 data exists in the window.
+     * Intended to no-op if no R24 data exists in the window yet.
      */
     fun recalcSleep(sleepId: Long) {
         val sleep =
@@ -284,7 +284,10 @@ class AggregationRunner(
     }
 
     companion object {
-        fun build(db: SeraphDb, r24Db: R24Db): AggregationRunner {
+        fun build(
+            db: SeraphDb,
+            r24Db: R24Db,
+        ): AggregationRunner {
             val aggDao = AggregationDao(db)
             val r24Dao = R24Dao(r24Db)
             return AggregationRunner(

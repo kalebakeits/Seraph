@@ -56,13 +56,18 @@ class NapRunner(
 
     private fun startStrategy(device: Device) {
         val token = orchestrator.acquireToken()
-        val strategy =
-            NapSyncStrategy(db, device, onComplete = {
-                activeStrategy = null
-                token.release()
-            }, onSleepOnset = { ts -> onSleepOnset?.invoke(ts) })
-        activeStrategy = strategy
-        syncLoopRunner.setStrategy(strategy)
+        try {
+            val strategy =
+                NapSyncStrategy(db, device, onComplete = {
+                    activeStrategy = null
+                    token.release()
+                }, onSleepOnset = { ts -> onSleepOnset?.invoke(ts) })
+            activeStrategy = strategy
+            syncLoopRunner.setStrategy(strategy)
+        } catch (e: Exception) {
+            token.release()
+            throw e
+        }
     }
 
     private fun clearDb() {

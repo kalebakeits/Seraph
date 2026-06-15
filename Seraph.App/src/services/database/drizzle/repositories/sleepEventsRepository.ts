@@ -74,16 +74,7 @@ class SleepEventsRepository {
   }
 
   async markFinalized(id: number): Promise<void> {
-    const rows = await getDb().select().from(sleepEvents).where(eq(sleepEvents.id, id)).limit(1);
-    const event = rows[0] as typeof rows[0] | undefined;
-    const durationMinutes =
-      event != null && event.start_ts > 0 && event.end_ts > event.start_ts
-        ? Math.max(0, Math.round((event.end_ts - event.start_ts) / 60000) - event.awake_minutes)
-        : undefined;
-    await getDb()
-      .update(sleepEvents)
-      .set({ finalized: 1, ...(durationMinutes !== undefined ? { duration_minutes: durationMinutes } : {}) })
-      .where(eq(sleepEvents.id, id));
+    await getDb().update(sleepEvents).set({ finalized: 1 }).where(eq(sleepEvents.id, id));
   }
 
   // Clear the manual edit flag so next aggregation can re-detect from raw data

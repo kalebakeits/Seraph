@@ -12,8 +12,13 @@ private const val TAG = "CorruptionHandler"
 
 enum class RestorationResult { NONE, RESTORED, NO_SNAPSHOT }
 
-class CorruptionHandler(private val context: Context) {
-    fun handleIfCorrupt(dbPath: String, snapshots: SnapshotManager): RestorationResult {
+class CorruptionHandler(
+    private val context: Context,
+) {
+    fun handleIfCorrupt(
+        dbPath: String,
+        snapshots: SnapshotManager,
+    ): RestorationResult {
         if (!isCorrupt(dbPath)) return RestorationResult.NONE
 
         val dbFile = File(dbPath)
@@ -28,10 +33,11 @@ class CorruptionHandler(private val context: Context) {
             Log.e(TAG, "Failed to rename corrupt DB", e)
         }
 
-        val snap = snapshots.latestValidSnapshot() ?: run {
-            Log.w(TAG, "No valid snapshot available — starting fresh")
-            return RestorationResult.NO_SNAPSHOT
-        }
+        val snap =
+            snapshots.latestValidSnapshot() ?: run {
+                Log.w(TAG, "No valid snapshot available — starting fresh")
+                return RestorationResult.NO_SNAPSHOT
+            }
 
         return try {
             snap.copyTo(dbFile, overwrite = true)
@@ -44,14 +50,15 @@ class CorruptionHandler(private val context: Context) {
         }
     }
 
-    private fun isCorrupt(dbPath: String): Boolean {
-        return try {
+    private fun isCorrupt(dbPath: String): Boolean =
+        try {
             val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
-            db.rawQuery("PRAGMA integrity_check", null).use { c ->
-                c.moveToFirst() && c.getString(0) != "ok"
-            }.also { db.close() }
+            db
+                .rawQuery("PRAGMA integrity_check", null)
+                .use { c ->
+                    c.moveToFirst() && c.getString(0) != "ok"
+                }.also { db.close() }
         } catch (_: Exception) {
             true
         }
-    }
 }

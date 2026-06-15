@@ -13,7 +13,7 @@ import { NapSaveDiscardSheet } from './NapSaveDiscardSheet';
 import { useNapState } from './hooks/useNapState';
 import { appParametersRepository } from '../../services/database/drizzle/repositories/appParametersRepository';
 import { sleepEventsRepository } from '../../services/database/drizzle/repositories/sleepEventsRepository';
-import { nativeCancelNap, seraphEmitter } from '../../services/ble/nativeModule';
+import { nativeCancelNap, nativeRecalcSleep, seraphEmitter } from '../../services/ble/nativeModule';
 import { syncAlarmToDevice } from '../../services/alarm/syncAlarmToDevice';
 import { formatDuration } from '../../utils/dateUtils';
 import { useTheme, type Theme } from '../../theme';
@@ -92,6 +92,7 @@ export const NapActiveScreen: React.FC = () => {
       void queryClient.invalidateQueries({ queryKey: ['activities'] });
       if (nap) {
         await sleepEventsRepository.markFinalized(nap.id);
+        void nativeRecalcSleep(nap.id);
         const date = new Date().toISOString().slice(0, 10);
         navigation.replace('SleepSessionDetail', { sleepId: nap.id, selectedDate: date });
       } else {

@@ -2,8 +2,8 @@
 
 package com.seraph.native.aggregation.workout
 
-import com.seraph.native.db.r24.R24
 import com.seraph.native.db.SeraphDb
+import com.seraph.native.db.r24.R24
 import kotlin.time.Clock
 
 internal class ActiveNoWindowHandler(

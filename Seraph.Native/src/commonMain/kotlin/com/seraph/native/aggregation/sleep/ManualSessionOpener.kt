@@ -1,8 +1,8 @@
 package com.seraph.native.aggregation.sleep
 
-import com.seraph.native.db.r24.R24
 import com.seraph.native.db.SeraphDb
 import com.seraph.native.db.Sleep_events
+import com.seraph.native.db.r24.R24
 
 /**
  * Opens a fixed (edited or manually logged) sleep session when a row falls within

@@ -1,7 +1,7 @@
 package com.seraph.native.aggregation.sleep
 
-import com.seraph.native.db.r24.R24
 import com.seraph.native.db.Sleep_events
+import com.seraph.native.db.r24.R24
 
 /**
  * Determines whether a new sleep session should be opened for the given row,

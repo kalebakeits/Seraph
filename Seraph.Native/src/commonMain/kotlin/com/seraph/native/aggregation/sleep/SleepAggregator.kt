@@ -2,10 +2,10 @@ package com.seraph.native.aggregation.sleep
 
 import com.seraph.native.aggregation.AggregationProfile
 import com.seraph.native.db.AggregationDao
-import com.seraph.native.db.r24.R24
 import com.seraph.native.db.R24Dao
 import com.seraph.native.db.SeraphDb
 import com.seraph.native.db.Sleep_events
+import com.seraph.native.db.r24.R24
 
 private data class ActiveSession(
     val session: Sleep_events,

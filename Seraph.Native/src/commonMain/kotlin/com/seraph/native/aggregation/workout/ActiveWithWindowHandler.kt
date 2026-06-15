@@ -1,7 +1,7 @@
 package com.seraph.native.aggregation.workout
 
-import com.seraph.native.db.r24.R24
 import com.seraph.native.db.SeraphDb
+import com.seraph.native.db.r24.R24
 
 internal class ActiveWithWindowHandler(
     private val db: SeraphDb,

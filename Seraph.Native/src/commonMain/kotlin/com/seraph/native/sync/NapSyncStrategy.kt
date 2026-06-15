@@ -58,6 +58,9 @@ class NapSyncStrategy(
             return
         }
 
+        val mode = db.seraphDbQueries.getAppParameter("nap_mode").executeAsOneOrNull()
+        if (mode == "manual") return
+
         val targetMs =
             db.seraphDbQueries
                 .getAppParameter("nap_active_duration_ms")

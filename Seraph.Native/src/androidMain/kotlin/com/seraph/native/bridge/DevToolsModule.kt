@@ -8,13 +8,13 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableArray
 import com.seraph.native.db.DbKeyExport
 import com.seraph.native.service.ForegroundService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import com.facebook.react.bridge.ReadableArray
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -42,9 +42,10 @@ class DevToolsModule(
         scope.launch {
             try {
                 val dbDir = reactApplicationContext.getDatabasePath("seraph.db").parentFile!!
-                val downloads = android.os.Environment.getExternalStoragePublicDirectory(
-                    android.os.Environment.DIRECTORY_DOWNLOADS,
-                )
+                val downloads =
+                    android.os.Environment.getExternalStoragePublicDirectory(
+                        android.os.Environment.DIRECTORY_DOWNLOADS,
+                    )
                 val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
                 val exportDir = File(downloads, "seraph_$ts")
                 exportDir.mkdirs()
@@ -66,7 +67,11 @@ class DevToolsModule(
     }
 
     @ReactMethod
-    fun importDb(srcPaths: ReadableArray, destNames: ReadableArray, promise: Promise) {
+    fun importDb(
+        srcPaths: ReadableArray,
+        destNames: ReadableArray,
+        promise: Promise,
+    ) {
         scope.launch {
             try {
                 serviceProvider()?.syncRunner?.abortSync()
@@ -78,7 +83,10 @@ class DevToolsModule(
                     val srcPath = srcPaths.getString(i) ?: continue
                     val destName = destNames.getString(i) ?: File(srcPath).name
                     val src = File(srcPath)
-                    if (!src.exists()) { errors.add("Not found: ${src.name}"); continue }
+                    if (!src.exists()) {
+                        errors.add("Not found: ${src.name}")
+                        continue
+                    }
                     val dst = File(dbDir, destName)
                     listOf("-wal", "-shm", "-journal").forEach { File(dst.absolutePath + it).delete() }
                     dst.delete()
@@ -122,12 +130,15 @@ class DevToolsModule(
         try {
             val clazz = Class.forName("com.seraph.native.blob.BlobUploader")
             val method = clazz.getMethod("getConfig", android.content.Context::class.java)
+
             @Suppress("UNCHECKED_CAST")
             val pair = method.invoke(clazz.kotlin.objectInstance, reactApplicationContext) as Pair<String, String>
-            promise.resolve(Arguments.createMap().apply {
-                putString("uploadUrl", pair.first)
-                putString("bearerToken", pair.second)
-            })
+            promise.resolve(
+                Arguments.createMap().apply {
+                    putString("uploadUrl", pair.first)
+                    putString("bearerToken", pair.second)
+                },
+            )
         } catch (e: ClassNotFoundException) {
             promise.resolve(null)
         } catch (e: Exception) {
@@ -136,7 +147,11 @@ class DevToolsModule(
     }
 
     @ReactMethod
-    fun setBlobUploadConfig(uploadUrl: String, bearerToken: String, promise: Promise) {
+    fun setBlobUploadConfig(
+        uploadUrl: String,
+        bearerToken: String,
+        promise: Promise,
+    ) {
         try {
             val clazz = Class.forName("com.seraph.native.blob.BlobUploader")
             val method = clazz.getMethod("saveConfig", android.content.Context::class.java, String::class.java, String::class.java)

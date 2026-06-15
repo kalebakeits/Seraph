@@ -13,10 +13,15 @@ class DbBridge {
     private val conn: SupportSQLiteDatabase
         get() = DbHolder.helper.writableDatabase
 
-    fun query(sql: String, params: ReadableArray): WritableArray =
-        execQuery(conn, sql, params)
+    fun query(
+        sql: String,
+        params: ReadableArray,
+    ): WritableArray = execQuery(conn, sql, params)
 
-    fun exec(sql: String, params: ReadableArray): Int {
+    fun exec(
+        sql: String,
+        params: ReadableArray,
+    ): Int {
         execUpdate(conn, sql, params)
         return 0
     }
@@ -28,13 +33,21 @@ class DbBridge {
         return id
     }
 
-    fun execInTx(txId: String, sql: String, params: ReadableArray): Int {
+    fun execInTx(
+        txId: String,
+        sql: String,
+        params: ReadableArray,
+    ): Int {
         val db = transactions[txId] ?: throw IllegalStateException("Unknown txId: $txId")
         execUpdate(db, sql, params)
         return 0
     }
 
-    fun queryInTx(txId: String, sql: String, params: ReadableArray): WritableArray {
+    fun queryInTx(
+        txId: String,
+        sql: String,
+        params: ReadableArray,
+    ): WritableArray {
         val db = transactions[txId] ?: throw IllegalStateException("Unknown txId: $txId")
         return execQuery(db, sql, params)
     }
@@ -55,13 +68,20 @@ class DbBridge {
 
     fun rollbackAll() {
         transactions.forEach { (_, db) ->
-            try { db.endTransaction() } catch (_: Exception) {}
+            try {
+                db.endTransaction()
+            } catch (_: Exception) {
+            }
         }
         transactions.clear()
     }
 
     // Returns [[col0, col1, ...], ...] — Drizzle sqlite-proxy array mode
-    private fun execQuery(db: SupportSQLiteDatabase, sql: String, params: ReadableArray): WritableArray {
+    private fun execQuery(
+        db: SupportSQLiteDatabase,
+        sql: String,
+        params: ReadableArray,
+    ): WritableArray {
         val args = params.toStringArgs()
         val rows = Arguments.createArray()
         db.query(sql, args).use { cursor ->
@@ -83,7 +103,11 @@ class DbBridge {
         return rows
     }
 
-    private fun execUpdate(db: SupportSQLiteDatabase, sql: String, params: ReadableArray) {
+    private fun execUpdate(
+        db: SupportSQLiteDatabase,
+        sql: String,
+        params: ReadableArray,
+    ) {
         db.execSQL(sql, params.toBindArgs())
     }
 

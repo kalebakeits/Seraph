@@ -84,8 +84,7 @@ export const NapSetupScreen: React.FC = () => {
   const handleWakeUpConfirm = (date: Date) => {
     const proposedCutoff = date.getTime();
     const minCutoff = Date.now() + durationMs;
-    // Only push cutoff forward if it would land before duration ends
-    const resolvedCutoff = proposedCutoff > minCutoff ? proposedCutoff : minCutoff + 60_000;
+    const resolvedCutoff = Math.max(proposedCutoff, minCutoff);
     setWakeUpDate(new Date(resolvedCutoff));
     setShowWakeUpPicker(false);
   };
@@ -95,7 +94,7 @@ export const NapSetupScreen: React.FC = () => {
     setDurationMs(ms);
     // Only push cutoff forward if duration now exceeds it
     if (Date.now() + ms > wakeUpDate.getTime()) {
-      setWakeUpDate(new Date(Date.now() + ms + 60_000));
+      setWakeUpDate(new Date(Date.now() + ms));
     }
     setShowDurationPicker(false);
   };
