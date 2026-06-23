@@ -14,10 +14,15 @@ private val log = Logger.withTag("SeraphFCM")
 /**
  * Receives FCM data messages and persists them as in-app notifications.
  *
+ * Localization model: the message is sent to a per-env/per-locale topic (e.g.
+ * "announcements_prod_fr"), so the payload already carries the final, translated
+ * text. No on-device formatting or content fetch is needed.
+ *
  * Expected data payload keys:
  *  - type: notification type (e.g. "update_available", "announcement")
+ *  - title: localized notification title
+ *  - body: localized notification body
  *  - version: (optional) app version string for update notifications
- *  - message: (optional) freeform text for announcements
  */
 @OptIn(ExperimentalTime::class)
 class SeraphFirebaseMessagingService : FirebaseMessagingService() {
@@ -30,8 +35,10 @@ class SeraphFirebaseMessagingService : FirebaseMessagingService() {
             }
         log.i { "FCM received: type=$type" }
 
+        val title = data["title"] ?: type
+        val body = data["body"] ?: ""
         val db = DbHolder.db
-        val payload = buildPayload(type, data)
+        val payload = buildPayload(title, body, data["version"])
 
         try {
             db.seraphDbQueries.insertNotification(
@@ -47,10 +54,6 @@ class SeraphFirebaseMessagingService : FirebaseMessagingService() {
 
         val nm = ServiceNotificationManager(this)
         nm.createChannels()
-        val lang = db.seraphDbQueries.getAppParameter("language").executeAsOneOrNull() ?: "en"
-        val (title, body) =
-            com.seraph.native.service.ForegroundService
-                .systemNotificationFormatter(lang, type, payload)
         nm.sendEventAlert(title, body, deepLink = null)
     }
 
@@ -59,6 +62,8 @@ class SeraphFirebaseMessagingService : FirebaseMessagingService() {
         FirebaseMessaging.getInstance().subscribeToTopic("all")
         try {
             val db = DbHolder.db
+            val lang = db.seraphDbQueries.getAppParameter("language").executeAsOneOrNull() ?: "en"
+            subscribeToLocaleTopic(lang)
             db.seraphDbQueries.setAppParameter(
                 "fcm_token",
                 token,
@@ -69,14 +74,45 @@ class SeraphFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun buildPayload(
-        type: String,
-        data: Map<String, String>,
-    ): String? {
-        val parts = mutableListOf<String>()
-        data["version"]?.let { parts.add(""""version":"$it"""") }
-        data["message"]?.let { parts.add(""""message":"$it"""") }
-        data["content_id"]?.let { parts.add(""""content_id":"$it"""") }
-        return if (parts.isEmpty()) null else "{${parts.joinToString(",")}}"
+    companion object {
+        private val TOPIC_PREFIX = "announcements_${NotifEnv.SEGMENT}_"
+
+        /**
+         * Subscribes to the announcements topic for [lang] and unsubscribes from
+         * the others, so the device only receives announcements pre-translated
+         * for its current locale. Call on token refresh and on language change.
+         */
+        fun subscribeToLocaleTopic(lang: String) {
+            val target = lang.take(2).lowercase()
+            val messaging = FirebaseMessaging.getInstance()
+            SUPPORTED_LANGS.forEach { code ->
+                if (code == target) {
+                    messaging.subscribeToTopic("$TOPIC_PREFIX$code")
+                } else {
+                    messaging.unsubscribeFromTopic("$TOPIC_PREFIX$code")
+                }
+            }
+        }
+
+        private val SUPPORTED_LANGS = listOf("en", "fr")
     }
+
+    private fun buildPayload(
+        title: String,
+        body: String,
+        version: String?,
+    ): String {
+        val escapedTitle = jsonEscape(title)
+        val escapedBody = jsonEscape(body)
+        val versionJson = version?.let { ""","version":"${jsonEscape(it)}"""" } ?: ""
+        return """{"title":"$escapedTitle","body":"$escapedBody"$versionJson}"""
+    }
+
+    private fun jsonEscape(s: String): String =
+        s
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
 }

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { reportError } from '../../utils/reportError';
 
 const CACHE_KEY = '@seraph/cached_device';
 
@@ -14,7 +15,7 @@ async function saveDevice(device: CachedDevice): Promise<void> {
   try {
     await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(device));
   } catch (error) {
-    console.error('[DeviceCache] Failed to save device:', error);
+    reportError(error, 'device', 'saveDeviceCache');
   }
 }
 
@@ -24,7 +25,7 @@ async function getDevice(): Promise<CachedDevice | null> {
     if (!json) return null;
     return JSON.parse(json) as CachedDevice;
   } catch (error) {
-    console.error('[DeviceCache] Failed to get device:', error);
+    reportError(error, 'device', 'getDeviceCache');
     return null;
   }
 }
@@ -33,7 +34,7 @@ async function clearDevice(): Promise<void> {
   try {
     await AsyncStorage.removeItem(CACHE_KEY);
   } catch (error) {
-    console.error('[DeviceCache] Failed to clear device:', error);
+    reportError(error, 'device', 'clearDeviceCache');
   }
 }
 

@@ -31,10 +31,10 @@ export async function initDb(): Promise<AppDatabase> {
       const rows = await DbModule.dbQuery(sql, args);
       if (method === 'get') {
         // Drizzle expects rows to be the first row array directly
-        return { rows: (rows[0] ?? []) as unknown[] };
+        return { rows: rows[0] ?? [] };
       }
       // 'all' and 'values': rows is array of arrays
-      return { rows: rows as unknown[][] };
+      return { rows };
     },
     { schema },
   );

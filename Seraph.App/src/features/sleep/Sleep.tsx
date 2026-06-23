@@ -87,6 +87,7 @@ export const Sleep: React.FC<Props> = ({ route }) => {
       >
         <HelperText translationKey="sleep.trendsHelper" />
         <SleepConsistencyCard anchorDate={selectedDate} />
+        <HelperText translationKey="sleep.sleepWindowHelper" />
         <SleepTimingChart anchorDate={selectedDate} />
       </Section>
     </ScreenLayout>

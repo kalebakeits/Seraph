@@ -7,6 +7,7 @@ import { ScreenLayout } from '../../../components/common/ScreenLayout';
 import { BlockingOverlay } from '../../../components/BlockingOverlay';
 import { TimePicker } from '../../../components/TimePicker';
 import { useTheme, type Theme } from '../../../theme';
+import { reportError } from '../../../utils/reportError';
 import { sleepEventsRepository } from '../../../services/database/drizzle/repositories/sleepEventsRepository';
 import { nativeRecalcSleep } from '../../../services/ble/nativeModule';
 import { dailyAggregationsRepository } from '../../../services/database/drizzle/repositories/dailyAggregationsRepository';
@@ -91,7 +92,7 @@ export const SleepSessionScreen: React.FC<Props> = ({ route }) => {
       if (code === 'OVERLAP_SLEEP') {
         Alert.alert(t('sleep.overlapTitle'), t('sleep.overlapMessage'));
       } else {
-        console.error('[SleepSessionScreen] save failed', e);
+        reportError(e, 'sleep', 'saveSleepSession');
       }
       setSaving(false);
     }
@@ -127,7 +128,7 @@ export const SleepSessionScreen: React.FC<Props> = ({ route }) => {
       void queryClient.invalidateQueries({ queryKey: ['notifications'] });
       navigation.goBack();
     } catch (e) {
-      console.error('[SleepSessionScreen] delete failed', e);
+      reportError(e, 'sleep', 'deleteSleepSession');
       setSaving(false);
     }
   };

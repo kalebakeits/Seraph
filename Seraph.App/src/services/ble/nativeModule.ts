@@ -55,6 +55,7 @@ interface NotificationModuleInterface extends NativeModule {
   getUnreadNotificationCount(): Promise<number>;
   markNotificationRead(id: number): Promise<void>;
   markAllNotificationsRead(): Promise<void>;
+  subscribeToLocaleTopic(lang: string): Promise<void>;
 }
 
 interface DevToolsModuleInterface extends NativeModule {
@@ -234,6 +235,8 @@ export const nativeMarkNotificationRead = (id: number): Promise<void> =>
   callNotif(m => m.markNotificationRead(id));
 export const nativeMarkAllNotificationsRead = (): Promise<void> =>
   callNotif(m => m.markAllNotificationsRead());
+export const nativeSubscribeToLocaleTopic = (lang: string): Promise<void> =>
+  callNotif(m => m.subscribeToLocaleTopic(lang));
 
 // ── Dev tools ─────────────────────────────────────────────────────────────────
 

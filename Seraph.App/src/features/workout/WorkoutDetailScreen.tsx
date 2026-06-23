@@ -12,6 +12,7 @@ import { ScreenLayout } from '../../components/common/ScreenLayout';
 import { BlockingOverlay } from '../../components/BlockingOverlay';
 import { TimePicker } from '../../components/TimePicker';
 import { useTheme, type Theme } from '../../theme';
+import { reportError } from '../../utils/reportError';
 import { activityEventsRepository } from '../../services/database/drizzle/repositories/activityEventsRepository';
 import { nativeRecalcActivity, nativeRefreshDailyLoad } from '../../services/ble/nativeModule';
 import type { HomeStackParamList } from '../../navigation/HomeStackNavigator';
@@ -87,7 +88,7 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route }) => {
       if (code === 'OVERLAP_ACTIVITY') {
         Alert.alert(t('workout.overlapTitle'), t('workout.overlapMessage'));
       } else {
-        console.error('[WorkoutDetailScreen] save failed', e);
+        reportError(e, 'workout', 'saveWorkoutDetail');
       }
       setSaving(false);
     }
@@ -105,7 +106,7 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route }) => {
       void queryClient.invalidateQueries({ queryKey: ['notifications'] });
       navigation.goBack();
     } catch (e) {
-      console.error('[WorkoutDetailScreen] delete failed', e);
+      reportError(e, 'workout', 'deleteWorkout');
       setSaving(false);
     }
   };

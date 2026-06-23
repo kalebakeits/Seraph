@@ -19,6 +19,8 @@ import { useSyncState } from './src/hooks/useSyncState';
 import { useNotificationPermission } from './src/hooks/useNotificationPermission';
 import { InAppBanner } from './src/components/common/InAppBanner';
 import { OnboardingScreen } from './src/features/onboarding/OnboardingScreen';
+import { reportError } from './src/utils/reportError';
+import { nativeSubscribeToLocaleTopic } from './src/services/ble/nativeModule';
 import * as Sentry from '@sentry/react-native';
 
 Sentry.init({
@@ -98,16 +100,21 @@ export default Sentry.wrap(function App() {
         if (!savedLang) {
           await appParametersRepository.set('language', i18n.language.slice(0, 2));
         }
+        void nativeSubscribeToLocaleTopic(savedLang ?? i18n.language.slice(0, 2)).catch(
+          (error: unknown) => {
+            reportError(error, 'notifications', 'subscribeToLocaleTopic');
+          },
+        );
         try {
           await seedHabitsIfNeeded();
         } catch (seedError) {
-          console.error('[App] Failed to seed habits:', seedError);
+          reportError(seedError, 'app', 'seedHabitsIfNeeded');
           // Continue anyway - habits feature may not work but app should load
         }
         const onboarded = await appParametersRepository.get('onboarding_complete');
         setAppState(onboarded === '1' ? 'ready' : 'onboarding');
       } catch (e) {
-        console.error('[App] init error:', e);
+        reportError(e, 'app', 'init');
         setAppState('onboarding');
       } finally {
         SplashScreen.setOptions({ fade: true, duration: 500 });

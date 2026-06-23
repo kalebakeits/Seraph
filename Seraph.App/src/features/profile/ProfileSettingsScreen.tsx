@@ -8,6 +8,7 @@ import { ScreenLayout } from '../../components/common/ScreenLayout';
 import { TimePicker } from '../../components/TimePicker';
 import { useTheme, type Theme } from '../../theme';
 import { appParametersRepository } from '../../services/database/drizzle';
+import { nativeSubscribeToLocaleTopic } from '../../services/ble/nativeModule';
 import { useBaselines } from '../../hooks/useBaselines';
 import type { AppParameter } from '../../services/database/drizzle/repositories/appParametersRepository';
 import { minutesToDate } from '../../utils/dateUtils';
@@ -99,6 +100,9 @@ export const ProfileSettingsScreen: React.FC = () => {
       if (patch.language && patch.language !== i18n.language.slice(0, 2)) {
         await i18n.changeLanguage(patch.language);
         await appParametersRepository.set('language', patch.language);
+        void nativeSubscribeToLocaleTopic(patch.language).catch(() => {
+          // best-effort; topic resubscribe retries on next token refresh
+        });
       }
 
       void queryClient.invalidateQueries({ queryKey: ['sleepGoal'] });

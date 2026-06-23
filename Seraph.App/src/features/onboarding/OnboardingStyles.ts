@@ -1,17 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '../../theme';
 
-export function buildCalStyles(theme: Theme) {
-  return StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: theme.colors.scrim.dark,
-      justifyContent: 'center',
-      paddingHorizontal: theme.spacing.lg,
-    },
-  });
-}
-
 export function buildStyles(theme: Theme) {
   return StyleSheet.create({
     container: { flex: 1 },
@@ -66,6 +55,15 @@ export function buildStyles(theme: Theme) {
       fontSize: theme.typography.sizes.sm,
       fontWeight: theme.typography.weights.semibold,
       color: theme.colors.icon.onLight,
+    },
+    skipBtn: {
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm + 2,
+    },
+    skipText: {
+      fontSize: theme.typography.sizes.sm,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.secondary,
     },
     // Welcome
     welcomeContent: {

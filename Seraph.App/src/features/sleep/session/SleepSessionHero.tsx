@@ -20,17 +20,19 @@ export const SleepSessionHero: React.FC<Props> = ({ durationMinutes, startTs, en
 
   return (
     <View style={styles.container}>
-      <View style={styles.ringCol}>
-        <ActivityRing
-          value={quality}
-          goal={100}
-          size={96}
-          strokeWidth={8}
-          color={theme.colors.sleep}
-          label=""
-          unit="%"
-        />
-      </View>
+      {quality !== null && (
+        <View style={styles.ringCol}>
+          <ActivityRing
+            value={quality}
+            goal={100}
+            size={96}
+            strokeWidth={8}
+            color={theme.colors.sleep}
+            label=""
+            unit="%"
+          />
+        </View>
+      )}
 
       <View style={styles.infoCol}>
         <SafeText style={styles.duration}>{formatDuration(durationMinutes * 60_000)}</SafeText>

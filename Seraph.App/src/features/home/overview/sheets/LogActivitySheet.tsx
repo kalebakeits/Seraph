@@ -14,6 +14,7 @@ import {
 import { nativeRecalcSleep, nativeRecalcActivity } from '../../../../services/ble/nativeModule';
 import { applyTimeToDate } from './activitySheetUtils';
 import { formatTime } from '../../../../utils/dateUtils';
+import { reportError } from '../../../../utils/reportError';
 
 import { ActivityType } from '../../../../types/ActivityType';
 
@@ -135,7 +136,7 @@ export const LogActivitySheet: React.FC<LogActivitySheetProps> = ({
 
       onClose();
     } catch (e) {
-      console.error('[LogActivitySheet] save failed', e);
+      reportError(e, 'activities', 'logActivity');
     } finally {
       setSaving(false);
     }

@@ -104,8 +104,8 @@ export function NotificationCenterScreen() {
         const payload = parsePayload(item.payload ?? null);
         const typeLabel = t(`notifications.types.${item.type}`, { defaultValue: item.type });
         navigationRef.navigate('SystemNotificationDetail', {
-          contentId: payload.content_id,
-          title: typeLabel,
+          title: payload.title ?? typeLabel,
+          body: payload.body ?? '',
           type: item.type,
         });
         return;
@@ -134,11 +134,11 @@ export function NotificationCenterScreen() {
           let heroTitle: string;
           let detail: string;
           if (isSystem) {
-            heroTitle = typeLabel;
+            heroTitle = payload.title ?? typeLabel;
             detail =
               item.type === 'update_available' && payload.version
                 ? t('notifications.updateBody', { version: payload.version })
-                : (payload.message ?? '');
+                : (payload.body ?? '');
           } else {
             const scoreLabel =
               payload.score != null ? t('notifications.score', { value: payload.score }) : '';

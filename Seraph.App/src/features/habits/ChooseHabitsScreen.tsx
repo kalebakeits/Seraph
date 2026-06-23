@@ -14,6 +14,7 @@ import { AddCustomHabitSheet } from './AddCustomHabitSheet';
 import { useAllHabits } from './hooks/useAllHabits';
 import { habitDefinitionsRepository } from '../../services/database/drizzle';
 import { useTheme, type Theme } from '../../theme';
+import { reportError } from '../../utils/reportError';
 import type { HabitDefinition } from '../../services/database/drizzle/schema';
 
 export function ChooseHabitsScreen() {
@@ -51,7 +52,7 @@ export function ChooseHabitsScreen() {
             }
             void queryClient.invalidateQueries({ queryKey: ['habits'] });
           } catch (e) {
-            console.error('[ChooseHabits] Failed to save', e);
+            reportError(e, 'habits', 'chooseHabitsSave');
           } finally {
             savingRef.current = false;
             const pendingSnapshot = pendingSaveRef.current;

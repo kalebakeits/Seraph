@@ -6,6 +6,7 @@ import { GradientBackground } from '../../components/common/GradientBackground';
 import { ScreenLayout } from '../../components/common/ScreenLayout';
 import { useTheme, type Theme } from '../../theme';
 import { appParametersRepository } from '../../services/database/drizzle';
+import { nativeSubscribeToLocaleTopic } from '../../services/ble/nativeModule';
 import type { AppParameter } from '../../services/database/drizzle/repositories/appParametersRepository';
 import { PreferencesSection } from './sections/PreferencesSection';
 import { ActivityDetectionSection } from './sections/ActivityDetectionSection';
@@ -106,6 +107,9 @@ export const PreferencesScreen: React.FC = () => {
       if (patch.language && patch.language !== i18n.language.slice(0, 2)) {
         await i18n.changeLanguage(patch.language);
         await appParametersRepository.set('language', patch.language);
+        void nativeSubscribeToLocaleTopic(patch.language).catch(() => {
+          // best-effort; topic resubscribe retries on next token refresh
+        });
       }
 
       void queryClient.invalidateQueries({ queryKey: ['baselines'] });

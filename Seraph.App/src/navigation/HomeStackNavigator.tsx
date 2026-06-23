@@ -43,7 +43,7 @@ export interface HomeStackParamList {
   SleepSessionDetail: { sleepId: number; selectedDate?: string };
   RecordWorkout: undefined;
   NotificationCenter: undefined;
-  SystemNotificationDetail: { contentId: string | undefined; title: string; type: string };
+  SystemNotificationDetail: { title: string; body: string; type: string };
   NapActive: undefined;
   NapSetup: undefined;
   ChooseHabits: undefined;

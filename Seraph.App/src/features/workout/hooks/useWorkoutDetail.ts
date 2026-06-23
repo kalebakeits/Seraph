@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { activityEventsRepository } from '../../../services/database/drizzle/repositories/activityEventsRepository';
 import { appParametersRepository } from '../../../services/database/drizzle/repositories/appParametersRepository';
+import { reportError } from '../../../utils/reportError';
 import type { ZoneSeconds } from '../../../services/database/drizzle/schema';
 
 interface HRSample {
@@ -68,7 +69,7 @@ export function useWorkoutDetail(activityId: number): WorkoutDetailData {
           setThresholdHr(profileFthr ?? null);
         }
       } catch (e) {
-        console.error('[useWorkoutDetail] load failed', e);
+        reportError(e, 'workout', 'loadWorkoutDetail');
       } finally {
         setLoading(false);
       }
