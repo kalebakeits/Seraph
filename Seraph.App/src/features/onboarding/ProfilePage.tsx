@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { View, TextInput, TouchableOpacity, Modal } from 'react-native';
-import { Calendar } from 'react-native-calendars';
+import { View, TextInput, TouchableOpacity } from 'react-native';
+import DatePicker from 'react-native-date-picker';
 import { TimePicker } from '../../components/TimePicker';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -8,8 +8,12 @@ import { SafeText } from '../../components/common/SafeText';
 import { useTheme } from '../../theme';
 import { PageContainer } from './PageContainer';
 import { SegmentPicker } from './SegmentPicker';
-import { buildStyles, buildCalStyles } from './OnboardingStyles';
+import { buildStyles } from './OnboardingStyles';
+import { dateFromISO, isoFromDate } from '../../utils/dateUtils';
 import type { ProfileDraft, Sex } from './OnboardingTypes';
+
+const DEFAULT_DOB_AGE_YEARS = 30;
+const MIN_DOB_AGE_YEARS = 120;
 
 interface Props {
   width: number;
@@ -20,9 +24,8 @@ interface Props {
 export const ProfilePage: React.FC<Props> = ({ width, draft, setDraft }) => {
   const { theme } = useTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
-  const calStyles = useMemo(() => buildCalStyles(theme), [theme]);
   const { t, i18n } = useTranslation();
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [showDobPicker, setShowDobPicker] = useState(false);
   const [showSleepPicker, setShowSleepPicker] = useState(false);
 
   const set = (k: keyof ProfileDraft, v: unknown) => {
@@ -37,14 +40,20 @@ export const ProfilePage: React.FC<Props> = ({ width, draft, setDraft }) => {
     0,
   );
 
+  const today = new Date();
+  const defaultDobDate = new Date();
+  defaultDobDate.setFullYear(today.getFullYear() - DEFAULT_DOB_AGE_YEARS);
+  const minDobDate = new Date();
+  minDobDate.setFullYear(today.getFullYear() - MIN_DOB_AGE_YEARS);
+  const dobDate = draft.dob ? dateFromISO(draft.dob) : defaultDobDate;
   const dobDisplay = draft.dob
-    ? new Date(draft.dob + 'T12:00:00Z').toLocaleDateString(i18n.language, {
+    ? dobDate.toLocaleDateString(i18n.language, {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
-        timeZone: 'UTC',
       })
     : '';
+
   const sleepDisplay = `${String(Math.floor(draft.sleep_goal_minutes / 60)).padStart(
     2,
     '0',
@@ -75,12 +84,12 @@ export const ProfilePage: React.FC<Props> = ({ width, draft, setDraft }) => {
         <TouchableOpacity
           style={styles.pickerRow}
           onPress={() => {
-            setShowCalendar(true);
+            setShowDobPicker(true);
           }}
           activeOpacity={0.7}
         >
           <SafeText style={[styles.pickerValue, !draft.dob && { color: theme.colors.text.muted }]}>
-            {dobDisplay || 'Select date'}
+            {dobDisplay || t('onboarding.profile.dobPlaceholder')}
           </SafeText>
           <Ionicons name="calendar-outline" size={18} color={theme.colors.text.muted} />
         </TouchableOpacity>
@@ -158,51 +167,6 @@ export const ProfilePage: React.FC<Props> = ({ width, draft, setDraft }) => {
         <SafeText style={styles.fieldHint}>{t('onboarding.profile.fthrHint')}</SafeText>
       </View>
 
-      <Modal
-        visible={showCalendar}
-        transparent
-        animationType="fade"
-        onRequestClose={() => {
-          setShowCalendar(false);
-        }}
-      >
-        <TouchableOpacity
-          style={calStyles.overlay}
-          activeOpacity={1}
-          onPress={() => {
-            setShowCalendar(false);
-          }}
-        >
-          <View>
-            <Calendar
-              current={draft.dob || undefined}
-              maxDate={new Date().toISOString().slice(0, 10)}
-              onDayPress={(day: { dateString: string }) => {
-                set('dob', day.dateString);
-                setShowCalendar(false);
-              }}
-              markedDates={
-                draft.dob
-                  ? { [draft.dob]: { selected: true, selectedColor: theme.colors.primary } }
-                  : {}
-              }
-              theme={{
-                backgroundColor: theme.colors.background,
-                calendarBackground: theme.colors.background,
-                textSectionTitleColor: theme.colors.text.muted,
-                selectedDayBackgroundColor: theme.colors.primary,
-                selectedDayTextColor: theme.colors.text.primary,
-                todayTextColor: theme.colors.sleep,
-                dayTextColor: theme.colors.text.primary,
-                textDisabledColor: theme.colors.text.muted,
-                arrowColor: theme.colors.text.primary,
-                monthTextColor: theme.colors.text.primary,
-              }}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
       <TimePicker
         time={sleepGoalDate}
         onTimeChange={() => {
@@ -215,6 +179,22 @@ export const ProfilePage: React.FC<Props> = ({ width, draft, setDraft }) => {
         onConfirm={(date: Date) => {
           set('sleep_goal_minutes', date.getHours() * 60 + date.getMinutes());
           setShowSleepPicker(false);
+        }}
+      />
+
+      <DatePicker
+        modal
+        mode="date"
+        date={dobDate}
+        minimumDate={minDobDate}
+        maximumDate={today}
+        open={showDobPicker}
+        onConfirm={date => {
+          set('dob', isoFromDate(date));
+          setShowDobPicker(false);
+        }}
+        onCancel={() => {
+          setShowDobPicker(false);
         }}
       />
     </PageContainer>

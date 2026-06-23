@@ -23,6 +23,7 @@ import { DonePage } from './DonePage';
 import { StoragePage } from './StoragePage';
 import { ConnectPage } from './ConnectPage';
 import { buildStyles } from './OnboardingStyles';
+import { reportError } from '../../utils/reportError';
 import {
   SENSITIVITY_PRESETS,
   type PageKey,
@@ -146,10 +147,23 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
       await Promise.all([
         ...entries.filter(([, v]) => v !== '').map(([k, v]) => appParametersRepository.set(k, v)),
         appParametersRepository.set('onboarding_complete', '1'),
+        // Clear the resume crumb so a completed onboarding never restores mid-flow.
+        appParametersRepository.delete('onboarding_page'),
       ]);
-      onComplete();
     } catch (e) {
-      console.error('[Onboarding] Failed to save settings', e);
+      reportError(e, 'onboarding', 'saveAndComplete');
+      // Never lock the user out of the app. Best-effort mark complete so they
+      // don't loop back here, then continue into the main UI regardless.
+      try {
+        await Promise.all([
+          appParametersRepository.set('onboarding_complete', '1'),
+          appParametersRepository.delete('onboarding_page'),
+        ]);
+      } catch (markError) {
+        reportError(markError, 'onboarding', 'markComplete');
+      }
+    } finally {
+      onComplete();
     }
   };
 
@@ -226,7 +240,17 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete }) => {
               <View style={styles.backBtn} />
             )}
 
-            {!isConnect && (
+            {isConnect ? (
+              <TouchableOpacity
+                style={styles.skipBtn}
+                onPress={() => {
+                  advanceTo(DONE_INDEX);
+                }}
+                activeOpacity={0.7}
+              >
+                <SafeText style={styles.skipText}>{t('onboarding.skip')}</SafeText>
+              </TouchableOpacity>
+            ) : (
               <TouchableOpacity
                 style={[styles.nextBtn, isDone && { backgroundColor: theme.colors.recovery }]}
                 onPress={() => {

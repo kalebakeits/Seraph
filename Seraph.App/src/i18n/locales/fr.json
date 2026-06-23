@@ -22,6 +22,7 @@
     "tonightHelper": "L'heure de coucher nécessaire pour atteindre votre objectif de sommeil ce soir.",
     "lastNightHelper": "Durée et réponse corporelle de la nuit dernière.",
     "trendsHelper": "Durée et horaires de sommeil sur les 7 derniers jours.",
+    "sleepWindowHelper": "Affiche votre fenêtre de sommeil relative avec le score de récupération correspondant.",
     "lastNight": "Nuit dernière",
     "naps": "Siestes",
     "nap": "Sieste",
@@ -400,6 +401,7 @@
       "name": "NOM",
       "namePlaceholder": "Votre nom",
       "dob": "DATE DE NAISSANCE",
+      "dobPlaceholder": "Choisir une date",
       "sex": "SEXE BIOLOGIQUE",
       "male": "Homme",
       "female": "Femme",
@@ -438,6 +440,7 @@
     },
     "next": "Suivant",
     "back": "Retour",
+    "skip": "Ignorer",
     "getStarted": "Commencer"
   },
   "settings": {

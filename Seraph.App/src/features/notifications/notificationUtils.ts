@@ -13,8 +13,8 @@ export interface NotificationPayload {
   avg_hr?: number;
   sport?: string;
   version?: string;
-  message?: string;
-  content_id?: string;
+  title?: string;
+  body?: string;
 }
 
 export function parsePayload(raw: string | null): NotificationPayload {

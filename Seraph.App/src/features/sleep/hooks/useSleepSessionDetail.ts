@@ -60,11 +60,12 @@ async function fetchSleepSessionDetail(sleepId: number): Promise<SleepSessionDet
   const isPrimary = session.end_ts === minEndTs;
 
   const rhr = agg?.rhr != null ? Math.round(agg.rhr) : null;
-  const quality =
+  const primarySleepQuality =
     session.sleep_score ??
     (session.hrv_rmssd
       ? Math.round(Math.min(100, (session.hrv_rmssd / 80) * 100))
       : Math.round(Math.min(100, (session.duration_minutes / 480) * 100)));
+  const quality = isPrimary ? primarySleepQuality : null;
 
   return { session, hrPoints, awakeRuns, isPrimary, rhr, quality };
 }

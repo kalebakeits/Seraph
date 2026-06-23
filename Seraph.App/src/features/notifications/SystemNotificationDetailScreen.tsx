@@ -1,26 +1,24 @@
 import React, { useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from '../../navigation/HomeStackNavigator';
 import { useTheme, type Theme } from '../../theme';
-import { useSystemNotificationContent } from './useSystemNotificationContent';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'SystemNotificationDetail'>;
 
 export function SystemNotificationDetailScreen({ route }: Props) {
   const { theme } = useTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
-  const { t, i18n } = useTranslation();
-  const { contentId, title } = route.params;
-  const { content, loading } = useSystemNotificationContent(contentId, i18n.language);
+  const { t } = useTranslation();
+  const { title, body } = route.params;
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
-      {loading && <ActivityIndicator color={theme.colors.primary} style={styles.spinner} />}
-      {!loading && content && <Text style={styles.body}>{content.body}</Text>}
-      {!loading && !content && (
+      {body ? (
+        <Text style={styles.body}>{body}</Text>
+      ) : (
         <View style={styles.placeholder}>
           <Text style={styles.placeholderTitle}>{t('notifications.contentUnavailable')}</Text>
           <Text style={styles.placeholderHint}>{t('notifications.contentUnavailableHint')}</Text>
@@ -42,9 +40,6 @@ function buildStyles(theme: Theme) {
       fontSize: theme.typography.sizes.xl,
       fontWeight: theme.typography.weights.bold,
       marginBottom: theme.spacing.lg,
-    },
-    spinner: {
-      marginTop: theme.spacing.xl,
     },
     body: {
       color: theme.colors.text.secondary,
