@@ -588,6 +588,13 @@
     "adjNone": "+0m",
     "tonight": "Tonight",
     "noData": "Sync your strap to see your sleep need.",
+    "sleepGoalCalculation": "Sleep Goal Calculation",
+    "sleepGoalMode": {
+      "adaptive": "Adaptive",
+      "fixed": "Fixed",
+      "adaptiveHint": "Adjusts your goal using recent sleep debt and today's training load.",
+      "fixedHint": "Uses your profile sleep goal without daily adjustments."
+    },
     "screenTitle": "Wake-Up Alarm",
     "screenHelper": "Set a time to wake up. Your strap will vibrate at that time.",
     "wakeTime": "Wake up",

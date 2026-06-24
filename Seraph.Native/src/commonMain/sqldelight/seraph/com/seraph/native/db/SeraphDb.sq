@@ -14,8 +14,7 @@ SET steps = steps + :steps,
     strain = :strain,
     active_minutes = active_minutes + :active_minutes,
     sleep_need = :sleep_need,
-    sleep_debt_adj = :sleep_debt_adj,
-    sleep_strain_adj = :sleep_strain_adj,
+    sleep_need_factors = :sleep_need_factors,
     last_agg_ts = :last_agg_ts,
     updated_at = :updated_at
 WHERE date = :date;
@@ -52,6 +51,13 @@ SELECT last_agg_ts FROM daily_aggregations WHERE date = ?;
 getStrainForDate:
 SELECT strain FROM daily_aggregations WHERE date = ?;
 
+updateSleepNeedForDate:
+UPDATE daily_aggregations
+SET sleep_need = :sleep_need,
+    sleep_need_factors = :sleep_need_factors,
+    updated_at = :updated_at
+WHERE date = :date;
+
 resetDailyAggregationForDate:
 UPDATE daily_aggregations
 SET steps = 0,
@@ -71,8 +77,7 @@ SET steps = 0,
     recovery = NULL,
     skin_temp = NULL,
     sleep_need = NULL,
-    sleep_debt_adj = NULL,
-    sleep_strain_adj = NULL,
+    sleep_need_factors = NULL,
     finalized = 0,
     last_agg_ts = NULL,
     updated_at = :updated_at
@@ -210,6 +215,9 @@ SELECT * FROM sleep_events WHERE date = ? ORDER BY id ASC;
 
 querySleepRange:
 SELECT * FROM sleep_events WHERE date >= ? ORDER BY date ASC;
+
+queryRecentFinalizedSleeps:
+SELECT * FROM sleep_events WHERE finalized = 1 ORDER BY end_ts DESC LIMIT :limit;
 
 getSleepById:
 SELECT * FROM sleep_events WHERE id = :id LIMIT 1;

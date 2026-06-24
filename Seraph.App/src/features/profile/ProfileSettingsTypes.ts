@@ -1,5 +1,6 @@
 export type Sex = 'male' | 'female' | '';
 export type SensitivityPreset = 'everything' | 'light' | 'moderate' | 'workoutsOnly' | 'off';
+export type SleepGoalMode = 'adaptive' | 'fixed';
 
 export interface SettingsState {
   name: string;

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, Modal } from 'react-native';
-import { Calendar } from 'react-native-calendars';
+import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { GradientBackground } from '../../components/common/GradientBackground';
@@ -8,10 +7,13 @@ import { ScreenLayout } from '../../components/common/ScreenLayout';
 import { TimePicker } from '../../components/TimePicker';
 import { useTheme, type Theme } from '../../theme';
 import { appParametersRepository } from '../../services/database/drizzle';
+import { nativeRecalculateCurrentSleepNeed } from '../../services/ble/nativeModule';
 import { useBaselines } from '../../hooks/useBaselines';
 import type { AppParameter } from '../../services/database/drizzle/repositories/appParametersRepository';
 import { minutesToDate } from '../../utils/dateUtils';
+import { DobDatePicker } from './components/DobDatePicker';
 import { PersonalInfoSection } from './sections/PersonalInfoSection';
+import type { PersonalInfoState } from './sections/PersonalInfoSection';
 import { BaselinesSection } from './sections/BaselinesSection';
 import type { SettingsState } from './ProfileSettingsTypes';
 import { dobToAge } from './ProfileSettingsTypes';
@@ -35,7 +37,7 @@ export const ProfileScreen: React.FC = () => {
     language: i18n.language.slice(0, 2),
   });
 
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [showDobPicker, setShowDobPicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
@@ -94,7 +96,14 @@ export const ProfileScreen: React.FC = () => {
         entries.filter(([, v]) => v !== '').map(([k, v]) => appParametersRepository.set(k, v)),
       );
 
+      if (patch.sleep_goal_minutes !== undefined) {
+        void nativeRecalculateCurrentSleepNeed().catch(() => {
+          // best-effort; native aggregation will refresh on the next sync
+        });
+      }
+
       void queryClient.invalidateQueries({ queryKey: ['sleepGoal'] });
+      void queryClient.invalidateQueries({ queryKey: ['sleepNeedFactors'] });
       void queryClient.invalidateQueries({ queryKey: ['baselines'] });
     },
     [state, queryClient],
@@ -115,6 +124,14 @@ export const ProfileScreen: React.FC = () => {
         void persist(patch);
       }, 800);
     }
+  };
+
+  const setPersonalInfoField = <K extends keyof PersonalInfoState>(
+    key: K,
+    value: PersonalInfoState[K],
+    immediate = false,
+  ) => {
+    setField(key, value as SettingsState[K], immediate);
   };
 
   const dobDisplay = state.dob
@@ -139,13 +156,13 @@ export const ProfileScreen: React.FC = () => {
           dobDisplay={dobDisplay}
           sleepDisplay={sleepDisplay}
           onFieldChange={(key, value) => {
-            setField(key, value);
+            setPersonalInfoField(key, value);
           }}
           onFieldChangeImmediate={(key, value) => {
-            setField(key, value, true);
+            setPersonalInfoField(key, value, true);
           }}
           onShowCalendar={() => {
-            setShowCalendar(true);
+            setShowDobPicker(true);
           }}
           onShowTimePicker={() => {
             setShowTimePicker(true);
@@ -157,51 +174,17 @@ export const ProfileScreen: React.FC = () => {
         <View style={{ height: theme.spacing.xxl }} />
       </ScreenLayout>
 
-      {/* Calendar modal for DOB */}
-      <Modal
-        visible={showCalendar}
-        transparent
-        animationType="fade"
-        onRequestClose={() => {
-          setShowCalendar(false);
+      <DobDatePicker
+        dob={state.dob}
+        open={showDobPicker}
+        onConfirm={iso => {
+          setField('dob', iso, true);
+          setShowDobPicker(false);
         }}
-      >
-        <TouchableOpacity
-          style={styles.calOverlay}
-          activeOpacity={1}
-          onPress={() => {
-            setShowCalendar(false);
-          }}
-        >
-          <View>
-            <Calendar
-              current={state.dob || undefined}
-              maxDate={new Date().toISOString().slice(0, 10)}
-              onDayPress={(day: { dateString: string }) => {
-                setField('dob', day.dateString, true);
-                setShowCalendar(false);
-              }}
-              markedDates={
-                state.dob
-                  ? { [state.dob]: { selected: true, selectedColor: theme.colors.primary } }
-                  : {}
-              }
-              theme={{
-                backgroundColor: theme.colors.background,
-                calendarBackground: theme.colors.background,
-                textSectionTitleColor: theme.colors.text.muted,
-                selectedDayBackgroundColor: theme.colors.primary,
-                selectedDayTextColor: theme.colors.text.primary,
-                todayTextColor: theme.colors.sleep,
-                dayTextColor: theme.colors.text.primary,
-                textDisabledColor: theme.colors.text.muted,
-                arrowColor: theme.colors.text.primary,
-                monthTextColor: theme.colors.text.primary,
-              }}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
+        onCancel={() => {
+          setShowDobPicker(false);
+        }}
+      />
 
       {/* Time picker for sleep goal */}
       <TimePicker
@@ -229,12 +212,6 @@ function buildStyles(theme: Theme) {
       paddingHorizontal: theme.spacing.lg,
       paddingBottom: theme.spacing.xxl,
       gap: theme.spacing.xs,
-    },
-    calOverlay: {
-      flex: 1,
-      backgroundColor: theme.colors.scrim.dark,
-      justifyContent: 'center',
-      paddingHorizontal: theme.spacing.lg,
     },
   });
 }

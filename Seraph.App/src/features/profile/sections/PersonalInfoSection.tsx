@@ -5,14 +5,27 @@ import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
 import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { useTheme, type Theme } from '../../../theme';
-import type { Sex, SettingsState } from '../ProfileSettingsTypes';
+import type { Sex } from '../ProfileSettingsTypes';
+
+export interface PersonalInfoState {
+  name: string;
+  dob: string;
+  sex: Sex;
+  height_cm: string;
+  weight_kg: string;
+  sleep_goal_minutes: number;
+  fthr: string;
+}
 
 interface Props {
-  state: SettingsState;
+  state: PersonalInfoState;
   dobDisplay: string;
   sleepDisplay: string;
-  onFieldChange: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
-  onFieldChangeImmediate: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
+  onFieldChange: <K extends keyof PersonalInfoState>(key: K, value: PersonalInfoState[K]) => void;
+  onFieldChangeImmediate: <K extends keyof PersonalInfoState>(
+    key: K,
+    value: PersonalInfoState[K],
+  ) => void;
   onShowCalendar: () => void;
   onShowTimePicker: () => void;
 }

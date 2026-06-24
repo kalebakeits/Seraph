@@ -34,6 +34,9 @@ class AlarmChecker(
         /** Everything is fine — alarm already set or not configured. */
         object None : AlarmAction()
 
+        /** The device alarm should be cleared immediately. */
+        object DisableAlarm : AlarmAction()
+
         /** The alarm should be set to this Unix-seconds value. */
         data class SetAlarm(
             val unixSec: Int,
@@ -58,7 +61,13 @@ class AlarmChecker(
         // A nap has taken ownership of the device alarm — do not overwrite it.
         if (!getPref("nap_mode").isNullOrEmpty()) return AlarmAction.None
 
-        val nextAlarm = getNextAlarmSeconds() ?: return AlarmAction.None
+        val nextAlarm =
+            getNextAlarmSeconds()
+                ?: return if (deviceAlarmSec != null && deviceAlarmSec != 0) {
+                    AlarmAction.DisableAlarm
+                } else {
+                    AlarmAction.None
+                }
 
         // Device already has the correct alarm set (within 60s tolerance for clock drift)
         if (deviceAlarmSec != null &&
@@ -93,6 +102,15 @@ class AlarmChecker(
         val mode = getPref("alarm_mode") ?: return null
         if (mode == "disabled") return null
 
+        if (mode == "single") {
+            val singleTs = getPref("alarm_single_ts")?.toIntOrNull()
+            return if (singleTs != null && singleTs > nowSec()) {
+                singleTs
+            } else {
+                null
+            }
+        }
+
         val timeStr = getPref("alarm_time") ?: return null // "HH:MM"
         val parts = timeStr.split(":")
         if (parts.size != 2) return null
@@ -101,8 +119,6 @@ class AlarmChecker(
         val minute = parts[1].toIntOrNull() ?: return null
 
         val nextOccurrence = calculateNextOccurrence(hour, minute)
-
-        if (mode == "single") return nextOccurrence
 
         // Schedule mode — walk forward up to 7 days to find the next enabled day
         val scheduleJson = getPref("alarm_schedule") ?: return nextOccurrence
@@ -135,6 +151,8 @@ class AlarmChecker(
             log.w { "Failed to read app_parameters.$key: $e" }
             null
         }
+
+    private fun nowSec(): Int = (Clock.System.now().toEpochMilliseconds() / 1000).toInt()
 
     companion object {
         /**

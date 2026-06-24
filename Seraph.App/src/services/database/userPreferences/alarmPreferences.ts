@@ -19,6 +19,14 @@ export async function setAlarmMode(mode: AlarmMode): Promise<void> {
   await appParametersRepository.set('alarm_mode', mode);
 }
 
+export async function getAlarmSingleTs(): Promise<number | null> {
+  return appParametersRepository.getNumeric('alarm_single_ts');
+}
+
+export async function setAlarmSingleTs(unixSec: number): Promise<void> {
+  await appParametersRepository.set('alarm_single_ts', unixSec);
+}
+
 export async function getAlarmSchedule(): Promise<number[]> {
   const schedule = await appParametersRepository.get('alarm_schedule');
   if (!schedule) return [0, 0, 0, 0, 0, 0, 0];

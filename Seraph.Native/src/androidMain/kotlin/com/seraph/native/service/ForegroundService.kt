@@ -458,6 +458,15 @@ class ForegroundService : Service() {
                     log.w(e) { "Failed to set alarm" }
                 }
             }
+            is AlarmChecker.AlarmAction.DisableAlarm -> {
+                try {
+                    device.disableAlarm()
+                    notifications.cancelAlarmNotification()
+                    WindDownScheduler.cancel(applicationContext)
+                } catch (e: Exception) {
+                    log.w(e) { "Failed to disable alarm" }
+                }
+            }
             is AlarmChecker.AlarmAction.NotifyUser -> notifications.sendAlarmNotification(notificationWriter)
             is AlarmChecker.AlarmAction.None -> {}
         }

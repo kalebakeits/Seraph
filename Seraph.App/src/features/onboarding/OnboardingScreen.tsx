@@ -24,12 +24,8 @@ import { StoragePage } from './StoragePage';
 import { ConnectPage } from './ConnectPage';
 import { buildStyles } from './OnboardingStyles';
 import { reportError } from '../../utils/reportError';
-import {
-  SENSITIVITY_PRESETS,
-  type PageKey,
-  type SensitivityPreset,
-  type ProfileDraft,
-} from './OnboardingTypes';
+import type { PageKey, SensitivityPreset, ProfileDraft } from './OnboardingTypes';
+import { SENSITIVITY_PRESETS } from '../profile/ProfileSettingsTypes';
 import type { GranularitySeconds } from '../profile/utils/storageUtils';
 
 interface Props {

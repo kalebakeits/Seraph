@@ -588,6 +588,13 @@
     "adjNone": "+0m",
     "tonight": "Ce soir",
     "noData": "Synchronisez votre strap pour voir votre besoin de sommeil.",
+    "sleepGoalCalculation": "Calcul de l'objectif de sommeil",
+    "sleepGoalMode": {
+      "adaptive": "Adaptatif",
+      "fixed": "Fixe",
+      "adaptiveHint": "Ajuste votre objectif selon votre dette de sommeil récente et votre charge d'entraînement du jour.",
+      "fixedHint": "Utilise votre objectif de sommeil sans ajustement quotidien."
+    },
     "screenTitle": "Réveil",
     "screenHelper": "Choisissez une heure de réveil. Votre strap vibrera à cette heure.",
     "wakeTime": "Réveil",

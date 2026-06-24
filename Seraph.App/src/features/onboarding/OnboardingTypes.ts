@@ -7,7 +7,7 @@ export type PageKey =
   | 'storage'
   | 'connect'
   | 'done';
-export type SensitivityPreset = 'everything' | 'light' | 'moderate' | 'workoutsOnly' | 'off';
+export type { SensitivityPreset } from '../profile/ProfileSettingsTypes';
 
 export interface ProfileDraft {
   name: string;
@@ -18,11 +18,3 @@ export interface ProfileDraft {
   sleep_goal_minutes: number;
   fthr: string;
 }
-
-export const SENSITIVITY_PRESETS: { key: SensitivityPreset; minTrimp: number; minMs: number }[] = [
-  { key: 'everything', minTrimp: 3.0, minMs: 900_000 },
-  { key: 'light', minTrimp: 8.0, minMs: 900_000 },
-  { key: 'moderate', minTrimp: 20.0, minMs: 900_000 },
-  { key: 'workoutsOnly', minTrimp: 40.0, minMs: 900_000 },
-  { key: 'off', minTrimp: 9999.0, minMs: 900_000 },
-];
