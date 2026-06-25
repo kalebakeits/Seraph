@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../components/common/SafeText';
 import { useTheme } from '../../theme';
-import { ActivityDetectionSection } from '../profile/sections/ActivityDetectionSection';
-import type { SensitivityPreset } from '../profile/ProfileSettingsTypes';
+import { ActivityDetectionSection } from '../settings/sections/ActivityDetectionSection';
+import type { SensitivityPreset } from '../settings/SettingsTypes';
 import { PageContainer } from './PageContainer';
 import { buildStyles } from './OnboardingStyles';
 

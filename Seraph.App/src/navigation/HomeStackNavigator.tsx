@@ -8,10 +8,9 @@ import { Recovery } from '../features/recovery/Recovery';
 import { Strain } from '../features/strain/Strain';
 import { DeviceManagementScreen } from '../features/device-management/DeviceManagementScreen';
 import { WakeUpScreen } from '../features/wake-up-time/WakeUpScreen';
-import { SettingsScreen } from '../features/profile/SettingsScreen';
-import { ProfileSettingsScreen } from '../features/profile/ProfileSettingsScreen';
-import { DataStorageScreen } from '../features/profile/DataStorageScreen';
-import { AboutScreen } from '../features/profile/AboutScreen';
+import { SettingsScreen } from '../features/settings/SettingsScreen';
+import { DataStorageScreen } from '../features/settings/DataStorageScreen';
+import { AboutScreen } from '../features/settings/AboutScreen';
 import { DebugMenuScreen } from '../features/device-management/device-details/DebugMenuScreen';
 import { TrendsScreen } from '../features/trends/TrendsScreen';
 import type { TrendKey } from '../features/trends/TrendConfig';
@@ -34,7 +33,6 @@ export interface HomeStackParamList {
   DeviceManagement: undefined;
   WakeUp: undefined;
   Profile: undefined;
-  ProfileSettings: undefined;
   DataStorage: undefined;
   About: undefined;
   DebugMenu: undefined;
@@ -99,11 +97,6 @@ export const HomeStackNavigator: React.FC = () => {
         name="Profile"
         component={SettingsScreen}
         options={{ presentation: 'modal', headerTitle: t('nav.settings') }}
-      />
-      <Stack.Screen
-        name="ProfileSettings"
-        component={ProfileSettingsScreen}
-        options={{ headerTitle: t('settings.profileAndPreferences') }}
       />
       <Stack.Screen
         name="DataStorage"

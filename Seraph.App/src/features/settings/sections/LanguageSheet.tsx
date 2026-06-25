@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
 import { useTheme, type Theme } from '../../../theme';
-import { LANGUAGES } from '../ProfileSettingsTypes';
+import { LANGUAGES } from '../SettingsTypes';
 
 interface Props {
   visible: boolean;

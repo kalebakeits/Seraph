@@ -6,8 +6,8 @@ import { useTheme } from '../../theme';
 import { PageContainer } from './PageContainer';
 import { buildStyles } from './OnboardingStyles';
 import { minutesToDate } from '../../utils/dateUtils';
-import { DobDatePicker } from '../profile/components/DobDatePicker';
-import { PersonalInfoSection } from '../profile/sections/PersonalInfoSection';
+import { DobDatePicker } from '../settings/components/DobDatePicker';
+import { PersonalInfoSection } from '../settings/sections/PersonalInfoSection';
 import type { ProfileDraft } from './OnboardingTypes';
 
 interface Props {

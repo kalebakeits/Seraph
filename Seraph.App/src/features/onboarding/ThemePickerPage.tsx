@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../components/common/SafeText';
 import { useTheme } from '../../theme';
-import { ThemeOptionsList } from '../profile/components/ThemeOptionsList';
+import { ThemeOptionsList } from '../settings/components/ThemeOptionsList';
 import { PageContainer } from './PageContainer';
 import { buildStyles } from './OnboardingStyles';
 

@@ -7,7 +7,7 @@ export type PageKey =
   | 'storage'
   | 'connect'
   | 'done';
-export type { SensitivityPreset } from '../profile/ProfileSettingsTypes';
+export type { SensitivityPreset } from '../settings/SettingsTypes';
 
 export interface ProfileDraft {
   name: string;

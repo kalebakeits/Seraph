@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { appParametersRepository } from '../../../services/database/drizzle/repositories/appParametersRepository';
 import { nativeRecalculateCurrentSleepNeed } from '../../../services/ble/nativeModule';
-import type { SleepGoalMode } from '../../profile/ProfileSettingsTypes';
+import type { SleepGoalMode } from '../WakeUpTypes';
 
 export const SLEEP_GOAL_MODE_KEY = ['sleepGoalMode'];
 const DEFAULT_SLEEP_GOAL_MODE: SleepGoalMode = 'adaptive';

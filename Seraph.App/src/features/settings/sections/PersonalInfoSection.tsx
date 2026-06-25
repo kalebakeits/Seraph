@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
 import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { useTheme, type Theme } from '../../../theme';
-import type { Sex } from '../ProfileSettingsTypes';
+import type { Sex } from '../SettingsTypes';
 
 export interface PersonalInfoState {
   name: string;

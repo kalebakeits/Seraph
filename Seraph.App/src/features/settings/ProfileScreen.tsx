@@ -15,8 +15,8 @@ import { DobDatePicker } from './components/DobDatePicker';
 import { PersonalInfoSection } from './sections/PersonalInfoSection';
 import type { PersonalInfoState } from './sections/PersonalInfoSection';
 import { BaselinesSection } from './sections/BaselinesSection';
-import type { SettingsState } from './ProfileSettingsTypes';
-import { dobToAge } from './ProfileSettingsTypes';
+import type { ProfileState } from './SettingsTypes';
+import { dobToAge } from './SettingsTypes';
 
 export const ProfileScreen: React.FC = () => {
   const { theme } = useTheme();
@@ -25,7 +25,7 @@ export const ProfileScreen: React.FC = () => {
   const queryClient = useQueryClient();
   const { data: baselines } = useBaselines();
 
-  const [state, setState] = useState<SettingsState>({
+  const [state, setState] = useState<ProfileState>({
     name: '',
     dob: '',
     sex: '',
@@ -33,8 +33,6 @@ export const ProfileScreen: React.FC = () => {
     weight_kg: '',
     sleep_goal_minutes: 480,
     fthr: '',
-    sensitivity: 'moderate',
-    language: i18n.language.slice(0, 2),
   });
 
   const [showDobPicker, setShowDobPicker] = useState(false);
@@ -57,7 +55,7 @@ export const ProfileScreen: React.FC = () => {
         ...s,
         name: name ?? '',
         dob: dob ?? '',
-        sex: sex as SettingsState['sex'],
+        sex: sex as ProfileState['sex'],
         height_cm: height ?? '',
         weight_kg: weight ?? '',
         sleep_goal_minutes: sleepGoal ? parseInt(sleepGoal, 10) : 480,
@@ -77,7 +75,7 @@ export const ProfileScreen: React.FC = () => {
   }, []);
 
   const persist = useCallback(
-    async (patch: Partial<SettingsState>) => {
+    async (patch: Partial<ProfileState>) => {
       const merged = { ...state, ...patch };
       const age = dobToAge(merged.dob);
 
@@ -109,14 +107,14 @@ export const ProfileScreen: React.FC = () => {
     [state, queryClient],
   );
 
-  const setField = <K extends keyof SettingsState>(
+  const setField = <K extends keyof ProfileState>(
     key: K,
-    value: SettingsState[K],
+    value: ProfileState[K],
     immediate = false,
   ) => {
     setState(s => ({ ...s, [key]: value }));
     if (saveRef.current) clearTimeout(saveRef.current);
-    const patch = { [key]: value } as Partial<SettingsState>;
+    const patch = { [key]: value } as Partial<ProfileState>;
     if (immediate) {
       void persist(patch);
     } else {
@@ -131,7 +129,7 @@ export const ProfileScreen: React.FC = () => {
     value: PersonalInfoState[K],
     immediate = false,
   ) => {
-    setField(key, value as SettingsState[K], immediate);
+    setField(key, value as ProfileState[K], immediate);
   };
 
   const dobDisplay = state.dob

@@ -13,8 +13,8 @@ import { ActivityDetectionSection } from './sections/ActivityDetectionSection';
 import { LanguageSheet } from './sections/LanguageSheet';
 import { NotificationsSection } from './sections/NotificationsSection';
 import type { NotificationPreferences } from './sections/NotificationsSection';
-import type { SettingsState, SensitivityPreset } from './ProfileSettingsTypes';
-import { SENSITIVITY_PRESETS, LANGUAGES, trimpToPreset } from './ProfileSettingsTypes';
+import type { PreferencesState, SensitivityPreset } from './SettingsTypes';
+import { SENSITIVITY_PRESETS, LANGUAGES, trimpToPreset } from './SettingsTypes';
 
 export const PreferencesScreen: React.FC = () => {
   const { theme } = useTheme();
@@ -22,14 +22,7 @@ export const PreferencesScreen: React.FC = () => {
   const { i18n } = useTranslation();
   const queryClient = useQueryClient();
 
-  const [state, setState] = useState<SettingsState>({
-    name: '',
-    dob: '',
-    sex: '',
-    height_cm: '',
-    weight_kg: '',
-    sleep_goal_minutes: 480,
-    fthr: '',
+  const [state, setState] = useState<PreferencesState>({
     sensitivity: 'moderate',
     language: i18n.language.slice(0, 2),
   });
@@ -90,7 +83,7 @@ export const PreferencesScreen: React.FC = () => {
   }, []);
 
   const persist = useCallback(
-    async (patch: Partial<SettingsState>) => {
+    async (patch: Partial<PreferencesState>) => {
       const merged = { ...state, ...patch };
       const preset =
         SENSITIVITY_PRESETS.find(p => p.key === merged.sensitivity) ?? SENSITIVITY_PRESETS[2];
@@ -129,14 +122,14 @@ export const PreferencesScreen: React.FC = () => {
     await Promise.all(entries.map(([k, v]) => appParametersRepository.set(k, v)));
   }, []);
 
-  const setField = <K extends keyof SettingsState>(
+  const setField = <K extends keyof PreferencesState>(
     key: K,
-    value: SettingsState[K],
+    value: PreferencesState[K],
     immediate = false,
   ) => {
     setState(s => ({ ...s, [key]: value }));
     if (saveRef.current) clearTimeout(saveRef.current);
-    const patch = { [key]: value } as Partial<SettingsState>;
+    const patch = { [key]: value } as Partial<PreferencesState>;
     if (immediate) {
       void persist(patch);
     } else {

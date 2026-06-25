@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
 import { useTheme, type Theme } from '../../../theme';
-import type { SleepGoalMode } from '../../profile/ProfileSettingsTypes';
+import type { SleepGoalMode } from '../WakeUpTypes';
 
 interface Props {
   mode: SleepGoalMode;

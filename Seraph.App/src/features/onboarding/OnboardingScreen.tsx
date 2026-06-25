@@ -25,8 +25,8 @@ import { ConnectPage } from './ConnectPage';
 import { buildStyles } from './OnboardingStyles';
 import { reportError } from '../../utils/reportError';
 import type { PageKey, SensitivityPreset, ProfileDraft } from './OnboardingTypes';
-import { SENSITIVITY_PRESETS } from '../profile/ProfileSettingsTypes';
-import type { GranularitySeconds } from '../profile/utils/storageUtils';
+import { SENSITIVITY_PRESETS } from '../settings/SettingsTypes';
+import type { GranularitySeconds } from '../settings/utils/storageUtils';
 
 interface Props {
   onComplete: () => void;
