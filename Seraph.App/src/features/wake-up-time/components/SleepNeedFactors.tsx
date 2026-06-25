@@ -45,44 +45,48 @@ export const SleepNeedFactors: React.FC<SleepNeedFactorsData & { displayMode?: D
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
 
+  const goalRow = (
+    <FactorRow
+      icon="moon-outline"
+      iconColor={theme.colors.sleep}
+      label={t('alarm.sleepGoal')}
+      value={formatDuration(goalMinutes * 60_000)}
+    />
+  );
+
+  if (displayMode === 'goalOnly') {
+    return goalRow;
+  }
+
   return (
     <>
+      {goalRow}
       <FactorRow
-        icon="moon-outline"
-        iconColor={theme.colors.sleep}
-        label={t('alarm.sleepGoal')}
-        value={formatDuration(goalMinutes * 60_000)}
+        icon="trending-up-outline"
+        iconColor={debtAdjMinutes ? theme.colors.warning : theme.colors.text.muted}
+        label={t('alarm.debtAdj')}
+        value={
+          debtAdjMinutes
+            ? t('alarm.adjValue', { duration: formatDuration(debtAdjMinutes * 60_000) })
+            : t('alarm.adjNone')
+        }
+        dimmed={!debtAdjMinutes}
       />
-      {displayMode === 'goalOnly' ? null : (
-        <>
-          <FactorRow
-            icon="trending-up-outline"
-            iconColor={debtAdjMinutes ? theme.colors.warning : theme.colors.text.muted}
-            label={t('alarm.debtAdj')}
-            value={
-              debtAdjMinutes
-                ? t('alarm.adjValue', { duration: formatDuration(debtAdjMinutes * 60_000) })
-                : t('alarm.adjNone')
-            }
-            dimmed={!debtAdjMinutes}
-          />
-          <FactorRow
-            icon="barbell-outline"
-            iconColor={strainAdjMinutes ? theme.colors.strain : theme.colors.text.muted}
-            label={t('alarm.strainAdj')}
-            value={
-              strainAdjMinutes
-                ? t('alarm.adjValue', { duration: formatDuration(strainAdjMinutes * 60_000) })
-                : t('alarm.adjNone')
-            }
-            dimmed={!strainAdjMinutes}
-          />
-          <View style={styles.totalRow}>
-            <SafeText style={styles.totalLabel}>{t('alarm.tonight')}</SafeText>
-            <SafeText style={styles.totalValue}>{formatDuration(totalMinutes * 60_000)}</SafeText>
-          </View>
-        </>
-      )}
+      <FactorRow
+        icon="barbell-outline"
+        iconColor={strainAdjMinutes ? theme.colors.strain : theme.colors.text.muted}
+        label={t('alarm.strainAdj')}
+        value={
+          strainAdjMinutes
+            ? t('alarm.adjValue', { duration: formatDuration(strainAdjMinutes * 60_000) })
+            : t('alarm.adjNone')
+        }
+        dimmed={!strainAdjMinutes}
+      />
+      <View style={styles.totalRow}>
+        <SafeText style={styles.totalLabel}>{t('alarm.tonight')}</SafeText>
+        <SafeText style={styles.totalValue}>{formatDuration(totalMinutes * 60_000)}</SafeText>
+      </View>
     </>
   );
 };

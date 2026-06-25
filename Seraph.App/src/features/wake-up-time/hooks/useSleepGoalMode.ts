@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { appParametersRepository } from '../../../services/database/drizzle/repositories/appParametersRepository';
 import { nativeRecalculateCurrentSleepNeed } from '../../../services/ble/nativeModule';
@@ -11,10 +11,8 @@ const SAVE_DELAY_MS = 800;
 export function useSleepGoalMode() {
   const queryClient = useQueryClient();
   const saveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasPendingChangeRef = useRef(false);
-  const [mode, setMode] = useState<SleepGoalMode>(DEFAULT_SLEEP_GOAL_MODE);
 
-  const { data: savedMode } = useQuery({
+  const { data: mode = DEFAULT_SLEEP_GOAL_MODE } = useQuery({
     queryKey: SLEEP_GOAL_MODE_KEY,
     queryFn: async (): Promise<SleepGoalMode> => {
       const saved = await appParametersRepository.get('profile_sleep_goal_mode');
@@ -22,24 +20,17 @@ export function useSleepGoalMode() {
     },
   });
 
-  useEffect(() => {
-    if (savedMode && !hasPendingChangeRef.current) {
-      setMode(savedMode);
-    }
-  }, [savedMode]);
-
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (saveRef.current) {
         clearTimeout(saveRef.current);
       }
-    };
-  }, []);
+    },
+    [],
+  );
 
   const setSleepGoalMode = useCallback(
     (nextMode: SleepGoalMode) => {
-      hasPendingChangeRef.current = true;
-      setMode(nextMode);
       queryClient.setQueryData(SLEEP_GOAL_MODE_KEY, nextMode);
 
       if (saveRef.current) {
@@ -52,7 +43,6 @@ export function useSleepGoalMode() {
           await nativeRecalculateCurrentSleepNeed().catch(() => {
             // best-effort; native aggregation will refresh on the next sync
           });
-          hasPendingChangeRef.current = false;
           void queryClient.invalidateQueries({ queryKey: ['sleepNeedFactors'] });
         })();
       }, SAVE_DELAY_MS);
