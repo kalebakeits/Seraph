@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from '../../navigation/HomeStackNavigator';
 import { useTheme, type Theme } from '../../theme';
 import { formatTime, formatDuration } from '../../utils/dateUtils';
+import { useCurrentSleepDate } from './hooks/useCurrentSleepDate';
 import { useAlarmTriggerForNextSleepInterval } from './hooks/useAlarmTriggerForNextSleepInterval';
 import { useAlarmPreferences } from './hooks/useAlarmPreferences';
 import { useSleepNeedFactors } from './hooks/useSleepNeedFactors';
@@ -21,21 +22,24 @@ export const WakeUpTimeCard: React.FC = () => {
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
-  const { data: sleepNeedData } = useSleepNeedFactors();
+  const { data: sleepNeedData } = useSleepNeedFactors(useCurrentSleepDate());
   const { data: alarmTrigger } = useAlarmTriggerForNextSleepInterval();
   const { alarmMode } = useAlarmPreferences();
   const { mode: sleepGoalMode } = useSleepGoalMode();
 
   const isFixedSleepGoal = sleepGoalMode === 'fixed';
   const sleepNeedMinutes = isFixedSleepGoal
-    ? (sleepNeedData?.goalMinutes ?? 480)
-    : (sleepNeedData?.totalMinutes ?? 480);
+    ? sleepNeedData?.goalMinutes
+    : sleepNeedData?.totalMinutes;
   const nextAlarmSeconds = alarmTrigger?.nextAlarmSeconds ?? null;
   const isDisabled = alarmMode === 'disabled' || alarmTrigger?.willTrigger !== true;
 
   const wakeTime =
     !isDisabled && nextAlarmSeconds !== null ? new Date(nextAlarmSeconds * 1000) : null;
-  const bedTime = wakeTime ? new Date(wakeTime.getTime() - sleepNeedMinutes * 60_000) : null;
+  const bedTime =
+    wakeTime && sleepNeedMinutes != null
+      ? new Date(wakeTime.getTime() - sleepNeedMinutes * 60_000)
+      : null;
 
   return (
     <TouchableOpacity
@@ -66,7 +70,7 @@ export const WakeUpTimeCard: React.FC = () => {
             <View style={styles.durationLine} />
             <View style={styles.pill}>
               <SafeText style={styles.pillText}>
-                {formatDuration(sleepNeedMinutes * 60_000)}
+                {sleepNeedMinutes != null ? formatDuration(sleepNeedMinutes * 60_000) : '--'}
               </SafeText>
             </View>
             <View style={styles.durationLine} />

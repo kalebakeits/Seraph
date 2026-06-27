@@ -9,7 +9,7 @@ import { ActivityType } from '../../../../types/ActivityType';
 
 interface ActivityHighlightProps {
   highlighted: ActivityItem | null;
-  selectedDate?: string;
+  selectedDate: string;
   onDismiss: () => void;
   onNavigate: (id: number, type: ActivityType) => void;
 }

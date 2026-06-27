@@ -6,6 +6,7 @@ export interface SleepNeedFactors {
 }
 
 interface StoredSleepNeedFactors {
+  baseMinutes?: unknown;
   debtAdjMinutes?: unknown;
   strainAdjMinutes?: unknown;
   totalMinutes?: unknown;
@@ -32,15 +33,13 @@ export function buildSleepNeedFactors(
   sleepNeedFactors: string | null,
 ): SleepNeedFactors {
   const stored = parseStoredFactors(sleepNeedFactors);
-  const debtAdjMinutes = numberOrZero(stored?.debtAdjMinutes);
-  const strainAdjMinutes = numberOrZero(stored?.strainAdjMinutes);
+  const storedBaseMinutes = numberOrZero(stored?.baseMinutes);
   const storedTotalMinutes = numberOrZero(stored?.totalMinutes);
-  const totalMinutes = storedTotalMinutes > 0 ? storedTotalMinutes : (sleepNeed ?? goalMinutes);
 
   return {
-    goalMinutes,
-    debtAdjMinutes,
-    strainAdjMinutes,
-    totalMinutes,
+    goalMinutes: storedBaseMinutes > 0 ? storedBaseMinutes : goalMinutes,
+    debtAdjMinutes: numberOrZero(stored?.debtAdjMinutes),
+    strainAdjMinutes: numberOrZero(stored?.strainAdjMinutes),
+    totalMinutes: storedTotalMinutes > 0 ? storedTotalMinutes : (sleepNeed ?? goalMinutes),
   };
 }

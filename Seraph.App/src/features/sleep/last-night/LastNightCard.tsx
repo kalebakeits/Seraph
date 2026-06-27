@@ -12,7 +12,7 @@ import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { formatDuration } from '../../../utils/dateUtils';
 
 interface LastNightCardProps {
-  selectedDate?: string;
+  selectedDate: string;
   onPress?: () => void;
   onEditPress?: () => void;
   showRing?: boolean;
@@ -29,9 +29,12 @@ export const LastNightCard: React.FC<LastNightCardProps> = ({
   const sectionStyles = useMemo(() => buildSectionStyles(theme), [theme]);
   const { t } = useTranslation();
   const { data: recent } = useRecentSleep(selectedDate);
-  const needMinutes = useSleepNeedMinutes();
+  const needMinutes = useSleepNeedMinutes(selectedDate);
 
-  const goalDuration = formatDuration(needMinutes * 60_000);
+  const goalLabel =
+    needMinutes != null
+      ? t('sleep.goalHours', { duration: formatDuration(needMinutes * 60_000) })
+      : '';
 
   return (
     <TouchableOpacity
@@ -53,9 +56,7 @@ export const LastNightCard: React.FC<LastNightCardProps> = ({
           </View>
           <View style={styles.heroRow}>
             <SafeText style={styles.heroValue}>{recent?.totalSleepFormatted ?? '--'}</SafeText>
-            <SafeText style={styles.heroGoal}>
-              {t('sleep.goalHours', { duration: goalDuration })}
-            </SafeText>
+            <SafeText style={styles.heroGoal}>{goalLabel}</SafeText>
           </View>
         </View>
         {showRing && (

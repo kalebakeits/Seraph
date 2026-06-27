@@ -40,7 +40,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const { withinWindDown } = useWithinWindDown();
-  const isToday = !selectedDate || selectedDate === todayISO();
+  const date = selectedDate ?? todayISO();
+  const isToday = date === todayISO();
 
   const { data: activities = [] } = useActivities(isToday ? undefined : selectedDate);
   const { highlighted, dismiss: dismissHighlight } = useActivityHighlight(
@@ -96,7 +97,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
 
         <ActivityHighlight
           highlighted={highlighted}
-          selectedDate={selectedDate}
+          selectedDate={date}
           onDismiss={dismissHighlight}
           onNavigate={(id, type) => {
             if (type === ActivityType.Workout)
