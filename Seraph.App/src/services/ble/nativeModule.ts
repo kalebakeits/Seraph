@@ -14,6 +14,7 @@ interface SyncModuleInterface extends NativeModule {
   reaggregate(dates: string[]): Promise<void>;
   recalcActivity(activityId: number): Promise<void>;
   recalcSleep(sleepId: number): Promise<void>;
+  recalculateCurrentSleepNeed(): Promise<void>;
   refreshDailyLoad(date: string): Promise<void>;
   getInitialDeepLink(): Promise<string | null>;
 }
@@ -179,6 +180,8 @@ export const nativeRecalcActivity = (activityId: number): Promise<void> =>
   callSync(m => m.recalcActivity(activityId));
 export const nativeRecalcSleep = (sleepId: number): Promise<void> =>
   callSync(m => m.recalcSleep(sleepId));
+export const nativeRecalculateCurrentSleepNeed = (): Promise<void> =>
+  callSync(m => m.recalculateCurrentSleepNeed());
 export const nativeRefreshDailyLoad = (date: string): Promise<void> =>
   callSync(m => m.refreshDailyLoad(date));
 export const nativeGetInitialDeepLink = (): Promise<string | null> =>

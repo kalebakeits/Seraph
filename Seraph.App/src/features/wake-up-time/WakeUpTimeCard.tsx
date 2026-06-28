@@ -7,9 +7,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from '../../navigation/HomeStackNavigator';
 import { useTheme, type Theme } from '../../theme';
 import { formatTime, formatDuration } from '../../utils/dateUtils';
-import { useNextAlarm } from './hooks/useNextAlarm';
+import { useCurrentSleepDate } from './hooks/useCurrentSleepDate';
+import { useAlarmTriggerForNextSleepInterval } from './hooks/useAlarmTriggerForNextSleepInterval';
 import { useAlarmPreferences } from './hooks/useAlarmPreferences';
 import { useSleepNeedFactors } from './hooks/useSleepNeedFactors';
+import { useSleepGoalMode } from './hooks/useSleepGoalMode';
 import { SleepNeedFactors } from './components/SleepNeedFactors';
 import { SafeText } from '../../components/common/SafeText';
 
@@ -20,16 +22,24 @@ export const WakeUpTimeCard: React.FC = () => {
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
-  const { data: sleepNeedData } = useSleepNeedFactors();
-  const { data: nextAlarmData } = useNextAlarm();
+  const { data: sleepNeedData } = useSleepNeedFactors(useCurrentSleepDate());
+  const { data: alarmTrigger } = useAlarmTriggerForNextSleepInterval();
   const { alarmMode } = useAlarmPreferences();
+  const { mode: sleepGoalMode } = useSleepGoalMode();
 
-  const sleepNeedMinutes = sleepNeedData?.totalMinutes ?? 480;
-  const nextAlarmSeconds = nextAlarmData?.nextAlarmSeconds ?? null;
-  const isDisabled = alarmMode === 'disabled' || nextAlarmSeconds === null;
+  const isFixedSleepGoal = sleepGoalMode === 'fixed';
+  const sleepNeedMinutes = isFixedSleepGoal
+    ? sleepNeedData?.goalMinutes
+    : sleepNeedData?.totalMinutes;
+  const nextAlarmSeconds = alarmTrigger?.nextAlarmSeconds ?? null;
+  const isDisabled = alarmMode === 'disabled' || alarmTrigger?.willTrigger !== true;
 
-  const wakeTime = isDisabled ? null : new Date(nextAlarmSeconds * 1000);
-  const bedTime = wakeTime ? new Date(wakeTime.getTime() - sleepNeedMinutes * 60_000) : null;
+  const wakeTime =
+    !isDisabled && nextAlarmSeconds !== null ? new Date(nextAlarmSeconds * 1000) : null;
+  const bedTime =
+    wakeTime && sleepNeedMinutes != null
+      ? new Date(wakeTime.getTime() - sleepNeedMinutes * 60_000)
+      : null;
 
   return (
     <TouchableOpacity
@@ -60,7 +70,7 @@ export const WakeUpTimeCard: React.FC = () => {
             <View style={styles.durationLine} />
             <View style={styles.pill}>
               <SafeText style={styles.pillText}>
-                {formatDuration(sleepNeedMinutes * 60_000)}
+                {sleepNeedMinutes != null ? formatDuration(sleepNeedMinutes * 60_000) : '--'}
               </SafeText>
             </View>
             <View style={styles.durationLine} />
@@ -77,8 +87,15 @@ export const WakeUpTimeCard: React.FC = () => {
         </View>
       )}
 
-      <View style={styles.divider} />
-      {sleepNeedData && <SleepNeedFactors {...sleepNeedData} />}
+      {sleepNeedData && (
+        <>
+          <View style={styles.divider} />
+          <SleepNeedFactors
+            {...sleepNeedData}
+            displayMode={isFixedSleepGoal ? 'goalOnly' : 'full'}
+          />
+        </>
+      )}
     </TouchableOpacity>
   );
 };

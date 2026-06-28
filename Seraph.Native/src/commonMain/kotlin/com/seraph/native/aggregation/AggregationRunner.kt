@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.seraph.native.aggregation
 
 import co.touchlab.kermit.Logger
@@ -5,6 +7,7 @@ import com.seraph.native.aggregation.DateUtils
 import com.seraph.native.aggregation.hrv.AllDayHRVAggregator
 import com.seraph.native.aggregation.sleep.MERGE_GAP_MS
 import com.seraph.native.aggregation.sleep.SleepAggregator
+import com.seraph.native.aggregation.sleep.SleepNeedCalculator
 import com.seraph.native.aggregation.workout.ActivityAggregator
 import com.seraph.native.aggregation.workout.TrainingLoadCalculator
 import com.seraph.native.db.AggregationDao
@@ -12,6 +15,7 @@ import com.seraph.native.db.R24Dao
 import com.seraph.native.db.SeraphDb
 import com.seraph.native.db.r24.R24Db
 import kotlinx.coroutines.sync.Mutex
+import kotlin.time.Clock
 
 class OverlapException(
     message: String,
@@ -32,6 +36,7 @@ data class AggregationProfile(
     val baselineRhr: Double?,
     val baselineMaxHr: Double?,
     val sleepGoalMinutes: Int,
+    val sleepGoalMode: String,
     val activityMinTrimp: Double,
     val activityMinMs: Long,
 )
@@ -168,6 +173,23 @@ class AggregationRunner(
         TrainingLoadCalculator.recascade(db, date, today)
     }
 
+    fun recalculateCurrentSleepNeed() {
+        val profile = loadProfile()
+        val result = SleepNeedCalculator(db).calculateCurrent(profile)
+        val updatedAt = Clock.System.now().toEpochMilliseconds()
+        db.seraphDbQueries.insertIncrementalAggregationIfMissing(
+            date = result.date,
+            last_agg_ts = null,
+            updated_at = updatedAt,
+        )
+        db.seraphDbQueries.updateSleepNeedForDate(
+            sleep_need = result.totalMinutes,
+            sleep_need_factors = result.factorsJson(),
+            updated_at = updatedAt,
+            date = result.date,
+        )
+    }
+
     /**
      * Recalculates a single sleep row from raw R24 data.
      * Throws [OverlapException] if the new window overlaps another finalized sleep.
@@ -278,6 +300,7 @@ class AggregationRunner(
             baselineRhr = baselineRhr,
             baselineMaxHr = param("baseline_max_hr")?.toDoubleOrNull(),
             sleepGoalMinutes = param("profile_sleep_goal_minutes")?.toIntOrNull() ?: 480,
+            sleepGoalMode = param("profile_sleep_goal_mode") ?: "adaptive",
             activityMinTrimp = param("activity_min_trimp")?.toDoubleOrNull() ?: 20.0,
             activityMinMs = param("activity_min_ms")?.toLongOrNull() ?: 900_000L,
         )

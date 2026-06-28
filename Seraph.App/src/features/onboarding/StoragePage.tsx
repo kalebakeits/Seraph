@@ -4,9 +4,9 @@ import { SafeText } from '../../components/common/SafeText';
 import { useTheme } from '../../theme';
 import { PageContainer } from './PageContainer';
 import { buildStyles } from './OnboardingStyles';
-import { GranularityPicker } from '../profile/components/GranularityPicker';
-import { StorageEstimateCard } from '../profile/components/StorageEstimateCard';
-import type { GranularitySeconds } from '../profile/utils/storageUtils';
+import { GranularityPicker } from '../settings/components/GranularityPicker';
+import { StorageEstimateCard } from '../settings/components/StorageEstimateCard';
+import type { GranularitySeconds } from '../settings/utils/storageUtils';
 
 interface Props {
   width: number;

@@ -120,6 +120,7 @@ class NapSyncStrategy(
             val alarmChecker = AlarmChecker(db)
             when (val action = alarmChecker.check(deviceAlarmSec = null, isConnected = true)) {
                 is AlarmChecker.AlarmAction.SetAlarm -> device.setAlarm(action.unixSec)
+                is AlarmChecker.AlarmAction.DisableAlarm -> device.disableAlarm()
                 else -> {}
             }
         } catch (e: Exception) {

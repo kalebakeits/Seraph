@@ -173,7 +173,7 @@ export const StressTimelineCard: React.FC<Props> = ({ selectedDate }) => {
         <View style={styles.legend}>
           {(
             [
-              ['calm', theme.colors.stress.calm],
+              ['normal', theme.colors.stress.calm],
               ['low', theme.colors.stress.low],
               ['mild', theme.colors.stress.mild],
               ['moderate', theme.colors.stress.moderate],

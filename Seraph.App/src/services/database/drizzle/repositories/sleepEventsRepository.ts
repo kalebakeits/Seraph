@@ -1,4 +1,4 @@
-import { eq, asc, gte, lte, and, or, lt, gt, ne } from 'drizzle-orm';
+import { eq, asc, desc, gte, lte, and, or, lt, gt, ne } from 'drizzle-orm';
 import { getDb, insertAndGetId } from '../db';
 import { sleepEvents, notifications, type SleepEvent } from '../schema';
 
@@ -55,6 +55,25 @@ class SleepEventsRepository {
       .from(sleepEvents)
       .where(gte(sleepEvents.date, from))
       .orderBy(asc(sleepEvents.date));
+  }
+
+  async getLastMainSleep(): Promise<SleepEvent | null> {
+    const rows = await getDb()
+      .select()
+      .from(sleepEvents)
+      .where(eq(sleepEvents.finalized, 1))
+      .orderBy(desc(sleepEvents.end_ts))
+      .limit(30);
+    const byDate = new Map<string, SleepEvent>();
+    for (const row of rows) {
+      const existing = byDate.get(row.date);
+      if (!existing || row.end_ts < existing.end_ts) byDate.set(row.date, row);
+    }
+    let latest: SleepEvent | null = null;
+    for (const row of byDate.values()) {
+      if (!latest || row.end_ts > latest.end_ts) latest = row;
+    }
+    return latest;
   }
 
   async getActiveNap(): Promise<SleepEvent | null> {

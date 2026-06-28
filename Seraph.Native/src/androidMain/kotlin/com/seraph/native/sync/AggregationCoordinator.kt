@@ -68,6 +68,17 @@ class AggregationCoordinator(
         }
     }
 
+    suspend fun recalculateCurrentSleepNeed() {
+        val token = orchestrator.acquireToken()
+        try {
+            _state.value = SyncState.Aggregating
+            withContext(Dispatchers.Default) { aggregationRunner.recalculateCurrentSleepNeed() }
+            _state.value = SyncState.Complete(emptyList())
+        } finally {
+            token.release()
+        }
+    }
+
     suspend fun reaggregate(dates: List<String>) {
         if (dates.isEmpty()) return
         val token = orchestrator.acquireToken()

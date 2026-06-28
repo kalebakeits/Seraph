@@ -1,8 +1,13 @@
-import { calculateNextOccurrenceSeconds } from '../../utils/alarmUtils';
+import {
+  calculateAlarmTriggerForNextSleepInterval,
+  calculateNextOccurrenceSeconds,
+} from '../../utils/alarmUtils';
+import type { AlarmTriggerForNextSleepInterval } from '../../utils/alarmUtils';
 import {
   getAlarmTime,
   getAlarmMode,
   getAlarmSchedule,
+  getAlarmSingleTs,
 } from '../database/userPreferences/alarmPreferences';
 
 /**
@@ -20,7 +25,8 @@ export async function getNextAlarmSeconds(): Promise<number | null> {
   const nextAlarmTime = calculateNextOccurrenceSeconds(alarmTime);
 
   if (alarmMode === 'single') {
-    return nextAlarmTime;
+    const singleTs = await getAlarmSingleTs();
+    return singleTs != null && singleTs > Math.floor(Date.now() / 1000) ? singleTs : null;
   }
 
   // Schedule mode: walk forward up to 7 days to find the next enabled day
@@ -33,4 +39,21 @@ export async function getNextAlarmSeconds(): Promise<number | null> {
     candidate += SECONDS_PER_DAY;
   }
   return null;
+}
+
+export async function getAlarmTriggerForNextSleepInterval(): Promise<AlarmTriggerForNextSleepInterval> {
+  const [alarmTime, alarmMode, schedule, singleTs] = await Promise.all([
+    getAlarmTime(),
+    getAlarmMode(),
+    getAlarmSchedule(),
+    getAlarmSingleTs(),
+  ]);
+
+  if (!alarmTime) return { willTrigger: false, nextAlarmSeconds: null };
+  if (alarmMode === 'single') {
+    const nextAlarmSeconds =
+      singleTs != null && singleTs > Math.floor(Date.now() / 1000) ? singleTs : null;
+    return { willTrigger: nextAlarmSeconds !== null, nextAlarmSeconds };
+  }
+  return calculateAlarmTriggerForNextSleepInterval(alarmTime, alarmMode, schedule);
 }

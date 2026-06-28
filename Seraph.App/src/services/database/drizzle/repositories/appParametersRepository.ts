@@ -9,6 +9,7 @@ export type AppParameter =
   // Alarm preferences
   | 'alarm_time'
   | 'alarm_mode'
+  | 'alarm_single_ts'
   | 'alarm_schedule'
   // User profile (manual)
   | 'profile_name'
@@ -18,6 +19,7 @@ export type AppParameter =
   | 'profile_height_cm'
   | 'profile_weight_kg'
   | 'profile_sleep_goal_minutes'
+  | 'profile_sleep_goal_mode'
   | 'profile_fitness_level'     // "sedentary" | "moderate" | "active" | "athlete"
   | 'profile_threshold_hr'      // FTHR — functional threshold heart rate
   // Activity detection thresholds

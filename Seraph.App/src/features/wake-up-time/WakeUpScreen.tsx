@@ -3,6 +3,8 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useAlarmPreferences } from './hooks/useAlarmPreferences';
+import { useSleepGoalMode } from './hooks/useSleepGoalMode';
+import { SleepGoalModePanel } from './components/SleepGoalModePanel';
 import { TimePicker } from '../../components/TimePicker';
 import { syncAlarmToDevice } from '../../services/alarm/syncAlarmToDevice';
 import { SafeText } from '../../components/common/SafeText';
@@ -24,8 +26,8 @@ export const WakeUpScreen: React.FC = () => {
   const { theme } = useTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
-  const { alarmTime, alarmMode, alarmSchedule, updateTime, updateMode, updateSchedule, isLoading } =
-    useAlarmPreferences();
+  const { alarmTime, alarmMode, alarmSchedule, savePreferences, isLoading } = useAlarmPreferences();
+  const { mode: sleepGoalMode, setSleepGoalMode } = useSleepGoalMode();
 
   const [pendingTime, setPendingTime] = useState(alarmTime);
   const [pendingMode, setPendingMode] = useState<AlarmMode>(alarmMode);
@@ -48,13 +50,13 @@ export const WakeUpScreen: React.FC = () => {
     (time: string, mode: AlarmMode, schedule: number[]) => {
       if (saveRef.current) clearTimeout(saveRef.current);
       saveRef.current = setTimeout(() => {
-        updateTime(time);
-        updateMode(mode);
-        updateSchedule(schedule);
-        void syncAlarmToDevice();
+        void (async () => {
+          await savePreferences(time, mode, schedule);
+          await syncAlarmToDevice();
+        })();
       }, 600);
     },
-    [updateTime, updateMode, updateSchedule],
+    [savePreferences],
   );
 
   const handleTimeConfirm = (date: Date) => {
@@ -164,6 +166,10 @@ export const WakeUpScreen: React.FC = () => {
             </View>
           </Section>
         )}
+
+        <Section title={t('alarm.sleepGoal')}>
+          <SleepGoalModePanel mode={sleepGoalMode} onChange={setSleepGoalMode} />
+        </Section>
       </ScrollView>
 
       <TimePicker

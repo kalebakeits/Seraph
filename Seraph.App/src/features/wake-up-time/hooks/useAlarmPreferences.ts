@@ -1,19 +1,20 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AlarmMode } from '../../../services/database/userPreferences/alarmPreferences';
 import {
   getAlarmTime,
   getAlarmMode,
   getAlarmSchedule,
+  setAlarmSingleTs,
   setAlarmTime,
   setAlarmMode,
   setAlarmSchedule,
 } from '../../../services/database/userPreferences/alarmPreferences';
 import { NEXT_ALARM_KEY } from './useNextAlarm';
+import { ALARM_TRIGGER_FOR_NEXT_SLEEP_INTERVAL_KEY } from './useAlarmTriggerForNextSleepInterval';
+import { calculateNextOccurrenceSeconds } from '../../../utils/alarmUtils';
 
-// Shared query key
 export const ALARM_PREFERENCES_KEY = ['alarmPreferences'];
 
-// Shared query function
 export const fetchAlarmPreferences = async () => {
   const alarmTime = await getAlarmTime();
   const alarmMode = await getAlarmMode();
@@ -28,50 +29,28 @@ export const fetchAlarmPreferences = async () => {
 export const useAlarmPreferences = () => {
   const queryClient = useQueryClient();
 
-  // Load all alarm preferences
   const { data, isLoading } = useQuery({
     queryKey: ALARM_PREFERENCES_KEY,
     queryFn: fetchAlarmPreferences,
   });
 
-  // Mutation to update alarm time
-  const updateTimeMutation = useMutation({
-    mutationFn: async (time: string) => {
-      await setAlarmTime(time);
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ALARM_PREFERENCES_KEY });
-      void queryClient.invalidateQueries({ queryKey: NEXT_ALARM_KEY });
-    },
-  });
-
-  // Mutation to update alarm mode
-  const updateModeMutation = useMutation({
-    mutationFn: async (mode: AlarmMode) => {
-      await setAlarmMode(mode);
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ALARM_PREFERENCES_KEY });
-    },
-  });
-
-  // Mutation to update schedule
-  const updateScheduleMutation = useMutation({
-    mutationFn: async (schedule: number[]) => {
-      await setAlarmSchedule(schedule);
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ALARM_PREFERENCES_KEY });
-    },
-  });
+  const savePreferences = async (time: string, mode: AlarmMode, schedule: number[]) => {
+    await Promise.all([setAlarmTime(time), setAlarmMode(mode), setAlarmSchedule(schedule)]);
+    if (mode === 'single') {
+      await setAlarmSingleTs(calculateNextOccurrenceSeconds(time));
+    }
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ALARM_PREFERENCES_KEY }),
+      queryClient.invalidateQueries({ queryKey: NEXT_ALARM_KEY }),
+      queryClient.invalidateQueries({ queryKey: ALARM_TRIGGER_FOR_NEXT_SLEEP_INTERVAL_KEY }),
+    ]);
+  };
 
   return {
     alarmTime: data?.alarmTime ?? '07:00',
     alarmMode: data?.alarmMode ?? 'disabled',
     alarmSchedule: data?.alarmSchedule ?? [1, 1, 1, 1, 1, 1, 1],
     isLoading,
-    updateTime: updateTimeMutation.mutate,
-    updateMode: updateModeMutation.mutate,
-    updateSchedule: updateScheduleMutation.mutate,
+    savePreferences,
   };
 };

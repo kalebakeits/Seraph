@@ -5,8 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { SafeText } from '../../../components/common/SafeText';
 import { buildSectionStyles } from '../../../theme/shared/SectionStyles';
 import { useTheme, type Theme } from '../../../theme';
-import { SENSITIVITY_PRESETS } from '../ProfileSettingsTypes';
-import type { SensitivityPreset } from '../ProfileSettingsTypes';
+import { SENSITIVITY_PRESETS } from '../SettingsTypes';
+import type { SensitivityPreset } from '../SettingsTypes';
 
 interface Props {
   selected: SensitivityPreset;

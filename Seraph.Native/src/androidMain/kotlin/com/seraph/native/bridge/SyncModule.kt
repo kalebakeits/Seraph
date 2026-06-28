@@ -218,6 +218,24 @@ class SyncModule(
     }
 
     @ReactMethod
+    fun recalculateCurrentSleepNeed(promise: Promise) {
+        scope.launch(Dispatchers.IO) {
+            try {
+                val coordinator =
+                    awaitService()?.aggregationCoordinator
+                        ?: run {
+                            promise.reject("SERVICE_NOT_READY", "Service not started")
+                            return@launch
+                        }
+                coordinator.recalculateCurrentSleepNeed()
+                promise.resolve(null)
+            } catch (e: Exception) {
+                promise.reject("RECALC_SLEEP_NEED_ERROR", e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun refreshDailyLoad(
         date: String,
         promise: Promise,

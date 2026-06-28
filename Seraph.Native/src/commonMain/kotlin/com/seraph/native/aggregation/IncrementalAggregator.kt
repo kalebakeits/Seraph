@@ -62,7 +62,7 @@ class IncrementalAggregator(
         }
         val activeMinutes = (activeSeconds / 60).roundToInt()
         val hrSamples = records.count { it.heartRate in 30..220 }.toLong()
-        val sleepNeedResult = SleepNeedCalculator(db).calculate(date)
+        val sleepNeedResult = SleepNeedCalculator(db).calculate(date, profile)
 
         aggDao.upsertIncremental(
             date = date,
@@ -74,8 +74,7 @@ class IncrementalAggregator(
             strain = strain.score,
             activeMinutes = activeMinutes.toLong(),
             sleepNeed = sleepNeedResult.totalMinutes,
-            sleepDebtAdj = sleepNeedResult.debtAdjMinutes,
-            sleepStrainAdj = sleepNeedResult.strainAdjMinutes,
+            sleepNeedFactors = sleepNeedResult.factorsJson(),
             lastAggTs = newLastAggTs,
             updatedAt = Clock.System.now().toEpochMilliseconds(),
         )

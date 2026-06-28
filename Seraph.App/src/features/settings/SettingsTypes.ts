@@ -1,7 +1,7 @@
 export type Sex = 'male' | 'female' | '';
 export type SensitivityPreset = 'everything' | 'light' | 'moderate' | 'workoutsOnly' | 'off';
 
-export interface SettingsState {
+export interface ProfileState {
   name: string;
   dob: string; // ISO date string "YYYY-MM-DD"
   sex: Sex;
@@ -9,6 +9,9 @@ export interface SettingsState {
   weight_kg: string;
   sleep_goal_minutes: number;
   fthr: string;
+}
+
+export interface PreferencesState {
   sensitivity: SensitivityPreset;
   language: string;
 }

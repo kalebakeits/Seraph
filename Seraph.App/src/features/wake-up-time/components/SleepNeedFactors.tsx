@@ -7,6 +7,8 @@ import { useTheme, type Theme } from '../../../theme';
 import { formatDuration } from '../../../utils/dateUtils';
 import type { SleepNeedFactors as SleepNeedFactorsData } from '../hooks/useSleepNeedFactors';
 
+type DisplayMode = 'full' | 'goalOnly';
+
 const FactorRow: React.FC<{
   icon: React.ComponentProps<typeof Ionicons>['name'];
   iconColor: string;
@@ -32,24 +34,33 @@ const FactorRow: React.FC<{
   );
 };
 
-export const SleepNeedFactors: React.FC<SleepNeedFactorsData> = ({
+export const SleepNeedFactors: React.FC<SleepNeedFactorsData & { displayMode?: DisplayMode }> = ({
   goalMinutes,
   debtAdjMinutes,
   strainAdjMinutes,
   totalMinutes,
+  displayMode = 'full',
 }) => {
   const { theme } = useTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { t } = useTranslation();
 
+  const goalRow = (
+    <FactorRow
+      icon="moon-outline"
+      iconColor={theme.colors.sleep}
+      label={t('alarm.sleepGoal')}
+      value={formatDuration(goalMinutes * 60_000)}
+    />
+  );
+
+  if (displayMode === 'goalOnly') {
+    return goalRow;
+  }
+
   return (
     <>
-      <FactorRow
-        icon="moon-outline"
-        iconColor={theme.colors.sleep}
-        label={t('alarm.sleepGoal')}
-        value={formatDuration(goalMinutes * 60_000)}
-      />
+      {goalRow}
       <FactorRow
         icon="trending-up-outline"
         iconColor={debtAdjMinutes ? theme.colors.warning : theme.colors.text.muted}

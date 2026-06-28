@@ -2,11 +2,11 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '../theme';
-import { SettingsScreen } from '../features/profile/SettingsScreen';
-import { ProfileScreen } from '../features/profile/ProfileScreen';
-import { PreferencesScreen } from '../features/profile/PreferencesScreen';
-import { DataStorageScreen } from '../features/profile/DataStorageScreen';
-import { AboutScreen } from '../features/profile/AboutScreen';
+import { SettingsScreen } from '../features/settings/SettingsScreen';
+import { ProfileScreen } from '../features/settings/ProfileScreen';
+import { PreferencesScreen } from '../features/settings/PreferencesScreen';
+import { DataStorageScreen } from '../features/settings/DataStorageScreen';
+import { AboutScreen } from '../features/settings/AboutScreen';
 import { DebugMenuScreen } from '../features/device-management/device-details/DebugMenuScreen';
 
 export interface SettingsStackParamList {
